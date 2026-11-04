@@ -4,9 +4,8 @@ Build a custom_attributes.tar from an existing valhalla_tiles.tar.
 
 Binary format per .cab file (matches CustomAttributesTileHeader in
 valhalla/baldr/custom_attributes_tile.h):
-  [0:4]                    uint32_t  edge_count
-  [4:8]                    uint32_t  num_attributes
-  [8:8+edge_count*N*4]     float32[edge_count * num_attributes]  row-major by edge
+  [0:32]                   header
+  [32:32+edge_count*N*4]   float32[edge_count * num_attributes]  row-major by edge
 
 The resulting tar contains:
   <level>/<path>.cab  – one file per tile, same path structure as .gph
@@ -19,6 +18,7 @@ import random
 import struct
 import sys
 import tarfile
+import time
 
 
 # Offset of the uint64 that holds nodecount_ / directededgecount_ inside
@@ -31,6 +31,10 @@ import tarfile
 _HEADER_COUNTS_OFFSET = 40
 _NODECOUNT_BITS = 21
 _DIRECTEDGE_BITS = 21
+_GRAPHID_BITS = 46
+
+# Must match CUSTOM_ATTRIBUTES_TAR_VERSION in valhalla/baldr/custom_attributes_tile.h
+_CUSTOM_ATTRIBUTES_TILE_VERSION = 1
 
 
 def _directed_edge_count(tile_bytes: bytes) -> int:
@@ -43,6 +47,12 @@ def _directed_edge_count(tile_bytes: bytes) -> int:
     return (counts_word >> _NODECOUNT_BITS) & ((1 << _DIRECTEDGE_BITS) - 1)
 
 
+def _tile_id(tile_bytes: bytes) -> int:
+    """Extract graphid_ (tile id and level) from raw GraphTileHeader bytes."""
+    (graphid_word,) = struct.unpack_from("<Q", tile_bytes, 0)
+    return graphid_word & ((1 << _GRAPHID_BITS) - 1)
+
+
 def _tile_path_to_cab(path: str) -> str:
     """Replace .gph/.gph.gz suffix with .cab, normalising separators to '/'."""
     path = path.replace("\\", "/")
@@ -53,6 +63,7 @@ def _tile_path_to_cab(path: str) -> str:
 
 
 def _build_cab(
+    tile_id: int,
     edge_count: int,
     num_attributes: int,
     randomize: bool,
@@ -60,7 +71,15 @@ def _build_cab(
     random_max: float = 1.0,
 ) -> bytes:
     """Build binary .cab payload for one tile."""
-    header = struct.pack("<II", edge_count, num_attributes)
+    # tile_id, last_update, num_attributes:16 | spare:48, directed_edge_count, version
+    header = struct.pack(
+        "<QQQII",
+        tile_id,
+        int(time.time()),
+        num_attributes,
+        edge_count,
+        _CUSTOM_ATTRIBUTES_TILE_VERSION,
+    )
     if randomize:
         values = [random.uniform(0.0, random_max) for _ in range(edge_count * num_attributes)]
     else:
@@ -111,12 +130,13 @@ def build(
 
             try:
                 edge_count = _directed_edge_count(tile_bytes)
+                tile_id = _tile_id(tile_bytes)
             except ValueError as exc:
                 print(f"  WARNING: skipping {name}: {exc}", file=sys.stderr)
                 tiles_skipped += 1
                 continue
 
-            cab_bytes = _build_cab(edge_count, num_attributes, randomize, default_values, random_max)
+            cab_bytes = _build_cab(tile_id, edge_count, num_attributes, randomize, default_values, random_max)
             _add_bytes_to_tar(dst_tf, cab_path, cab_bytes)
             tiles_processed += 1
 
@@ -145,14 +165,16 @@ def main() -> None:
         description="Build a custom_attributes.tar sidecar from an existing valhalla_tiles.tar."
     )
     parser.add_argument(
-        "--tiles-tar",
-        default="/data/valhalla_tiles.tar",
-        help="Path to the source valhalla_tiles.tar (default: /data/valhalla_tiles.tar)",
+        "-c",
+        "--config",
+        help="Path to the Valhalla config JSON. Tiles are read from mjolnir.tile_extract, "
+        "the sidecar is written to mjolnir.custom_attributes_extract.",
     )
     parser.add_argument(
-        "--output",
-        default="/data/custom_attributes.tar",
-        help="Path for the output custom_attributes.tar (default: /data/custom_attributes.tar)",
+        "-i",
+        "--inline-config",
+        default="{}",
+        help="Inline JSON config, will override --config JSON if present",
     )
     parser.add_argument(
         "--attribute-names",
@@ -190,11 +212,30 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if not args.config and args.inline_config == "{}":
+        parser.error("one of --config or --inline-config is required")
+
+    config = {}
+    if args.config:
+        with open(args.config) as f:
+            config = json.load(f)
+    config.update(**json.loads(args.inline_config))
+
+    mjolnir = config.get("mjolnir", {})
+    tiles_tar = mjolnir.get("tile_extract")
+    output_tar = mjolnir.get("custom_attributes_extract")
+    if not tiles_tar or not output_tar:
+        parser.error(
+            "config must set both mjolnir.tile_extract and mjolnir.custom_attributes_extract"
+        )
+
     names = [n.strip() for n in args.attribute_names.split(",") if n.strip()]
     if not names:
         parser.error("--attribute-names must contain at least one non-empty name")
 
     num_attributes = len(names)
+    if num_attributes > 0xFFFF:
+        parser.error(f"--attribute-names has {num_attributes} names, at most 65535 are supported")
 
     # --default-value (legacy) overrides --default-values when provided
     if args.default_value is not None:
@@ -202,8 +243,8 @@ def main() -> None:
     else:
         default_values = _parse_default_values(args.default_values, num_attributes)
 
-    print(f"Reading tiles from : {args.tiles_tar}", file=sys.stderr)
-    print(f"Writing output to  : {args.output}", file=sys.stderr)
+    print(f"Reading tiles from : {tiles_tar}", file=sys.stderr)
+    print(f"Writing output to  : {output_tar}", file=sys.stderr)
     print(f"Attribute names    : {names}", file=sys.stderr)
     print(f"Attributes per edge: {num_attributes}", file=sys.stderr)
     if args.random:
@@ -212,7 +253,7 @@ def main() -> None:
         print(f"Edge values        : {default_values}", file=sys.stderr)
 
     build(
-        args.tiles_tar, args.output, num_attributes, args.random, default_values, names, args.random_max
+        tiles_tar, output_tar, num_attributes, args.random, default_values, names, args.random_max
     )
 
 

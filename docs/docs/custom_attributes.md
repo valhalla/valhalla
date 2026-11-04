@@ -7,7 +7,8 @@ Per-directed-edge float attributes stored in a separate tar archive alongside th
 The sidecar is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.cab`. A `.cab` file is a compact binary:
 
 ```
-[CustomAttributesTileHeader: uint32_t edge_count, uint32_t num_attributes]
+[CustomAttributesTileHeader: uint64_t tile_id, uint64_t last_update, uint16_t num_attributes + 48 spare bits,
+ uint32_t directed_edge_count, uint32_t custom_attributes_tile_version]
 [float attr[0][0], attr[0][1], ..., attr[0][num_attributes-1]]   ← edge 0
 [float attr[1][0], attr[1][1], ..., attr[1][num_attributes-1]]   ← edge 1
 ...
@@ -32,8 +33,7 @@ This JSON array declares the attribute names in column order (column 0 = first n
 
 ```bash
 python3 scripts/build_custom_attributes_tar.py \
-    --tiles-tar      /data/valhalla/tiles.tar \
-    --output         /data/custom_attributes.tar \
+    --config         valhalla.json \
     --attribute-names scenic,surface_quality \
     --default-values 0.0,0.0
 ```
@@ -42,8 +42,8 @@ Options:
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--tiles-tar` | `/data/valhalla_tiles.tar` | Path to the main `valhalla_tiles.tar` |
-| `--output` | `/data/custom_attributes.tar` | Output path for the new sidecar tar |
+| `-c`, `--config` | — | Valhalla config JSON. Reads tiles from `mjolnir.tile_extract`, writes the sidecar to `mjolnir.custom_attributes_extract` |
+| `-i`, `--inline-config` | `{}` | Inline JSON config, overrides `--config` if present. One of the two is required |
 | `--attribute-names` | required | Comma-separated names written to `attributes.json` in the tar. The number of names determines `num_attributes` per edge. |
 | `--default-values` | `0.0` | Comma-separated default floats, one per attribute. Fewer values than the name count repeats the last value. |
 | `--random` | off | Fill each slot with a random value in `[0.0, --random-max)` instead of the default |
@@ -136,12 +136,16 @@ Enable it by adding `"edge.custom_attribute": true` to the `filters.attributes` 
 
 ```
 Offset              Size              Type        Field
-0                   4                 uint32_t    edge_count
-4                   4                 uint32_t    num_attributes
-8                   4*N               float       attr[edge=0][attr=0..N-1]
-8+4*N               4*N               float       attr[edge=1][attr=0..N-1]
+0                   8                 uint64_t    tile_id (GraphId of the tile)
+8                   8                 uint64_t    last_update (seconds since epoch)
+16                  2                 uint16_t    num_attributes (bits 0-15 of a uint64_t)
+18                  6                             spare (bits 16-63, 0)
+24                  4                 uint32_t    directed_edge_count
+28                  4                 uint32_t    custom_attributes_tile_version (1)
+32                  4*N               float       attr[edge=0][attr=0..N-1]
+32+4*N              4*N               float       attr[edge=1][attr=0..N-1]
 ...
-8+(edge_count-1)*N*4  4*N             float       attr[edge=edge_count-1][attr=0..N-1]
+32+(edge_count-1)*N*4 4*N             float       attr[edge=edge_count-1][attr=0..N-1]
 ```
 
 Total file size must equal `sizeof(CustomAttributesTileHeader) + edge_count * num_attributes * sizeof(float)` exactly. A mismatch causes the tile to be skipped with a `LOG_ERROR` at startup; routing for that tile proceeds without custom attributes.

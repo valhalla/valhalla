@@ -187,6 +187,12 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
               }
               return false; // stop after first match
             });
+        // CustomAttributesTileHeader::num_attributes is 16 bits wide
+        if (custom_attribute_names.size() > 0xFFFF) {
+          LOG_ERROR("Custom attributes descriptor lists {} names, at most 65535 are supported",
+                    custom_attribute_names.size());
+          custom_attribute_names.clear();
+        }
         if (!custom_attribute_names.empty()) {
           LOG_INFO("Custom attribute names: {} attribute(s) loaded", custom_attribute_names.size());
         }

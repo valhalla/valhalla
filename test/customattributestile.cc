@@ -26,7 +26,8 @@ TEST(CustomAttributesTile, TileConstruction) {
 #pragma pack(pop)
 
   TestTile testdata{};
-  testdata.header.edge_count = 3;
+  testdata.header.directed_edge_count = 3;
+  testdata.header.custom_attributes_tile_version = CUSTOM_ATTRIBUTES_TAR_VERSION;
   testdata.header.num_attributes = 2;
   // edge0: attr0=0.1, attr1=0.2
   testdata.values[0] = 0.1f;
@@ -63,7 +64,8 @@ TEST(CustomAttributesTile, WeightedSum) {
 #pragma pack(pop)
 
   TestTile testdata{};
-  testdata.header.edge_count = 2;
+  testdata.header.directed_edge_count = 2;
+  testdata.header.custom_attributes_tile_version = CUSTOM_ATTRIBUTES_TAR_VERSION;
   testdata.header.num_attributes = 2;
   testdata.values[0] = 0.5f; // edge0 attr0
   testdata.values[1] = 1.0f; // edge0 attr1
@@ -95,7 +97,8 @@ TEST(CustomAttributesTile, SingleAttributeBackwardsCompatible) {
 #pragma pack(pop)
 
   TestTile testdata{};
-  testdata.header.edge_count = 1;
+  testdata.header.directed_edge_count = 1;
+  testdata.header.custom_attributes_tile_version = CUSTOM_ATTRIBUTES_TAR_VERSION;
   testdata.header.num_attributes = 1;
   testdata.value0 = 0.7f;
 
@@ -119,7 +122,8 @@ TEST(CustomAttributesTile, OutOfBoundsReturnsZero) {
 #pragma pack(pop)
 
   TestTile testdata{};
-  testdata.header.edge_count = 1;
+  testdata.header.directed_edge_count = 1;
+  testdata.header.custom_attributes_tile_version = CUSTOM_ATTRIBUTES_TAR_VERSION;
   testdata.header.num_attributes = 1;
   testdata.value0 = 0.7f;
 
@@ -152,14 +156,15 @@ TEST(CustomAttributesTile, EdgeCountMismatchThrows) {
 #pragma pack(pop)
 
   TestTile testdata{};
-  testdata.header.edge_count = 2;
+  testdata.header.directed_edge_count = 2;
+  testdata.header.custom_attributes_tile_version = CUSTOM_ATTRIBUTES_TAR_VERSION;
   testdata.header.num_attributes = 1;
   testdata.value0 = 0.3f;
   testdata.value1 = 0.6f;
 
   auto memory =
       std::make_unique<UnmanagedGraphMemory>(reinterpret_cast<char*>(&testdata), sizeof(TestTile));
-  // expected_edge_count doesn't match header.edge_count → should throw
+  // expected_edge_count doesn't match header.directed_edge_count → should throw
   EXPECT_THROW(CustomAttributesTile(std::move(memory), 5), std::runtime_error);
 }
 
