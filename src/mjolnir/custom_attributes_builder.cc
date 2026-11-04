@@ -183,9 +183,9 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
   }
   for (const auto& [id, cab] : cab_tar.tiles) {
     if (cab.header->num_attributes != cab_tar.names.size()) {
-      throw std::runtime_error(std::format("Tile {} has {} attributes, attributes.json lists {}",
-                                           GraphId(id), static_cast<uint32_t>(cab.header->num_attributes),
-                                           cab_tar.names.size()));
+      throw std::runtime_error(
+          std::format("Tile {} has {} attributes, attributes.json lists {}", GraphId(id),
+                      static_cast<uint32_t>(cab.header->num_attributes), cab_tar.names.size()));
     }
   }
   LOG_INFO("Custom attributes tar: {} tiles, {} attributes", cab_tar.tiles.size(),
