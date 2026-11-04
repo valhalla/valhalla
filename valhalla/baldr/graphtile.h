@@ -5,6 +5,7 @@
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/boundingcircle.h>
 #include <valhalla/baldr/complexrestriction.h>
+#include <valhalla/baldr/custom_attributes_tile.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -16,7 +17,6 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/predictedspeeds.h>
-#include <valhalla/baldr/custom_attributes_tile.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/traffictile.h>
@@ -153,10 +153,11 @@ public:
    * @param  graphid    GraphId (tileid and level)
    * @return nullptr if the tile could not be loaded. may throw
    */
-  static graph_tile_ptr Create(const std::string& tile_dir,
-                               const GraphId& graphid,
-                               std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr,
-                               std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
+  static graph_tile_ptr
+  Create(const std::string& tile_dir,
+         const GraphId& graphid,
+         std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr,
+         std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
 
   /**
    * Constructs with a given the graph Id, pointer to the tile data, and the
@@ -173,10 +174,11 @@ public:
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  static graph_tile_ptr Create(const GraphId& graphid,
-                               std::unique_ptr<const GraphMemory>&& memory,
-                               std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr,
-                               std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
+  static graph_tile_ptr
+  Create(const GraphId& graphid,
+         std::unique_ptr<const GraphMemory>&& memory,
+         std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr,
+         std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
 
   /**
    * Constructs a tile given a url for the tile using curl
@@ -188,18 +190,21 @@ public:
    * @param  range_size HTTP range offsete in case of a tar URL
    * @param  id_txt_path the file path to the tile_dir's id.txt
    * @param  id_checksum the (optional) expected checksum of the tileset
+   * @param  http_code set to the response's HTTP code, 0 if none
    * @return the graph tile or nullptr
    */
 
-  static graph_tile_ptr CacheTileURL(const std::string& tile_url,
-                                     const GraphId& graphid,
-                                     tile_getter_t* tile_getter,
-                                     const std::string& tile_dir,
-                                     uint64_t range_offset = 0,
-                                     uint64_t range_size = 0,
-                                     const std::filesystem::path& id_txt_path = "",
-                                     std::optional<uint64_t> id_checksum = std::nullopt,
-                                     std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
+  static graph_tile_ptr
+  CacheTileURL(const std::string& tile_url,
+               const GraphId& graphid,
+               tile_getter_t* tile_getter,
+               const std::string& tile_dir,
+               uint64_t range_offset = 0,
+               uint64_t range_size = 0,
+               const std::filesystem::path& id_txt_path = "",
+               std::optional<uint64_t> id_checksum = std::nullopt,
+               long* http_code = nullptr,
+               std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -218,14 +223,12 @@ public:
    * Gets the directory like filename suffix given the graphId
    * @param  graphid      Graph Id to construct filename.
    * @param  gzipped      Modifies the suffix if you expect gzipped file names
-   * @param  is_file_path Determines the 1000 separator to be used for file or URL access
    * @param  tiles        Allows passing a custom tile definition rather than pulling from static
    *                      hierarchy, which is useful for testing
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
   static std::string FileSuffix(const GraphId& graphid,
                                 const std::string& suffix = valhalla::baldr::SUFFIX_NON_COMPRESSED,
-                                bool is_file_path = true,
                                 const TileLevel* tiles = nullptr);
 
   /**
@@ -1132,8 +1135,10 @@ protected:
    * @return a pointer to a graphtile if it  has been successfully initialized with
    *         the uncompressed data, or nullptr
    */
-  static graph_tile_ptr DecompressTile(const GraphId& graphid, const std::vector<char>& compressed,
-                                       std::unique_ptr<const GraphMemory> custom_attributes_memory = nullptr);
+  static graph_tile_ptr
+  DecompressTile(const GraphId& graphid,
+                 const std::vector<char>& compressed,
+                 std::unique_ptr<const GraphMemory> custom_attributes_memory = nullptr);
 };
 
 } // namespace baldr

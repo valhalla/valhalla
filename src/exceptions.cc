@@ -85,6 +85,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {173, {173, "Failed to parse line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
     {174, {174, "Invalid tile coordinates", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_coords_invalid"}},
     {175, {175, "Exceeded max zoom level of", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_zoom_invalid"}},
+    {176, {176, "Exceeded maximum number of vertices for exclude_polygons", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_large_polygon"}},
+    {177, {177, "Polygon crosses antimeridian", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "polygon_parse_failed"}},
     {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -98,7 +100,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {230, {230, "Invalid DirectionsLeg_Maneuver_Type in method FormTurnInstruction", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_turn"}},
     {231, {231, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeTwoDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_two"}},
     {232, {232, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeThreeDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_three"}},
-    {233, {233, "Failed to edge walk line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},  
+    {233, {233, "Failed to edge walk line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},  // no longer used, replaced by warning code 216
     {234, {234, "Exceeded maximum allowed cost factor edges", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_many_cost_factor_edges"}},
     {299, {299, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {312, {312, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_parse_failed"}},
@@ -152,6 +154,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {213, R"(CostMatrix algorithm used, ignoring "matrix_locations")"},
   {214, R"(Distance exceeded max_timedep_distance for arrive_by, probably ignoring date_time)"},
   {215, R"(At least one location had no correlated edges, resorting to filtered edges)"},
+  {216, R"(Failed to edge walk linear cost factors, ignoring those at indices: )"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},

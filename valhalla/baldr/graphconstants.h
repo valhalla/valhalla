@@ -188,6 +188,9 @@ constexpr uint8_t kMaxBicycleNetwork = 15;
 // Maximum offset to edge information
 constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
 
+// Minimum length of an edge
+constexpr uint32_t kMinEdgeLength = 1;
+
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters
 
@@ -314,6 +317,7 @@ enum class Use : uint8_t {
                         // connected at one node to another edge.
   kLivingStreet = 10,   // Streets with preference towards bicyclists and pedestrians
   kServiceRoad = 11,    // Generic service road (not driveway, alley, parking aisle, etc.)
+  kCycleStreet = 12,    // Road with priority for cyclists
 
   // Bicycle specific uses
   kCycleway = 20,     // Dedicated bicycle path
@@ -331,6 +335,7 @@ enum class Use : uint8_t {
   kElevator = 33,
   kEscalator = 34,
   kPlatform = 35,
+  kLadder = 36, // Ladder
 
   // Rest/Service Areas
   kRestArea = 30,
@@ -369,12 +374,14 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
       {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
       {static_cast<uint8_t>(Use::kServiceRoad), "service_road"},
+      {static_cast<uint8_t>(Use::kCycleStreet), "cycle_street"},
       {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
       {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
       {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
       {static_cast<uint8_t>(Use::kFootway), "footway"},
       {static_cast<uint8_t>(Use::kElevator), "elevator"},
       {static_cast<uint8_t>(Use::kSteps), "steps"},
+      {static_cast<uint8_t>(Use::kLadder), "ladder"},
       {static_cast<uint8_t>(Use::kEscalator), "escalator"},
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
@@ -814,6 +821,7 @@ inline float GetOffsetForHeading(RoadClass road_class, Use use) {
     case Use::kMountainBike:
     case Use::kFootway:
     case Use::kSteps:
+    case Use::kLadder:
     case Use::kPath:
     case Use::kPedestrian:
     case Use::kBridleway: {
@@ -856,6 +864,11 @@ constexpr uint8_t kPredictedFlowMask = 4;
 constexpr uint8_t kCurrentFlowMask = 8;
 constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
+
+// Which restrictions a linear cost feature clears
+constexpr uint32_t kAllowNone = 0;
+constexpr uint32_t kAllowAll = std::numeric_limits<uint32_t>::max();
+
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint64_t kInvalidSecondsOfWeek =

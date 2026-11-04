@@ -154,6 +154,57 @@ TEST(Standalone, RetrieveNodeTrafficSignal) {
   EXPECT_FALSE(edges[1]["end_node"]["traffic_signal"].GetBool());
 }
 
+TEST(Standalone, NodeStopImpact) {
+  const std::string ascii_map = R"(
+    A---B---C
+        |
+    E---D
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"BD", {{"highway", "residential"}}},
+                            {"DE", {{"highway", "residential"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/stop_impact_node_attributes");
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const auto* AB = std::get<1>(gurka::findEdgeByNodes(reader, layout, "A", "B"));
+  const auto* BD = std::get<1>(gurka::findEdgeByNodes(reader, layout, "B", "D"));
+  const auto* DE = std::get<1>(gurka::findEdgeByNodes(reader, layout, "D", "E"));
+
+  // off by default
+  std::string trace_json;
+  [[maybe_unused]] auto api = gurka::do_action(valhalla::Options::trace_attributes, map,
+                                               {"A", "B", "D", "E"}, "auto", {}, {}, &trace_json);
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+  auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 3);
+  for (const auto& edge : edges) {
+    EXPECT_FALSE(edge["end_node"].HasMember("stop_impact"));
+  }
+
+  api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "D", "E"}, "auto",
+                         {{"/filters/action", "include"},
+                          {"/filters/attributes/0", "node.stop_impact"}},
+                         {}, &trace_json);
+  result.Parse(trace_json.c_str());
+  edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 3);
+
+  ASSERT_TRUE(edges[0]["end_node"].HasMember("stop_impact"));
+  EXPECT_EQ(edges[0]["end_node"]["stop_impact"].GetUint(), BD->stopimpact(AB->opp_local_idx()));
+  ASSERT_TRUE(edges[1]["end_node"].HasMember("stop_impact"));
+  EXPECT_EQ(edges[1]["end_node"]["stop_impact"].GetUint(), DE->stopimpact(BD->opp_local_idx()));
+  EXPECT_NE(edges[0]["end_node"]["stop_impact"].GetUint(),
+            edges[1]["end_node"]["stop_impact"].GetUint());
+
+  // no outgoing edge at the last node
+  EXPECT_FALSE(edges[2]["end_node"].HasMember("stop_impact"));
+}
+
 TEST(Standalone, SpeedTypes) {
   const std::string ascii_map = R"(
     A---B---C
@@ -605,4 +656,37 @@ TEST(Standalone, BackwardTraceOnOnewayEdge) {
   EXPECT_THROW(gurka::do_action(valhalla::Options::trace_attributes, map, {"4", "3", "2", "1"},
                                 "auto", {{"/elevation_interval", "30"}}),
                std::exception);
+}
+
+TEST(Standalone, DuplicateTracePointsEdgeIndex) {
+  const std::string ascii_map = R"(
+    A--1--B--2--C
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+  };
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/duplicate_trace_points");
+
+  std::string trace_json;
+  gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "1", "1", "2"}, "auto", {}, {},
+                   &trace_json, "");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+  ASSERT_FALSE(result.HasParseError());
+
+  ASSERT_EQ(result["edges"].GetArray().Size(), 2);
+
+  // the duplicates are interpolated onto AB, only the last point is matched onto BC
+  std::vector<uint64_t> edge_indexes;
+  for (const auto& point : result["matched_points"].GetArray()) {
+    ASSERT_TRUE(point.HasMember("edge_index"));
+    edge_indexes.push_back(point["edge_index"].GetUint64());
+  }
+  EXPECT_EQ(edge_indexes, (std::vector<uint64_t>{0, 0, 0, 1}));
 }

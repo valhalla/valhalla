@@ -3,6 +3,7 @@
 #include "baldr/tilehierarchy.h"
 
 #include <algorithm>
+#include <charconv>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
@@ -12,12 +13,15 @@ namespace valhalla {
 namespace baldr {
 
 // Get the tile Id given the full path to the file.
-GraphId GraphId::FromTilePath(const std::string& fname) {
+GraphId GraphId::FromTilePath(const std::filesystem::path& path) {
+  // generic_string normalizes to forward slash regardless of platform (windows accepts it too),
+  // so we only ever parse a single separator
+  const std::string fname = path.generic_string();
   std::unordered_set<std::string::value_type> allowed{
-      std::filesystem::path::preferred_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   };
   // we require slashes
-  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
+  auto pos = fname.find_last_of('/');
   if (pos == fname.npos) {
     throw std::runtime_error("Invalid tile path: " + fname);
   }
@@ -28,7 +32,7 @@ GraphId GraphId::FromTilePath(const std::string& fname) {
       break;
     }
   }
-  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
+  allowed.erase('/');
 
   // if you didnt reach the end and it wasnt a dot then this isnt valid
   if (pos != fname.size() && fname[pos] != '.') {
@@ -46,7 +50,7 @@ GraphId GraphId::FromTilePath(const std::string& fname) {
     }
 
     // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
+    if (pos == 0 || fname[pos - 1] == '/') {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if (dist != 3 && dist != 1) {
@@ -124,3 +128,18 @@ std::ostream& operator<<(std::ostream& os, const GraphId& id) {
 
 } // namespace baldr
 } // namespace valhalla
+
+namespace std {
+
+std::string to_string(const valhalla::baldr::GraphId& id) {
+  constexpr size_t kTextMaxSize = 20; // "7/4194303/2097151" is the longest a GraphId can print
+  char buf[kTextMaxSize];
+  char* pos = std::to_chars(buf, buf + kTextMaxSize, id.level()).ptr;
+  *pos++ = '/';
+  pos = std::to_chars(pos, buf + kTextMaxSize, id.tileid()).ptr;
+  *pos++ = '/';
+  pos = std::to_chars(pos, buf + kTextMaxSize, id.id()).ptr;
+  return {buf, pos};
+}
+
+} // namespace std

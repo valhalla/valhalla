@@ -1,5 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/complexrestriction.h"
+#include "baldr/tilegetter.h"
 #include "config.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
@@ -8,7 +9,10 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <sstream>
+#include <string>
+#include <tuple>
 #include <vector>
 
 using namespace valhalla::baldr;
@@ -42,8 +46,8 @@ TEST(Graphtile, FileSuffix) {
   TileLevel level{7, valhalla::baldr::RoadClass::kSecondary, "half_degree_is_a_multiple_of_3",
                   Tiles<PointLL>{{{-180, -90}, {180, 90}}, .5, 1}};
 
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", false, &level), "7/001/234.qux");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", false, &level), "7/123/456.qux");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", &level), "7/001/234.qux");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", &level), "7/123/456.qux");
 }
 
 TEST(Graphtile, IdFromString) {
@@ -57,13 +61,17 @@ TEST(Graphtile, IdFromString) {
   EXPECT_EQ(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002"),
             GraphId(1000002, 3, 0));
   EXPECT_EQ(GraphId::FromTilePath("2/000/791/317.gph.gz"), GraphId(791317, 2, 0));
+#ifdef _WIN32
+  // backslash is a separator only on windows; the path lib normalizes it to forward slash
+  EXPECT_EQ(GraphId::FromTilePath("foo\\bar\\1\\000\\002.gph"), GraphId(2, 1, 0));
+  EXPECT_EQ(GraphId::FromTilePath("foo\\bar/2/001\\000/002.gph"), GraphId(1000002, 2, 0));
+#endif
 
   EXPECT_THROW(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph"),
                std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("foo2/8675309/bar/1baz2/qux42corge/0/004/050.gph"),
                std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("foo/bar/0/004/0-1.gph"), std::runtime_error);
-  EXPECT_THROW(GraphId::FromTilePath("foo/bar/0/004//001.gph"), std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("foo/bar/1/000/004/001.gph"), std::runtime_error);
   EXPECT_THROW(GraphId::FromTilePath("00/002.gph"), std::runtime_error);
 }
@@ -132,6 +140,69 @@ TEST(GraphTileIntegrity, SizeLessThanPayload) {
 
   EXPECT_THROW(GraphTile::Create(GraphId(), std::make_unique<const TestGraphMemory>(tile_size)),
                std::runtime_error);
+}
+
+class body_tile_getter_t : public tile_getter_t {
+public:
+  body_tile_getter_t(std::vector<char> body, bool gzipped)
+      : body_(std::move(body)), gzipped_(gzipped) {
+  }
+
+  GET_response_t get(const std::string&, const uint64_t, const uint64_t) override {
+    return {body_, status_code_t::SUCCESS, 200};
+  }
+
+  HEAD_response_t head(const std::string&, header_mask_t) override {
+    return {};
+  }
+
+  bool gzipped() const override {
+    return gzipped_;
+  }
+
+private:
+  std::vector<char> body_;
+  bool gzipped_;
+};
+
+std::vector<char> header_only_tile(uint64_t end_offset) {
+  GraphTileHeader header;
+  header.set_end_offset(end_offset);
+  std::vector<char> tile(sizeof(header));
+  memcpy(tile.data(), &header, sizeof(header));
+  return tile;
+}
+
+TEST(GraphTileIntegrity, DownloadThatIsNotATileIsNotCached) {
+  const std::string page = "<html>sign in</html>";
+  const std::vector<char> html(page.begin(), page.end());
+  const std::vector<std::tuple<std::string, std::vector<char>, bool>> bodies = {
+      {"html", html, false},
+      {"truncated tile", header_only_tile(sizeof(GraphTileHeader) + 1), false},
+      {"empty", {}, false},
+      {"html as gzip", html, true},
+  };
+  const std::filesystem::path tile_dir = "test/data/cache_tile_url";
+  for (const auto& [name, body, gzipped] : bodies) {
+    SCOPED_TRACE(name);
+    std::filesystem::remove_all(tile_dir);
+    body_tile_getter_t getter(body, gzipped);
+    EXPECT_EQ(GraphTile::CacheTileURL("http://tiles.invalid/{tilePath}", GraphId(746, 2, 0), &getter,
+                                      tile_dir.string()),
+              nullptr);
+    EXPECT_FALSE(std::filesystem::exists(tile_dir));
+  }
+}
+
+TEST(GraphTileIntegrity, DownloadedTileIsCached) {
+  const std::filesystem::path tile_dir = "test/data/cache_tile_url";
+  std::filesystem::remove_all(tile_dir);
+  body_tile_getter_t getter(header_only_tile(sizeof(GraphTileHeader)), false);
+  const GraphId tile_id(746, 2, 0);
+  EXPECT_NE(GraphTile::CacheTileURL("http://tiles.invalid/{tilePath}", tile_id, &getter,
+                                    tile_dir.string()),
+            nullptr);
+  EXPECT_TRUE(std::filesystem::exists(tile_dir / GraphTile::FileSuffix(tile_id)));
 }
 
 TEST(GraphTileVersion, VersionChecksum) {

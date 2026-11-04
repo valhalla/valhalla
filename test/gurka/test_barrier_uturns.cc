@@ -1,7 +1,8 @@
 #include "gurka.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
+
+#include <format>
 
 using namespace valhalla;
 
@@ -45,15 +46,13 @@ TEST_F(BarrierUturns, break_thruough_waypoint_into_barrier) {
 
 // Test various algorithms with forced heading
 TEST_P(BarrierUturns, forced_heading_into_barrier_with_algorithm) {
-  const std::string& request =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s,"heading":180,"heading_tolerance":45},{"lat":%s,"lon":%s}],
+  const std::string& request = std::format(
+      R"({{"locations":[{{"lat":{:.6f},"lon":{:.6f},"heading":180,"heading_tolerance":45}},{{"lat":{:.6f},"lon":{:.6f}}}],
              "costing":"auto",
-             "date_time": { "type": %d, "value": "2020-10-30T09:00"},
-             "costing_options": { "auto": { "speed_types": ["constrained"]}}})") %
-       std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) %
-       std::to_string(map.nodes.at("F").lat()) % std::to_string(map.nodes.at("F").lng()) % GetParam())
-          .str();
+             "date_time": {{ "type": {}, "value": "2020-10-30T09:00"}},
+             "costing_options": {{ "auto": {{ "speed_types": ["constrained"]}}}}}})",
+      map.nodes.at("1").lat(), map.nodes.at("1").lng(), map.nodes.at("F").lat(),
+      map.nodes.at("F").lng(), GetParam());
   auto result1 = gurka::do_action(valhalla::Options::route, map, request);
   gurka::assert::raw::expect_path(result1, {"BD", "BD", "BC", "CF"});
 }

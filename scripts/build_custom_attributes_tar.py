@@ -15,12 +15,10 @@ The resulting tar contains:
 import argparse
 import io
 import json
-import os
 import random
 import struct
 import sys
 import tarfile
-from pathlib import Path
 
 
 # Offset of the uint64 that holds nodecount_ / directededgecount_ inside

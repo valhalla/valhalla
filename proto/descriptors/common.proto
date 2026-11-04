@@ -67,6 +67,9 @@ message SearchFilter {
   oneof has_level {
     float level = 9; // level to filter edges by
   }
+  oneof has_exclude_steps {
+    bool exclude_steps = 10; // whether to exclude steps from loki results [default = true for bicycle]
+  }
 }
 
 message PathEdge {

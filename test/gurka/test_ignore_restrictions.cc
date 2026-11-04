@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 using namespace valhalla;
 
 std::string get_access_mode(const std::string& costing_mode) {
@@ -342,10 +344,13 @@ TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestrictionWithMask) {
     expected_path = {"BC", "CD", "DE", "EF"};
   }
 
+  // tag can contain a colon (e.g. maxheight:forward) which is illegal in windows paths
+  std::string tag_dir = p.tag;
+  std::replace(tag_dir.begin(), tag_dir.end(), ':', '_');
   gurka::map map =
       gurka::buildtiles(layout, ways, {}, {},
                         VALHALLA_BUILD_DIR "test/data/destination_access_restrictions_" + p.costing +
-                            "_" + p.tag + "_" + (p.simple ? "simple" : "not_simple"),
+                            "_" + tag_dir + "_" + (p.simple ? "simple" : "not_simple"),
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
                          {"thor.costmatrix.allow_second_pass", "1"}});
 

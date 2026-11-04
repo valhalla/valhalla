@@ -456,6 +456,10 @@ components:
           type: boolean
           default: false
           description: Whether to exclude ferry routes.
+        exclude_steps:
+          type: boolean
+          description: > 
+            **BETA** Whether to exclude steps. Defaults to `true` for `bicycle` costing and `false` otherwise.
         exclude_closures:
           type: boolean
           default: true
@@ -1108,6 +1112,14 @@ components:
                 between 0 and 1. When the value is 0, there is no penalization of roads with different surface types; only bicycle speed on each surface is taken into account. 
                 As the value approaches 1, roads with poor surfaces for the bike are penalized heavier so that they are only taken if they significantly improve travel time. 
                 When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points.
+            steps_factor:
+              type: number
+              minimum: 0.1
+              maximum: 100000
+              default: 8
+              description: >
+                **BETA**: A factor that multiplies the cost of steps or stairs, which are traversed at a pace of 1 km/h while carrying the bike.
+                1 only accounts for the slow pace, higher values avoid steps more strongly and lower values favor them.
             bss_return_cost:
               type: number
               minimum: 0
@@ -1360,6 +1372,14 @@ components:
                 and 1 indicates that streets not marked as truck routes should be avoided. This information is derived from 
                 the `hgv=designated` tag. Note that even with values near 1, there is no guarantee the returned route will include 
                 streets marked as truck routes.
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
 
     MotorcycleCostingOptions:
       allOf:
@@ -1396,6 +1416,14 @@ components:
               description: >
                 Top speed the vehicle can go in km/h. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 km/h. The default value is 140 km/h 
                 for motorcycle. 
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
 
     MotorScooterCostingOptions:
       allOf:
@@ -1430,6 +1458,14 @@ components:
                 A rider's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable
                 riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding 
                 the best path.
+            use_distance:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0
+              description: >
+                A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account 
+                and 1 only distance. A factor of 0.5 will weigh them roughly equally.  
 
     TransitFilterOptions:
       type: object

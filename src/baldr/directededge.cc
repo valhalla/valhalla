@@ -53,12 +53,6 @@ uint32_t OverwriteBit(const uint32_t dst, const uint32_t src, const uint32_t pos
 namespace valhalla {
 namespace baldr {
 
-// Default constructor
-DirectedEdge::DirectedEdge() {
-  memset(this, 0, sizeof(DirectedEdge));
-  weighted_grade_ = 6;
-}
-
 // Sets the end node of this directed edge.
 void DirectedEdge::set_endnode(const GraphId& endnode) {
   endnode_ = endnode.value;
@@ -115,18 +109,14 @@ void DirectedEdge::set_sign(const bool exit) {
 // ------------------------- Geographic attributes ------------------------- //
 
 // Sets the length of the edge in meters.
-void DirectedEdge::set_length(const uint32_t length, bool should_error) {
+void DirectedEdge::set_length(const double length) {
   if (length > kMaxEdgeLength) {
-    if (should_error) {
-      // Consider this a catastrophic error.
-      LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
-      throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
-    }
-    LOG_WARN("Exceeding max. edge length: " + std::to_string(length));
-    length_ = kMaxEdgeLength;
-  } else {
-    length_ = length;
+    // Consider this a catastrophic error.
+    LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
   }
+
+  length_ = std::max(static_cast<uint32_t>(std::round(length)), kMinEdgeLength);
 }
 
 // Sets the weighted_grade factor (0-15) for the edge.

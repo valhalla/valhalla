@@ -18,7 +18,6 @@
 
 using namespace valhalla;
 
-zmq::context_t context;
 const std::string tile_remote_address{"127.0.0.1:48004"};
 const std::string tile_source_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
 const auto tar_path = tile_source_dir + "/tiles.tar";
@@ -130,6 +129,23 @@ TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
                 ::testing::HasSubstr("Remote tar file has changed, service is unavailable"));
     EXPECT_EQ(e.code, 446);
   } catch (...) { FAIL() << "should've raised a valhalla_exception_t"; }
+
+  tyr::actor_t actor(make_conf("url_tile_cache", false, true, ""), true);
+  const std::string a = R"({"lat":52.09620,"lon":5.11909})";
+  const std::string b = R"({"lat":52.09585,"lon":5.11934})";
+  try {
+    actor.matrix(R"({"sources":[)" + a + R"(],"targets":[)" + b + R"(],"costing":"auto"})");
+    ADD_FAILURE() << "Expected valhalla_exception_t";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 446); }
+  try {
+    actor.isochrone(R"({"locations":[)" + a + R"(],"costing":"auto","contours":[{"time":1}]})");
+    ADD_FAILURE() << "Expected valhalla_exception_t";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 446); }
+  try {
+    actor.trace_route(R"({"shape":[)" + a + "," + b +
+                      R"(],"costing":"auto","shape_match":"map_snap"})");
+    ADD_FAILURE() << "Expected valhalla_exception_t";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 446); }
 }
 
 TEST_F(HttpTilesWithCache, test_tar_user_pw) {
@@ -341,7 +357,7 @@ public:
     valhalla::test_tile_server_t server;
     server.set_url(tile_remote_address);
     server.set_user_pw(user_pw);
-    server.start(tile_source_dir, tar_path, context);
+    server.start(tile_source_dir, tar_path, valhalla::zmq_context());
   }
 
   void TearDown() override {

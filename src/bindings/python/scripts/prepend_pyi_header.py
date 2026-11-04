@@ -19,7 +19,7 @@ HEADER = """\
 
 def main(path: str) -> None:
     pyi = Path(path)
-    text = pyi.read_text()
+    text = pyi.read_text(encoding="utf-8")
     # Strip an existing banner so changes to HEADER propagate: the leading run
     # of '#' comment lines plus one trailing blank separator.
     if text.lstrip().startswith(HEADER_MARK):
@@ -31,8 +31,8 @@ def main(path: str) -> None:
             i += 1
         text = "".join(lines[i:])
     new_text = HEADER + text.lstrip("\n")
-    if pyi.read_text() != new_text:
-        pyi.write_text(new_text)
+    if pyi.read_text(encoding="utf-8") != new_text:
+        pyi.write_text(new_text, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

@@ -127,16 +127,16 @@ TEST(Standalone, FerryEdges) {
 
     const auto big = gurka::findEdge(reader, layout, "DEF", "F");
     EXPECT_EQ(std::get<1>(big)->speed(), 6);
-    EXPECT_EQ(std::get<1>(big)->length(), 6199); // merged
+    EXPECT_EQ(std::get<1>(big)->length(), 6200); // merged
     EXPECT_EQ(std::get<3>(big)->speed(), 6);
-    EXPECT_EQ(std::get<3>(big)->length(), 6199);
+    EXPECT_EQ(std::get<3>(big)->length(), 6200);
 
     // Small and big edges got merged.
     const auto small = gurka::findEdge(reader, layout, "DEF", "D");
     EXPECT_EQ(std::get<1>(small)->speed(), 6);
-    EXPECT_EQ(std::get<1>(small)->length(), 6199);
+    EXPECT_EQ(std::get<1>(small)->length(), 6200);
     EXPECT_EQ(std::get<3>(small)->speed(), 6);
-    EXPECT_EQ(std::get<3>(small)->length(), 6199);
+    EXPECT_EQ(std::get<3>(small)->length(), 6200);
     EXPECT_EQ(std::get<0>(big), std::get<2>(small));
     EXPECT_EQ(std::get<2>(big), std::get<0>(small));
   }

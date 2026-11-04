@@ -49,7 +49,7 @@ TEST_F(incident_loading, read_tile) {
 
   // failed to parse
   {
-    std::ofstream f(filepath);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::binary);
     f << "bazqux";
   }
   ASSERT_FALSE(testable_singleton::read_tile(filepath)) << " should fail to parse the file";
@@ -57,7 +57,7 @@ TEST_F(incident_loading, read_tile) {
   // empty but valid
   IncidentsTile t;
   {
-    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
     f << t.SerializeAsString();
   }
   ASSERT_FALSE(testable_singleton::read_tile(filepath)) << " should ignore empty tile";
@@ -69,7 +69,7 @@ TEST_F(incident_loading, read_tile) {
   loc->set_end_offset(1);
   loc->set_metadata_index(0);
   {
-    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
     f << t.SerializeAsString();
   }
   ASSERT_TRUE(testable_singleton::read_tile(filepath)) << " should return valid tile";
@@ -125,6 +125,9 @@ TEST_F(incident_loading, watch) {
            {"incident_dir", scratch_dir, {baldr::GraphId{11, 1, 0}, baldr::GraphId{66, 2, 0}}},
            {"incident_log", log_path, {baldr::GraphId{11, 1, 0}, baldr::GraphId{66, 2, 0}}},
        }) {
+    // reset between configs
+    std::filesystem::remove_all(scratch_dir);
+
     // build config
     boost::property_tree::ptree config;
     config.put(std::get<0>(conf), std::get<1>(conf).string());
@@ -282,10 +285,7 @@ TEST_F(incident_loading, watch) {
           EXPECT_TRUE(state->cache[box_cars]) << " should be not null";
           EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars]))
               << " should be equivalent";
-          // remove the dir and quit before next update
-          std::filesystem::remove_all(scratch_dir);
-          EXPECT_TRUE(!std::filesystem::exists(scratch_dir))
-              << " Could not teardown incident loading test dir";
+          // quit before next update; the dir is reset below, after the log mapping closes
           return true;
         }
         default:
