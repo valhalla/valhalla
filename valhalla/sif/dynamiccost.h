@@ -791,11 +791,9 @@ public:
   }
 
   /**
-   * Checks the edge's mode-specific access restrictions, such as height, width, length, weight,
-   * axle load, axle count and hazmat, against this costing's vehicle. Unlike
-   * EvaluateRestrictions it needs no predecessor or time: time-dependent restrictions are not
-   * evaluated, and restrictions that exempt destinations are skipped, since a location may lie on
-   * such an edge legitimately. Used to filter location candidates.
+   * Checks the edge's access restrictions (height, weight, etc.) against the vehicle, for
+   * filtering location candidates. Time-dependent restrictions and those that exempt
+   * destinations are skipped.
    *
    * @param edge    The edge to check
    * @param tile    The edge's tile

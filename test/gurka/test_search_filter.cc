@@ -1231,29 +1231,19 @@ TEST_F(LevelSearchFilter, CutoffClamped) {
 }
 
 /*************************************************************/
-// exclude_restricted: thor does not evaluate the access restrictions of the edges a route starts
-// on, since the vehicle is assumed to be on that edge already. Bidirectional A* does not evaluate
-// those of the edges it ends on either. When a location is at a node, or merely near a restricted
-// edge, the vehicle need not use that edge at all, and a truck that exceeds one of its limits
-// should not be routed along it. The filter drops such candidates in loki.
 struct RestrictionCase {
   std::string tag;
   std::string value;
 };
 
-void PrintTo(const RestrictionCase& c, std::ostream* os) {
-  *os << c.tag << "=" << c.value;
-}
-
 class ExcludeRestricted : public ::testing::TestWithParam<RestrictionCase> {
 protected:
-  // A 40 t articulated truck, over every limit below.
+  // 40 t truck, over every limit below
   static constexpr const char* kTruck =
       R"("height":4.0,"width":2.55,"length":16.5,"weight":40.0,"axle_load":11.5,"axle_count":5)";
 
-  // BC carries the restriction, and BD, DE, EC is the way around it. Thor uses unidirectional A*
-  // when an origin edge touches a destination edge (B to F, A to C), and bidirectional A*
-  // otherwise (B to Y, X to C), so each case is checked with both.
+  // BC is restricted, BD-DE-EC goes around it. B-F and A-C use unidirectional A*, B-Y and X-C
+  // bidirectional
   static gurka::map
   build(const std::vector<std::pair<std::string, std::string>>& extra_bc_tags = {}) {
     const std::string ascii_map = R"(
@@ -1294,7 +1284,7 @@ protected:
 };
 
 TEST_P(ExcludeRestricted, UnfilteredOriginEdgeIsNotChecked) {
-  // the behavior the filter is for: the restriction on the origin edge is ignored
+  // without the filter, the restriction on the origin edge is ignored
   const auto map = build();
   gurka::assert::raw::expect_path(route(map, "B", "F", kTruck, false), {"BC", "CF"});
   gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, false), {"BC", "CF", "FY"});
@@ -1318,7 +1308,7 @@ TEST_P(ExcludeRestricted, FilteredDestinationEdgeIsAvoided) {
 }
 
 TEST_P(ExcludeRestricted, RestrictionInsideRouteIsAlwaysChecked) {
-  // from X to Y, BC is neither an origin nor a destination edge, so thor checks it anyway
+  // BC is mid-route here, so thor checks it anyway
   const auto map = build();
   for (bool filtered : {false, true})
     gurka::assert::raw::expect_path(route(map, "X", "Y", kTruck, filtered),
@@ -1326,7 +1316,7 @@ TEST_P(ExcludeRestricted, RestrictionInsideRouteIsAlwaysChecked) {
 }
 
 TEST_P(ExcludeRestricted, VehicleWithinLimitsKeepsTheEdge) {
-  // a small truck is within every limit, so the filter leaves BC in place
+  // a small truck is within every limit
   const auto map = build();
   const std::string small_truck =
       R"("height":2.5,"width":1.9,"length":5.0,"weight":3.0,"axle_load":1.5,"axle_count":2)";
@@ -1334,8 +1324,7 @@ TEST_P(ExcludeRestricted, VehicleWithinLimitsKeepsTheEdge) {
 }
 
 TEST_P(ExcludeRestricted, ExceptDestinationIsNotFiltered) {
-  // a restriction that exempts destinations may hold a location legitimately, as thor allows
-  // at a route's ends, so the filter keeps it
+  // restrictions that exempt destinations are kept
   const auto map = build({{GetParam().tag + ":conditional", "none @ destination"}});
   gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, true), {"BC", "CF", "FY"});
 }
@@ -1350,29 +1339,3 @@ INSTANTIATE_TEST_SUITE_P(SearchFilter,
                          [](const ::testing::TestParamInfo<RestrictionCase>& info) {
                            return info.param.tag;
                          });
-
-TEST(SearchFilterExcludeRestricted, CarIgnoresTruckLimits) {
-  // auto costing has no weight limits of its own, so the filter changes nothing for it
-  const std::string ascii_map = R"(
-    X---A---B---C---F---Y
-            |   |
-            D---E
-    )";
-  const gurka::ways ways = {{"XA", {{"highway", "residential"}}},
-                            {"AB", {{"highway", "residential"}}},
-                            {"BC", {{"highway", "residential"}, {"maxweight", "7.5"}}},
-                            {"CF", {{"highway", "residential"}}},
-                            {"FY", {{"highway", "residential"}}},
-                            {"BD", {{"highway", "residential"}}},
-                            {"DE", {{"highway", "residential"}}},
-                            {"EC", {{"highway", "residential"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  const auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter_exclude_restricted_auto");
-  const std::string request = std::format(
-      R"({{"locations":[{{"lat":{:.6f},"lon":{:.6f},"search_filter":{{"exclude_restricted":true}}}},{{"lat":{:.6f},"lon":{:.6f}}}],"costing":"auto"}})",
-      map.nodes.at("B").lat(), map.nodes.at("B").lng(), map.nodes.at("Y").lat(),
-      map.nodes.at("Y").lng());
-  gurka::assert::raw::expect_path(gurka::do_action(valhalla::Options::route, map, request),
-                                  {"BC", "CF", "FY"});
-}

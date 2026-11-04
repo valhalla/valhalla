@@ -461,9 +461,7 @@ components:
           default: false
           description: >
             Whether to exclude roads whose access restrictions the costing's vehicle exceeds, such as height, width,
-            length, weight, axle load, axle count and hazmat. These restrictions are not checked on the edges a route
-            starts on, nor by bidirectional A* on those it ends on, so without this filter a route that starts or ends
-            next to such a road can use it. Time-dependent restrictions and those that exempt destinations are not
+            length, weight, axle load, axle count and hazmat. If true, routes can't start or end on such edges. Time-dependent restrictions and those that exempt destinations are not
             considered.
         exclude_steps:
           type: boolean
