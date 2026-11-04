@@ -136,7 +136,9 @@ def build(
                 tiles_skipped += 1
                 continue
 
-            cab_bytes = _build_cab(tile_id, edge_count, num_attributes, randomize, default_values, random_max)
+            cab_bytes = _build_cab(
+                tile_id, edge_count, num_attributes, randomize, default_values, random_max
+            )
             _add_bytes_to_tar(dst_tf, cab_path, cab_bytes)
             tiles_processed += 1
 
@@ -225,9 +227,7 @@ def main() -> None:
     tiles_tar = mjolnir.get("tile_extract")
     output_tar = mjolnir.get("custom_attributes_extract")
     if not tiles_tar or not output_tar:
-        parser.error(
-            "config must set both mjolnir.tile_extract and mjolnir.custom_attributes_extract"
-        )
+        parser.error("config must set both mjolnir.tile_extract and mjolnir.custom_attributes_extract")
 
     names = [n.strip() for n in args.attribute_names.split(",") if n.strip()]
     if not names:
@@ -252,9 +252,7 @@ def main() -> None:
     else:
         print(f"Edge values        : {default_values}", file=sys.stderr)
 
-    build(
-        tiles_tar, output_tar, num_attributes, args.random, default_values, names, args.random_max
-    )
+    build(tiles_tar, output_tar, num_attributes, args.random, default_values, names, args.random_max)
 
 
 if __name__ == "__main__":

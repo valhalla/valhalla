@@ -43,9 +43,9 @@ constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
 constexpr uint8_t MAX_CONGESTION_VAL = 63;
 
 struct TrafficSpeed {
-  uint64_t overall_encoded_speed
-      : 7;                     // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
-  uint64_t encoded_speed1 : 7; // 0-255kph in 2kph resolution (access with `get_speed(0)`)
+  uint64_t
+      overall_encoded_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
+  uint64_t encoded_speed1 : 7;   // 0-255kph in 2kph resolution (access with `get_speed(0)`)
   uint64_t encoded_speed2 : 7;
   uint64_t encoded_speed3 : 7;
   uint64_t breakpoint1 : 8;   // position = length * (breakpoint1 / 255)

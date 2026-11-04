@@ -55,6 +55,36 @@ After writing the initial archive, replace individual `.cab` entries in-place to
 
 **Important:** Always regenerate or update the sidecar from the same tile set it was built against. Edge indices are stable within a tileset version but will shift if tiles are rebuilt from new OSM data. There is no cross-check between the sidecar and the main tileset at load time; a mismatched sidecar silently applies values to the wrong edges.
 
+## Filling the sidecar from OSM tags
+
+`valhalla_add_custom_attributes` writes values derived from OSM way tags into an existing sidecar. It reads the graph and the sidecar from the config (`mjolnir.tile_extract` or `mjolnir.tile_dir`, and `mjolnir.custom_attributes_extract`), then streams the ways of the PBF the graph was built from.
+
+```bash
+valhalla_add_custom_attributes -c valhalla.json \
+    --tag-keys surface,smoothness \
+    --lua surface_quality.lua \
+    planet.osm.pbf
+```
+
+Ways that have none of the `--tag-keys` are skipped before Lua runs. The tags of the remaining ways are passed to `custom_attributes(tags)`, which returns a table of attribute name → number. Each value is written to every edge of that way. Names missing from `attributes.json` are reported once and ignored, and attributes the script does not return keep their current value.
+
+```lua
+local smoothness = { excellent = 0.0, good = 0.1, intermediate = 0.3, bad = 0.6, very_bad = 1.0 }
+
+function custom_attributes(tags)
+  local v = smoothness[tags["smoothness"]]
+  if v then
+    return { surface_quality = v }
+  end
+  if tags["surface"] == "gravel" then
+    return { surface_quality = 0.5 }
+  end
+  return nil
+end
+```
+
+Way edges come from `collect_way_edges` (`valhalla/mjolnir/way_edges_processor.h`), so only edges with forward auto access get values. Shortcut edges are not written.
+
 ## Configuration
 
 Add only `custom_attributes_extract` to the `mjolnir` section of your config. Attribute names come from `attributes.json` inside the tar — no separate config entry is needed.
