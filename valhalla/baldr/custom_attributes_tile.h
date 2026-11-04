@@ -63,19 +63,18 @@ public:
     header_ = reinterpret_cast<const volatile CustomAttributesTileHeader*>(memory_->data);
 
     if (header_->edge_count != expected_edge_count) {
-      throw std::runtime_error(
-          "CustomAttributesTile: edge_count mismatch (expected=" +
-          std::to_string(expected_edge_count) + ", got=" + std::to_string(header_->edge_count) +
-          ")");
+      throw std::runtime_error("CustomAttributesTile: edge_count mismatch (expected=" +
+                               std::to_string(expected_edge_count) +
+                               ", got=" + std::to_string(header_->edge_count) + ")");
     }
 
     const size_t required_size = sizeof(CustomAttributesTileHeader) +
                                  static_cast<size_t>(header_->edge_count) *
                                      static_cast<size_t>(header_->num_attributes) * sizeof(float);
     if (memory_->size < required_size) {
-      throw std::runtime_error(
-          "CustomAttributesTile: memory too small for data (required=" +
-          std::to_string(required_size) + ", got=" + std::to_string(memory_->size) + ")");
+      throw std::runtime_error("CustomAttributesTile: memory too small for data (required=" +
+                               std::to_string(required_size) +
+                               ", got=" + std::to_string(memory_->size) + ")");
     }
 
     data_ =
@@ -112,9 +111,8 @@ public:
     const uint32_t n = header_->num_attributes;
     const size_t base = static_cast<size_t>(edge_index) * n;
     float sum = 0.0f;
-    const uint32_t count = static_cast<uint32_t>(weights.size()) < n
-                               ? static_cast<uint32_t>(weights.size())
-                               : n;
+    const uint32_t count =
+        static_cast<uint32_t>(weights.size()) < n ? static_cast<uint32_t>(weights.size()) : n;
     for (uint32_t i = 0; i < count; ++i) {
       sum += data_[base + i] * weights[i];
     }

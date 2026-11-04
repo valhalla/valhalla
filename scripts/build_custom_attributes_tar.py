@@ -52,18 +52,24 @@ def _tile_path_to_cab(path: str) -> str:
     raise ValueError(f"Unexpected tile suffix in path: {path!r}")
 
 
-def _build_cab(edge_count: int, num_attributes: int, randomize: bool,
-               default_values: list[float], random_max: float = 1.0) -> bytes:
+def _build_cab(
+    edge_count: int,
+    num_attributes: int,
+    randomize: bool,
+    default_values: list[float],
+    random_max: float = 1.0,
+) -> bytes:
     """Build binary .cab payload for one tile."""
     header = struct.pack("<II", edge_count, num_attributes)
     if randomize:
-        values = [random.uniform(0.0, random_max)
-                  for _ in range(edge_count * num_attributes)]
+        values = [random.uniform(0.0, random_max) for _ in range(edge_count * num_attributes)]
     else:
         # default_values has one entry per attribute; replicate across all edges
-        values = [default_values[a % len(default_values)]
-                  for _ in range(edge_count)
-                  for a in range(num_attributes)]
+        values = [
+            default_values[a % len(default_values)]
+            for _ in range(edge_count)
+            for a in range(num_attributes)
+        ]
     data = struct.pack(f"<{edge_count * num_attributes}f", *values)
     return header + data
 
@@ -74,9 +80,15 @@ def _add_bytes_to_tar(tf: tarfile.TarFile, name: str, data: bytes) -> None:
     tf.addfile(info, io.BytesIO(data))
 
 
-def build(valhalla_tar: str, output_tar: str, num_attributes: int, randomize: bool,
-          default_values: list[float], attribute_names: list[str],
-          random_max: float = 1.0) -> None:
+def build(
+    valhalla_tar: str,
+    output_tar: str,
+    num_attributes: int,
+    randomize: bool,
+    default_values: list[float],
+    attribute_names: list[str],
+    random_max: float = 1.0,
+) -> None:
     with tarfile.open(valhalla_tar, "r:*") as src_tf, tarfile.open(output_tar, "w:") as dst_tf:
         manifest = json.dumps(attribute_names, ensure_ascii=False).encode()
         _add_bytes_to_tar(dst_tf, "attributes.json", manifest)
@@ -104,8 +116,7 @@ def build(valhalla_tar: str, output_tar: str, num_attributes: int, randomize: bo
                 tiles_skipped += 1
                 continue
 
-            cab_bytes = _build_cab(edge_count, num_attributes, randomize,
-                                   default_values, random_max)
+            cab_bytes = _build_cab(edge_count, num_attributes, randomize, default_values, random_max)
             _add_bytes_to_tar(dst_tf, cab_path, cab_bytes)
             tiles_processed += 1
 
@@ -148,14 +159,14 @@ def main() -> None:
         type=str,
         required=True,
         help="Comma-separated attribute names written to attributes.json inside the tar "
-             "(e.g. 'scenic,surface_quality'). The service reads names from there; "
-             "no need to set mjolnir.custom_attributes_names in the config.",
+        "(e.g. 'scenic,surface_quality'). The service reads names from there; "
+        "no need to set mjolnir.custom_attributes_names in the config.",
     )
     parser.add_argument(
         "--random",
         action="store_true",
         help="Assign random float values in [0.0, --random-max) to each slot instead of "
-             "the default value",
+        "the default value",
     )
     parser.add_argument(
         "--random-max",
@@ -168,7 +179,7 @@ def main() -> None:
         type=str,
         default="0.0",
         help="Comma-separated default float values, one per attribute (default: 0.0). "
-             "Fewer values than the number of names repeats the last value.",
+        "Fewer values than the number of names repeats the last value.",
     )
     # Legacy single-value alias kept for backwards compatibility with old invocations.
     parser.add_argument(
@@ -200,8 +211,9 @@ def main() -> None:
     else:
         print(f"Edge values        : {default_values}", file=sys.stderr)
 
-    build(args.tiles_tar, args.output, num_attributes, args.random, default_values, names,
-          args.random_max)
+    build(
+        args.tiles_tar, args.output, num_attributes, args.random, default_values, names, args.random_max
+    )
 
 
 if __name__ == "__main__":

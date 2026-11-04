@@ -1,6 +1,7 @@
 #include "baldr/custom_attributes_tile.h"
 
 #include <gtest/gtest.h>
+
 #include <span>
 
 namespace {
@@ -103,8 +104,8 @@ TEST(CustomAttributesTile, SingleAttributeBackwardsCompatible) {
   CustomAttributesTile tile(std::move(memory), 1);
 
   EXPECT_FLOAT_EQ(tile.value(0, 0), 0.7f);
-  EXPECT_FLOAT_EQ(tile.value(1, 0), 0.0f);  // out-of-bounds edge
-  EXPECT_FLOAT_EQ(tile.value(0, 1), 0.0f);  // out-of-bounds attribute
+  EXPECT_FLOAT_EQ(tile.value(1, 0), 0.0f); // out-of-bounds edge
+  EXPECT_FLOAT_EQ(tile.value(0, 1), 0.0f); // out-of-bounds attribute
 }
 
 TEST(CustomAttributesTile, OutOfBoundsReturnsZero) {
@@ -126,7 +127,7 @@ TEST(CustomAttributesTile, OutOfBoundsReturnsZero) {
       std::make_unique<UnmanagedGraphMemory>(reinterpret_cast<char*>(&testdata), sizeof(TestTile));
   CustomAttributesTile tile(std::move(memory), 1);
 
-  EXPECT_FLOAT_EQ(tile.value(0), 0.7f);     // default attr_index=0
+  EXPECT_FLOAT_EQ(tile.value(0), 0.7f); // default attr_index=0
   EXPECT_FLOAT_EQ(tile.value(1), 0.0f);
   EXPECT_FLOAT_EQ(tile.value(999), 0.0f);
 }

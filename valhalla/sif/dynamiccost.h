@@ -1443,8 +1443,6 @@ public:
   }
 
 protected:
-
-
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
