@@ -144,6 +144,20 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
+  // Inject custom attribute names from the tar descriptor into every Costing entry so the
+  // costing constructor can map use_custom_attributes request keys to .cab column indices.
+  const auto& ca_names = reader->GetCustomAttributeNames();
+  if (!ca_names.empty()) {
+    for (auto& costing_pair : *options.mutable_costings()) {
+      auto* costing = &costing_pair.second;
+      if (costing->custom_attribute_names_size() == 0) {
+        for (const auto& name : ca_names) {
+          costing->add_custom_attribute_names(name);
+        }
+      }
+    }
+  }
+
   const auto& costing_str = Costing_Enum_Name(options.costing_type());
   try {
     // For the begin and end of multimodal we expect you to be walking

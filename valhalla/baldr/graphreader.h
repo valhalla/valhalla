@@ -469,6 +469,10 @@ public:
     return !tile_extract_->traffic_tiles.empty();
   }
 
+  const std::vector<std::string>& GetCustomAttributeNames() const {
+    return tile_extract_->custom_attribute_names;
+  }
+
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
@@ -988,8 +992,11 @@ protected:
     // TODO: dont remove constness, and actually make graphtile read only?
     std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
     std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
+    std::unordered_map<uint64_t, std::pair<char*, size_t>> custom_attributes_tiles;
     std::shared_ptr<midgard::tar> archive;
     std::shared_ptr<midgard::tar> traffic_archive;
+    std::shared_ptr<midgard::tar> custom_attributes_archive;
+    std::vector<std::string> custom_attribute_names;
     uint64_t checksum;
   };
   std::shared_ptr<const tile_extract_t> tile_extract_;

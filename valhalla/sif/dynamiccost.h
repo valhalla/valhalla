@@ -24,7 +24,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro
 
@@ -1476,6 +1478,16 @@ protected:
   double min_linear_cost_factor_;
   bool has_allowed_linear_edges_{false};
 
+  // Ordered attribute names from Costing.custom_attribute_names (filled by ParseAutoCostOptions
+  // from mjolnir.custom_attributes_names). Position i corresponds to column i in the .cab sidecar.
+  std::vector<std::string> custom_attribute_names_;
+
+public:
+  const std::vector<std::string>& custom_attribute_names() const {
+    return custom_attribute_names_;
+  }
+
+protected:
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.

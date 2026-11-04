@@ -227,6 +227,9 @@ DynamicCost::DynamicCost(const Costing& costing,
   }
 
   SetCostFactorEdges(costing.options());
+  for (const auto& name : costing.custom_attribute_names()) {
+    custom_attribute_names_.push_back(name);
+  }
 }
 
 DynamicCost::~DynamicCost() {
