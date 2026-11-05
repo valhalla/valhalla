@@ -1,7 +1,9 @@
 ## UNRELEASED
 * **Removed**
 * **Enhancement**
+   * UPDATED: timezone database to 2026f [#6454](https://github.com/valhalla/valhalla/pull/6454)
    * CHANGED: replace `memset` with C++20 default member initializers for bitfields in `DirectedEdge`, `NodeInfo`, and `GraphTileHeader`; drop empty default constructors where possible [#6128](https://github.com/valhalla/valhalla/issues/6128)
+   * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
 * **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
@@ -16,6 +18,8 @@
    * FIXED: don't skip past end time in frequency based transit schedules [#6399](https://github.com/valhalla/valhalla/pull/6399)
    * FIXED: matrix, isochrone and trace requests report errors like 446 instead of "No suitable edges near location" (171), as route already does [#6416](https://github.com/valhalla/valhalla/pull/6416)
    * FIXED: Fix assertion when decrementing end iterator of empty vector [#6388](https://github.com/valhalla/valhalla/pull/6388)
+   * FIXED: Vietnamese arrival phrases use "bên trái/bên phải" for the destination side [#6447](https://github.com/valhalla/valhalla/pull/6447)
+   * FIXED: Apply configured CostMatrix hierarchy limits to `/optimized_route` [#6441](https://github.com/valhalla/valhalla/issues/6441)
    * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
