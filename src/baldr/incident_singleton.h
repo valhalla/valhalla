@@ -150,8 +150,19 @@ protected:
         LOG_ERROR("Incident watcher failed to add incident tile to cache");
       }
     }
+
+// libc++ doesn't have `std::atomic<std::shared_ptr>`
+// https://github.com/llvm/llvm-project/issues/99980
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     // atomically store the tile shared_ptr, could be actually nullptr when there are no incidents
     std::atomic_store_explicit(&found->second, tile, std::memory_order_release);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
     LOG_DEBUG("Incident watcher " + std::string(tile ? "loaded " : "unloaded ") +
               std::to_string(tile_id));
     return true;
@@ -356,7 +367,18 @@ public:
     if (found == singleton.state->cache.cend()) {
       return {};
     }
+
+// libc++ doesn't have `std::atomic<std::shared_ptr>`
+// https://github.com/llvm/llvm-project/issues/99980
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     auto tile = std::atomic_load_explicit(&found->second, std::memory_order_acquire);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
     return tile;
   }
 };
