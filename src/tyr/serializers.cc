@@ -269,6 +269,7 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape) {
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer) {
   writer("type", "LineString");
   writer.start_array("coordinates");
+  const auto before = writer.get_precision();
   writer.set_precision(tyr::kCoordinatePrecision);
   for (const auto& p : shape) {
     writer.start_array();
@@ -276,13 +277,13 @@ void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer
     writer(p.lat());
     writer.end_array();
   }
-  writer.set_precision(kDefaultPrecision);
+  writer.set_precision(before);
   writer.end_array();
 }
 
 void street_hint(const valhalla::Location& location, rapidjson::writer_wrapper_t& writer) {
   writer("street_hint", location.street_hint());
-  const auto before = writer.writer.GetMaxDecimalPlaces();
+  const auto before = writer.get_precision();
   writer.set_precision(kDefaultPrecision);
   writer("street_hint_score", location.correlation().street_hint_score());
   writer("street_hint_matched", location.correlation().street_hint_matched());
