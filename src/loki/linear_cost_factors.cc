@@ -20,13 +20,14 @@ void add_shortcut(GraphReader& reader,
                   valhalla::Costing_Options* options,
                   valhalla::CostFactorEdge* cost_factor) {
 
-  // for ignoring access restrictions, we don't care if it's
-  // a partial, it applies to the whole edge
-  if (cost_factor->ignore_access_restrictions()) {
-    auto* exclude_edge = options->add_exclude_edges();
-    exclude_edge->set_id(shortcut.value);
+  // allow applies to the whole edge
+  if (cost_factor->allow_types() && cost_factor->factor() != 1.0) {
+    auto* e = options->add_cost_factor_edges();
+    e->set_id(shortcut.value);
+    e->set_allow_types(cost_factor->allow_types());
     return;
   }
+
   GraphId edge = static_cast<GraphId>(cost_factor->id());
   graph_tile_ptr tile = reader.GetGraphTile(shortcut);
   // it's part of a shortcut
@@ -65,23 +66,26 @@ void add_shortcut(GraphReader& reader,
 namespace valhalla {
 namespace loki {
 
-void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
-                           const sif::TravelMode& mode,
-                           GraphReader& reader,
-                           valhalla::Options& options,
-                           double min_allowed_factor,
-                           uint64_t max_allowed_edges) {
+std::vector<size_t> add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
+                                          const sif::TravelMode& mode,
+                                          GraphReader& reader,
+                                          valhalla::Options& options,
+                                          double min_allowed_factor,
+                                          uint64_t max_allowed_edges) {
   Costing_Options* costing_options =
       options.mutable_costings()->find(options.costing_type())->second.mutable_options();
 
   // keep track of how many edges we're adding
   uint64_t edge_count = 0;
+  std::vector<size_t> failed_lines;
 
-  for (auto& line : *options.mutable_cost_factor_lines()) {
+  for (int line_idx = 0; line_idx < options.cost_factor_lines_size(); ++line_idx) {
+    auto& line = *options.mutable_cost_factor_lines(line_idx);
     std::vector<std::vector<PathInfo>> legs;
     if (!RouteMatcher::FormPath(mode_costing, mode, reader, line, false, /* use_shortcuts=*/true,
                                 legs)) {
-      throw valhalla_exception_t{233};
+      failed_lines.push_back(line_idx);
+      continue;
     }
     for (const auto& leg : legs) {
       for (size_t i = 0; i < leg.size(); ++i) {
@@ -95,7 +99,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
-          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+          e->set_allow_types(line.allow_types());
           for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
               e->set_start(edge.percent_along());
@@ -129,7 +133,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+              e->set_allow_types(line.allow_types());
               e->set_start(start);
               e->set_end(end);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
@@ -144,7 +148,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-          e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+          e->set_allow_types(line.allow_types());
           e->set_start(0.);
           e->set_end(1.);
 
@@ -156,7 +160,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
               e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
-              e->set_ignore_access_restrictions(line.ignore_access_restrictions());
+              e->set_allow_types(line.allow_types());
               e->set_start(0);
               e->set_end(1);
             }
@@ -173,6 +177,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
       }
     }
   }
+  return failed_lines;
 }
 
 } // namespace loki

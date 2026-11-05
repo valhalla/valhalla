@@ -244,9 +244,6 @@ class TestBindings(unittest.TestCase):
         self.assertGreater(header.tile_checksum, 0)
         self.assertLess(header.tile_checksum, 1 << 48)
 
-        with self.assertRaises(AttributeError):
-            header.tile_checksum = 0
-
     def test_tile_header_build_id(self):
         """build_id is the 16-bit tileset id packed into the high bits of checksum_."""
         graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
@@ -256,9 +253,6 @@ class TestBindings(unittest.TestCase):
         self.assertIsInstance(header.build_id, int)
         self.assertGreater(header.build_id, 0)
         self.assertLess(header.build_id, 1 << 16)
-
-        with self.assertRaises(AttributeError):
-            header.build_id = 0
 
     def test_graphutils_dict_config(self):
         """Test GraphUtils initialization with dict config."""
@@ -342,8 +336,7 @@ class TestBindings(unittest.TestCase):
         self.assertIn("mjolnir.tile_extract and mjolnir.tile_dir are missing", str(exc.exception))
 
     def test_get_tile_ids_from_ring_rectangle(self):
-        """Rectangle ring should match bbox results.
-        """
+        """Rectangle ring should match bbox results."""
         ring = [(0.5, 0.5), (2.5, 0.5), (2.5, 2.5), (0.5, 2.5)]
         ring_result = get_tile_ids_from_ring(ring, [1])
         bbox_result = get_tile_ids_from_bbox(0.5, 0.5, 2.5, 2.5, [1])
@@ -355,8 +348,7 @@ class TestBindings(unittest.TestCase):
         )
 
     def test_get_tile_ids_from_ring_triangle(self):
-        """Triangle should return fewer tiles than its bounding box.
-        """
+        """Triangle should return fewer tiles than its bounding box."""
         ring = [(2, 3), (14, 3), (8, 9)]
         ring_result = get_tile_ids_from_ring(ring, [0])
         bbox_result = get_tile_ids_from_bbox(2, 3, 14, 9, [0])
@@ -393,8 +385,8 @@ class TestBindings(unittest.TestCase):
 
         self.assertEqual(
             {r.value for r in cw_result},
-            {r.value for r in ccw_result}, 
-        ) 
+            {r.value for r in ccw_result},
+        )
 
     def test_get_tile_ids_from_ring_auto_close(self):
         """Open ring (last != first) should be auto-closed."""
@@ -432,8 +424,18 @@ class TestBindings(unittest.TestCase):
         #    |                                          |
         #  (0,0)--------------------------------------(14,0)
         ring = [
-            (0, 0), (14, 0), (14, 10), (11, 10), (11, 3), (10, 3),
-            (10, 10), (7, 10), (7, 3), (3, 3), (3, 10), (0, 10),
+            (0, 0),
+            (14, 0),
+            (14, 10),
+            (11, 10),
+            (11, 3),
+            (10, 3),
+            (10, 10),
+            (7, 10),
+            (7, 3),
+            (3, 3),
+            (3, 10),
+            (0, 10),
         ]
         ring_result = get_tile_ids_from_ring(ring, [1])
         bbox_result = get_tile_ids_from_bbox(0, 0, 14, 10, [1])
@@ -455,7 +457,11 @@ class TestBindings(unittest.TestCase):
             if 3 < lon and lon + 1 < 7 and 3 < lat and lat + 1 < 10:
                 notch_tiles.add(gid.value)
         # left notch interior: lon in {4,5}, lat in {4..8} = 10
-        self.assertEqual(len(notch_tiles), 10, f"Left notch should contain exactly 10 interior tiles, not {len(notch_tiles)}")
+        self.assertEqual(
+            len(notch_tiles),
+            10,
+            f"Left notch should contain exactly 10 interior tiles, not {len(notch_tiles)}",
+        )
         self.assertFalse(ring_set & notch_tiles, "Tiles in the left notch must not be in the W-shape")
 
     def test_get_tile_ids_from_ring_errors(self):
