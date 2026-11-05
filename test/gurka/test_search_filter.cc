@@ -1242,8 +1242,8 @@ protected:
   static constexpr const char* kTruck =
       R"("height":4.0,"width":2.55,"length":16.5,"weight":40.0,"axle_load":11.5,"axle_count":5)";
 
-  // BC is restricted, BD-DE-EC goes around it. B-F and A-C use unidirectional A*, B-Y and X-C
-  // bidirectional
+  // BC is restricted, BD-DE-EC goes around it. Requests with a date_time use time-dependent
+  // forward A*, the others bidirectional A*
   static gurka::map
   build(const std::vector<std::pair<std::string, std::string>>& extra_bc_tags = {}) {
     const std::string ascii_map = R"(
@@ -1272,22 +1272,42 @@ protected:
                              const std::string& from,
                              const std::string& to,
                              const std::string& costing_options,
-                             bool exclude_restricted) {
+                             bool exclude_restricted,
+                             bool depart_at = false) {
+    const std::string date_time =
+        depart_at ? R"(,"date_time":{"type":1,"value":"2026-11-05T10:00"})" : "";
+    const std::string request = std::format(
+        R"({{"locations":[{},{}],"costing":"truck","costing_options":{{"truck":{{{}}}}}{}}})",
+        location(map, from, exclude_restricted), location(map, to, exclude_restricted),
+        costing_options, date_time);
+    return gurka::do_action(valhalla::Options::route, map, request);
+  }
+
+  static valhalla::Api matrix(const gurka::map& map,
+                              const std::string& from,
+                              const std::string& to,
+                              bool exclude_restricted) {
+    const std::string request = std::format(
+        R"({{"sources":[{}],"targets":[{}],"costing":"truck","costing_options":{{"truck":{{{}}}}}}})",
+        location(map, from, exclude_restricted), location(map, to, exclude_restricted), kTruck);
+    return gurka::do_action(valhalla::Options::sources_to_targets, map, request);
+  }
+
+  static std::string
+  location(const gurka::map& map, const std::string& node, bool exclude_restricted) {
     const std::string filter =
         exclude_restricted ? R"(,"search_filter":{"exclude_restricted":true})" : "";
-    const std::string request = std::format(
-        R"({{"locations":[{{"lat":{:.6f},"lon":{:.6f}{}}},{{"lat":{:.6f},"lon":{:.6f}{}}}],"costing":"truck","costing_options":{{"truck":{{{}}}}}}})",
-        map.nodes.at(from).lat(), map.nodes.at(from).lng(), filter, map.nodes.at(to).lat(),
-        map.nodes.at(to).lng(), filter, costing_options);
-    return gurka::do_action(valhalla::Options::route, map, request);
+    return std::format(R"({{"lat":{:.6f},"lon":{:.6f}{}}})", map.nodes.at(node).lat(),
+                       map.nodes.at(node).lng(), filter);
   }
 };
 
 TEST_P(ExcludeRestricted, UnfilteredOriginEdgeIsNotChecked) {
   // without the filter, the restriction on the origin edge is ignored
   const auto map = build();
-  gurka::assert::raw::expect_path(route(map, "B", "F", kTruck, false), {"BC", "CF"});
-  gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, false), {"BC", "CF", "FY"});
+  for (bool depart_at : {false, true})
+    gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, false, depart_at),
+                                    {"BC", "CF", "FY"});
 }
 
 TEST_P(ExcludeRestricted, UnfilteredDestinationEdgeIsNotCheckedByBidirectionalAStar) {
@@ -1297,14 +1317,16 @@ TEST_P(ExcludeRestricted, UnfilteredDestinationEdgeIsNotCheckedByBidirectionalAS
 
 TEST_P(ExcludeRestricted, FilteredOriginEdgeIsAvoided) {
   const auto map = build();
-  gurka::assert::raw::expect_path(route(map, "B", "F", kTruck, true), {"BD", "DE", "EC", "CF"});
-  gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, true), {"BD", "DE", "EC", "CF", "FY"});
+  for (bool depart_at : {false, true})
+    gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, true, depart_at),
+                                    {"BD", "DE", "EC", "CF", "FY"});
 }
 
 TEST_P(ExcludeRestricted, FilteredDestinationEdgeIsAvoided) {
   const auto map = build();
-  gurka::assert::raw::expect_path(route(map, "A", "C", kTruck, true), {"AB", "BD", "DE", "EC"});
-  gurka::assert::raw::expect_path(route(map, "X", "C", kTruck, true), {"XA", "AB", "BD", "DE", "EC"});
+  for (bool depart_at : {false, true})
+    gurka::assert::raw::expect_path(route(map, "X", "C", kTruck, true, depart_at),
+                                    {"XA", "AB", "BD", "DE", "EC"});
 }
 
 TEST_P(ExcludeRestricted, RestrictionInsideRouteIsAlwaysChecked) {
@@ -1327,6 +1349,12 @@ TEST_P(ExcludeRestricted, ExceptDestinationIsNotFiltered) {
   // restrictions that exempt destinations are kept
   const auto map = build({{GetParam().tag + ":conditional", "none @ destination"}});
   gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, true), {"BC", "CF", "FY"});
+}
+
+TEST_P(ExcludeRestricted, MatrixAvoidsFilteredOriginEdge) {
+  const auto map = build();
+  EXPECT_NEAR(matrix(map, "B", "Y", false).matrix().distances(0), 1200, 10);
+  EXPECT_NEAR(matrix(map, "B", "Y", true).matrix().distances(0), 1600, 10);
 }
 
 INSTANTIATE_TEST_SUITE_P(SearchFilter,
