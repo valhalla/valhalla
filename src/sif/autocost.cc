@@ -340,11 +340,11 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_;                            // Vehicle type: car (default), motorcycle, etc
-  float highway_factor_;                        // Factor applied when road is a motorway or trunk
-  float alley_factor_;                          // Avoid alleys factor.
-  float toll_factor_;                           // Factor applied when road has a toll
-  float surface_factor_;                        // How much the surface factors are applied.
+  VehicleType type_;     // Vehicle type: car (default), motorcycle, etc
+  float highway_factor_; // Factor applied when road is a motorway or trunk
+  float alley_factor_;   // Avoid alleys factor.
+  float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied.
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
@@ -400,7 +400,6 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   width_ = costing_options.width();
   length_ = costing_options.length();
   weight_ = costing_options.weight();
-
 }
 
 // Check if access is allowed on the specified edge.

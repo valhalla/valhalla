@@ -508,8 +508,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
     for (auto it = attrs->MemberBegin(); it != attrs->MemberEnd(); ++it) {
       if (it->name.IsString() && it->value.IsNumber()) {
         bool clamped = false;
-        (*weights)[it->name.GetString()] =
-            kCustomAttributeWeightRange(it->value.GetFloat(), clamped);
+        (*weights)[it->name.GetString()] = kCustomAttributeWeightRange(it->value.GetFloat(), clamped);
       }
     }
   }

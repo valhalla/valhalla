@@ -240,8 +240,8 @@ size_t aggregate_shortcuts(GraphReader& reader,
 
       float* out = cab->second.data + static_cast<size_t>(i) * n;
       for (size_t a = 0; a < n; ++a) {
-        out[a] = static_cast<float>(mode == ShortcutAggregation::kMean ? agg[a] / total_length
-                                                                       : agg[a]);
+        out[a] =
+            static_cast<float>(mode == ShortcutAggregation::kMean ? agg[a] / total_length : agg[a]);
       }
       touched_tiles.insert(tile_id.value);
       ++shortcuts;
