@@ -599,6 +599,33 @@ TEST(Standalone, RouteOnPrivateAccess) {
   }
 }
 
+TEST(Standalone, RouteOnUnknownAccess) {
+  // access=unknown routes through the same destonly_ path as access=private.
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+        A---B---C
+            |
+            D
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"BD", {{"highway", "track"}, {"access", "unknown"}}},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_route_on_unknown_access",
+                               build_config);
+
+  for (auto& c : costing) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, c);
+    gurka::assert::raw::expect_path(result, {"AB", "BD"});
+  }
+}
+
 TEST(Standalone, AccessForwardBackward) {
   constexpr double gridsize_metres = 10;
 
