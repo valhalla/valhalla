@@ -215,8 +215,7 @@ struct projector_wrapper {
         bin_center_approximator(bin_center), sq_radius(midgard::sqr(double(location->radius()))),
         sq_cutoff(midgard::sqr(double(location->search_cutoff()))),
         hint_radius(location->street_hint().empty() ? 0. : location->street_hint_radius()),
-        sq_hint_radius(midgard::sqr(hint_radius)), hint_threshold(location->street_hint_threshold()),
-        project(point_ll_from_latlng(location->ll())) {
+        sq_hint_radius(midgard::sqr(hint_radius)), project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -295,7 +294,6 @@ struct projector_wrapper {
   double sq_cutoff;
   double hint_radius;
   double sq_hint_radius;
-  float hint_threshold;
   // every candidate within the hint radius, regardless of what the radius rules keep
   std::vector<candidate_t> hint_pool;
 

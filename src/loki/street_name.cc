@@ -20,22 +20,16 @@ namespace {
 constexpr auto kDecomposeOpts =
     static_cast<utf8proc_option_t>(UTF8PROC_COMPAT | UTF8PROC_DECOMPOSE | UTF8PROC_CASEFOLD);
 
-constexpr std::pair<std::u32string_view, char32_t> kDigraphs[] = {
-    {U"ue", U'u'},
-    {U"oe", U'o'},
-    {U"ae", U'a'},
-};
-
 // only the diacritics of Latin, Greek and Cyrillic
 // the marks of other scripts carry their vowels
 bool is_diacritic(utf8proc_int32_t codepoint) {
   return codepoint >= 0x0300 && codepoint <= 0x036F;
 }
 
-// anything but letters, marks and numbers
-bool is_separator(utf8proc_int32_t codepoint) {
+// letters, marks and numbers
+bool is_alphanumeric(utf8proc_int32_t codepoint) {
   const auto category = utf8proc_category(codepoint);
-  return category < UTF8PROC_CATEGORY_LU || category > UTF8PROC_CATEGORY_NO;
+  return category >= UTF8PROC_CATEGORY_LU && category <= UTF8PROC_CATEGORY_NO;
 }
 
 // three codepoints of 21 bits each (top 11 bits of a valid codepoint are empty)
@@ -43,7 +37,7 @@ using gram_t = uint64_t;
 constexpr size_t kGramSize = 3;
 
 // sorted gram bag after normalization, each uint64_t representing one 3-char gram
-// stripped strings less than kGramSize long are ignored (e.g. refs)
+// normalized strings less than kGramSize long have none (e.g. refs)
 std::vector<gram_t> get_trigrams(const std::u32string& text) {
   std::vector<gram_t> grams;
   for (size_t i = 0; i + kGramSize <= text.size(); ++i)
@@ -114,17 +108,8 @@ float score_candidate(const std::vector<gram_t>& hint_grams,
 
 } // namespace
 
-normalized_t normalize_name(std::string_view name) {
-  normalized_t normalized;
-  std::u32string token;
-  auto close_token = [&normalized, &token]() {
-    if (token.empty())
-      return;
-    normalized.stripped += token;
-    normalized.tokens.push_back(std::move(token));
-    token.clear();
-  };
-
+std::u32string normalize_name(std::string_view name) {
+  std::u32string normalized;
   const auto* name_bytes = reinterpret_cast<const utf8proc_uint8_t*>(name.data());
   const auto name_size = static_cast<utf8proc_ssize_t>(name.size());
 
@@ -134,10 +119,9 @@ normalized_t normalize_name(std::string_view name) {
     utf8proc_int32_t codepoint;
     // see if we can read a unicode codepoint
     const auto name_bytes_read = utf8proc_iterate(name_bytes + i, name_size - i, &codepoint);
-    // a malformed byte separates tokens
+    // a malformed byte is dropped
     // we require utf-8 as input, but who knows what clients send..
     if (name_bytes_read < 0) {
-      close_token();
       ++i;
       continue;
     }
@@ -148,53 +132,36 @@ normalized_t normalize_name(std::string_view name) {
                                 nullptr);
     if (decomposed_count < 0 ||
         decomposed_count > static_cast<utf8proc_ssize_t>(std::size(decomposed))) {
-      close_token();
       i += name_bytes_read;
       continue;
     }
 
-    // start new token on non-alphanumeric codepoint and skip relevant diacritics
+    // drop anything non-alphanumeric and the relevant diacritics
     for (utf8proc_ssize_t j = 0; j < decomposed_count; ++j) {
-      if (is_separator(decomposed[j]))
-        close_token();
-      else if (!is_diacritic(decomposed[j])) {
-        // binary search to find a matching codepoint in the extra table which utf8proc doesn't
-        // decompose
-        const auto* entry = std::lower_bound(std::begin(kDecomposeExtra), std::end(kDecomposeExtra),
-                                             static_cast<char32_t>(decomposed[j]),
-                                             [](const auto& e, char32_t c) { return e.first < c; });
+      if (!is_alphanumeric(decomposed[j]) || is_diacritic(decomposed[j]))
+        continue;
 
-        if (entry == std::end(kDecomposeExtra) ||
-            entry->first != static_cast<char32_t>(decomposed[j]))
-          token.push_back(static_cast<char32_t>(decomposed[j]));
-        else
-          token.append(entry->second.begin(), entry->second.end());
-      }
+      // binary search to find a matching codepoint in the extra table which utf8proc doesn't
+      // decompose
+      const auto* found = std::lower_bound(std::begin(kDecomposeExtra), std::end(kDecomposeExtra),
+                                           static_cast<char32_t>(decomposed[j]),
+                                           [](const auto& e, char32_t c) { return e.first < c; });
+
+      if (found == std::end(kDecomposeExtra) || found->first != static_cast<char32_t>(decomposed[j]))
+        normalized.push_back(static_cast<char32_t>(decomposed[j]));
+      else
+        normalized.append(found->second.begin(), found->second.end());
     }
 
     i += name_bytes_read;
   }
-  close_token();
   return normalized;
-}
-
-normalized_t collapse_digraphs(const normalized_t& light) {
-  normalized_t collapsed;
-  collapsed.tokens = light.tokens;
-  for (auto& token : collapsed.tokens) {
-    for (const auto& [digraph, single] : kDigraphs) {
-      for (auto pos = token.find(digraph); pos != token.npos; pos = token.find(digraph, pos + 1))
-        token.replace(pos, digraph.size(), 1, single);
-    }
-    collapsed.stripped += token;
-  }
-  return collapsed;
 }
 
 // TODO: ref regime, evidence floor, surplus, retries
 std::vector<float> score(std::string_view hint, const std::vector<names_t>& pool) {
   std::vector<float> scores(pool.size(), 0.f);
-  const auto hint_grams = get_trigrams(normalize_name(hint).stripped);
+  const auto hint_grams = get_trigrams(normalize_name(hint));
   if (hint_grams.empty())
     return scores;
 
@@ -206,7 +173,7 @@ std::vector<float> score(std::string_view hint, const std::vector<names_t>& pool
     for (const auto& name : pool[i]) {
       auto [it, added] = document_by_name.try_emplace(name.first, pool_grams_unique.size());
       if (added)
-        pool_grams_unique.push_back(get_trigrams(normalize_name(name.first).stripped));
+        pool_grams_unique.push_back(get_trigrams(normalize_name(name.first)));
       cands_to_grams.emplace_back(i, it->second);
     }
   }

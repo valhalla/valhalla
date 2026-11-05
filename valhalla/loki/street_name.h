@@ -14,20 +14,9 @@ namespace street_name {
 // (name, is route number) as returned by EdgeInfo::GetNames(bool)
 using names_t = std::vector<std::pair<std::string, bool>>;
 
-// structure holding normalized strings
-struct normalized_t {
-  // word-bounded tokens, needed for generics & abbreviation rules
-  std::vector<std::u32string> tokens;
-  // stripped & normalized string, used for scoring
-  std::u32string stripped;
-};
-
-// lowercases, transliterates and splits on anything that isn't alphanumeric, used on both the hint
-// and the candidate pool names
-normalized_t normalize_name(std::string_view name);
-
-// the retry pass: collapses the digraphs people swap for the plain vowel, which loses information
-normalized_t collapse_digraphs(const normalized_t& light);
+// lowercases, transliterates and drops anything that isn't alphanumeric, which is what makes
+// `Hermannstraße` and `Hermann-Straße` the same string. Used on both the hint and the pool names
+std::u32string normalize_name(std::string_view name);
 
 // one score in [0, 1] per candidate, the max over its names. All candidates' names form the rarity
 // corpus, so a pool has to be scored as a whole.

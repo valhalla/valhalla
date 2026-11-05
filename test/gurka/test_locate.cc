@@ -9,6 +9,8 @@
 
 #include <gtest/gtest.h>
 
+#include <set>
+
 using namespace valhalla;
 using namespace valhalla::gurka;
 using namespace valhalla::midgard;
@@ -433,6 +435,130 @@ TEST_F(Search, EdgeSnapCutoffJustWithinReach) {
   auto dist = near_c.Distance(edge_pt);
   auto api = do_locate(near_c, [dist](valhalla::Location& loc) { loc.set_search_cutoff(dist + 10); });
   EXPECT_GT(edge_count(api), 0);
+}
+
+class StreetHint : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static gurka::nodelayout layout;
+
+  static void SetUpTestSuite() {
+    // 1 is 10 m from CD, 20 m from the island GH, 30 m from EF and 40 m from AB
+    const std::string ascii_map = R"(
+        A-----------B
+        |           |
+        |  G-----H  |
+        |           |
+        |     1     |
+        C-----------D
+        |           |
+        E-----------F
+    )";
+
+    const gurka::ways ways = {
+        {"AB", {{"highway", "residential"}, {"name", "Bergstraße"}}},
+        {"GH", {{"highway", "residential"}, {"name", "Bergstraße"}}},
+        {"CD", {{"highway", "residential"}, {"name", "Burgstraße"}}},
+        {"EF", {{"highway", "residential"}, {"name", "Bahnhofstraße"}}},
+        {"ACE", {{"highway", "residential"}, {"name", "Schulweg"}}},
+        {"BDF", {{"highway", "residential"}, {"name", "Kirchweg"}}},
+    };
+
+    layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_street_hint");
+  }
+
+  static Api do_locate(const std::string& hint,
+                       const std::function<void(valhalla::Location&)>& mod = {}) {
+    Api request;
+    auto* options = request.mutable_options();
+    options->set_action(Options::locate);
+    auto* loc = options->add_locations();
+    loc->mutable_ll()->set_lat(layout.at("1").lat());
+    loc->mutable_ll()->set_lng(layout.at("1").lng());
+    // the whole map is below the default reachability
+    loc->set_minimum_reachability(0);
+    loc->set_street_hint(hint);
+    if (mod)
+      mod(*loc);
+
+    tyr::actor_t actor(map.config);
+    actor.locate("", nullptr, &request);
+    return request;
+  }
+
+  static std::set<uint64_t> get_locate_edge_ids(const Api& api, bool filtered = false) {
+    const auto& correlation = api.options().locations(0).correlation();
+    std::set<uint64_t> ids;
+    for (const auto& e : (filtered ? correlation.filtered_edges() : correlation.edges()))
+      ids.insert(e.graph_id());
+    return ids;
+  }
+
+  static std::set<uint64_t> get_way_edge_ids(const std::string& from, const std::string& to) {
+    GraphReader reader(map.config.get_child("mjolnir"));
+    return {std::get<0>(gurka::findEdgeByNodes(reader, layout, from, to)).value,
+            std::get<0>(gurka::findEdgeByNodes(reader, layout, to, from)).value};
+  }
+};
+
+gurka::map StreetHint::map = {};
+gurka::nodelayout StreetHint::layout = {};
+
+TEST_F(StreetHint, NoHintSnapsToClosest) {
+  EXPECT_EQ(get_locate_edge_ids(do_locate("")), get_way_edge_ids("C", "D"));
+}
+
+TEST_F(StreetHint, HintBeatsDistance) {
+  const auto api = do_locate("Bahnhofstr");
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("E", "F"));
+  // what's in filtered edges is equal to no-hint unfiltered edges
+  EXPECT_EQ(get_locate_edge_ids(api, true), get_locate_edge_ids(do_locate("")));
+}
+
+TEST_F(StreetHint, HintWithoutMatchKeepsBaseline) {
+  const auto api = do_locate("Hauptstr");
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
+  EXPECT_TRUE(get_locate_edge_ids(api, true).empty());
+}
+
+TEST_F(StreetHint, HintOutsideRadiusKeepsBaseline) {
+  const auto api =
+      do_locate("Bahnhofstr", [](valhalla::Location& loc) { loc.set_street_hint_radius(5); });
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
+}
+
+TEST_F(StreetHint, HintBelowThresholdKeepsBaseline) {
+  // shares only `bahnhof` with Bahnhofstraße, which is half its weight
+  EXPECT_EQ(get_locate_edge_ids(do_locate("Bahnhofplatz")), get_way_edge_ids("C", "D"));
+  const auto api =
+      do_locate("Bahnhofplatz", [](valhalla::Location& loc) { loc.set_street_hint_threshold(0.4f); });
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("E", "F"));
+}
+
+TEST_F(StreetHint, HintTakesClosestBestMatch) {
+  EXPECT_EQ(get_locate_edge_ids(do_locate("Bergstr")), get_way_edge_ids("G", "H"));
+}
+
+TEST_F(StreetHint, HintSkipsUnreachableBestMatch) {
+  // the island GH can't reach 3 nodes, so the next best match stands in
+  const auto api =
+      do_locate("Bergstr", [](valhalla::Location& loc) { loc.set_minimum_reachability(3); });
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("A", "B"));
+}
+
+TEST_F(StreetHint, RouteStartsOnHintedStreet) {
+  const std::unordered_map<std::string, std::string> reach{
+      {"/locations/0/minimum_reachability", "0"},
+      {"/locations/1/minimum_reachability", "0"},
+  };
+  auto result = gurka::do_action(Options::route, map, {"1", "B"}, "auto", reach);
+  gurka::assert::raw::expect_path(result, {"Burgstraße", "Kirchweg"});
+
+  auto hinted = reach;
+  hinted["/locations/0/street_hint"] = "Bahnhofstr";
+  result = gurka::do_action(Options::route, map, {"1", "B"}, "auto", hinted);
+  gurka::assert::raw::expect_path(result, {"Bahnhofstraße", "Kirchweg", "Kirchweg"});
 }
 
 TEST(locate, basic_properties) {

@@ -6,93 +6,72 @@ using namespace valhalla::loki::street_name;
 
 namespace {
 
-TEST(StreetName, NormalizeSplitsOnNonAlphanumerics) {
+TEST(StreetName, NormalizeDropsNonAlphanumerics) {
   const auto hyphen = normalize_name("Primus-Truber Straße");
-  EXPECT_EQ(hyphen.tokens, (std::vector<std::u32string>{U"primus", U"truber", U"strasse"}));
-  EXPECT_EQ(hyphen.stripped, U"primustruberstrasse");
-
-  EXPECT_EQ(normalize_name("Primus Truber Straße").stripped, hyphen.stripped);
-  EXPECT_EQ(normalize_name("Primus-Truber-Straße").stripped, hyphen.stripped);
-  EXPECT_EQ(normalize_name("St. John's (Rd)/2").stripped, U"stjohnsrd2");
+  EXPECT_EQ(hyphen, U"primustruberstrasse");
+  EXPECT_EQ(normalize_name("Primus Truber Straße"), hyphen);
+  EXPECT_EQ(normalize_name("Primus-Truber-Straße"), hyphen);
+  EXPECT_EQ(normalize_name("St. John's (Rd)/2"), U"stjohnsrd2");
 }
 
 TEST(StreetName, NormalizeIgnoresCompounding) {
-  const auto glued = normalize_name("Hermannstraße");
-  const auto split = normalize_name("Hermann Straße");
-  EXPECT_EQ(glued.tokens.size(), 1u);
-  EXPECT_EQ(split.tokens.size(), 2u);
-  EXPECT_EQ(glued.stripped, split.stripped);
+  EXPECT_EQ(normalize_name("Hermannstraße"), normalize_name("Hermann Straße"));
 }
 
 TEST(StreetName, NormalizeTransliterates) {
-  EXPECT_EQ(normalize_name("Łąkowa").stripped, U"lakowa");
-  EXPECT_EQ(normalize_name("Nørregade").stripped, U"norregade");
-  EXPECT_EQ(normalize_name("Þingholtsstræti").stripped, U"thingholtsstraeti");
-  EXPECT_EQ(normalize_name("Ulica Świętokrzyska").stripped, U"ulicaswietokrzyska");
-  EXPECT_EQ(normalize_name("Çarşı Caddesi").stripped, U"carsicaddesi");
+  EXPECT_EQ(normalize_name("Łąkowa"), U"lakowa");
+  EXPECT_EQ(normalize_name("Nørregade"), U"norregade");
+  EXPECT_EQ(normalize_name("Þingholtsstræti"), U"thingholtsstraeti");
+  EXPECT_EQ(normalize_name("Ulica Świętokrzyska"), U"ulicaswietokrzyska");
+  EXPECT_EQ(normalize_name("Çarşı Caddesi"), U"carsicaddesi");
 }
 
 TEST(StreetName, NormalizeFoldsCase) {
-  EXPECT_EQ(normalize_name("УЛИЦА Ленина").stripped, normalize_name("улица ленина").stripped);
-  EXPECT_EQ(normalize_name("ΟΔΟΣ").stripped, normalize_name("οδος").stripped);
-  EXPECT_EQ(normalize_name("Ɛɓɔ").stripped, normalize_name("ƐƁƆ").stripped);
+  EXPECT_EQ(normalize_name("УЛИЦА Ленина"), normalize_name("улица ленина"));
+  EXPECT_EQ(normalize_name("ΟΔΟΣ"), normalize_name("οδος"));
+  EXPECT_EQ(normalize_name("Ɛɓɔ"), normalize_name("ƐƁƆ"));
 }
 
 TEST(StreetName, NormalizeStripsDiacriticsAcrossScripts) {
-  EXPECT_EQ(normalize_name("Οδός").stripped, normalize_name("οδος").stripped);
-  EXPECT_EQ(normalize_name("Ёлочная").stripped, normalize_name("елочная").stripped);
+  EXPECT_EQ(normalize_name("Οδός"), normalize_name("οδος"));
+  EXPECT_EQ(normalize_name("Ёлочная"), normalize_name("елочная"));
 }
 
 TEST(StreetName, NormalizeKeepsVowelMarks) {
-  EXPECT_EQ(normalize_name("กิ").stripped, U"กิ");
-  EXPECT_EQ(normalize_name("चि").stripped, U"चि");
-  EXPECT_EQ(normalize_name("中山路").stripped, U"中山路");
+  EXPECT_EQ(normalize_name("กิ"), U"กิ");
+  EXPECT_EQ(normalize_name("चि"), U"चि");
+  EXPECT_EQ(normalize_name("中山路"), U"中山路");
 }
 
 TEST(StreetName, NormalizeCompatibilityForms) {
-  EXPECT_EQ(normalize_name("Ｍａｉｎ").stripped, U"main");
-  EXPECT_EQ(normalize_name("ﬁeld").stripped, U"field");
+  EXPECT_EQ(normalize_name("Ｍａｉｎ"), U"main");
+  EXPECT_EQ(normalize_name("ﬁeld"), U"field");
 }
 
-TEST(StreetName, NormalizeUnicodePunctuationSeparates) {
-  const std::vector<std::u32string> expected{U"hans", U"sachs"};
-  EXPECT_EQ(normalize_name("Hans–Sachs").tokens, expected);
-  EXPECT_EQ(normalize_name("Hans’Sachs").tokens, expected);
-  EXPECT_EQ(normalize_name("Hans\u00A0Sachs").tokens, expected);
+TEST(StreetName, NormalizeDropsUnicodePunctuation) {
+  EXPECT_EQ(normalize_name("Hans–Sachs"), U"hanssachs");
+  EXPECT_EQ(normalize_name("Hans’Sachs"), U"hanssachs");
+  EXPECT_EQ(normalize_name("Hans\u00A0Sachs"), U"hanssachs");
 }
 
 TEST(StreetName, NormalizeEmpty) {
-  EXPECT_TRUE(normalize_name("").tokens.empty());
-  EXPECT_TRUE(normalize_name(" - / ").stripped.empty());
+  EXPECT_TRUE(normalize_name("").empty());
+  EXPECT_TRUE(normalize_name(" - / ").empty());
 }
 
 TEST(StreetName, NormalizeMalformedUtf8) {
-  const std::vector<std::u32string> expected{U"a", U"b"};
   EXPECT_EQ(normalize_name("a\xFF"
-                           "b")
-                .tokens,
-            expected);
+                           "b"),
+            U"ab");
   // truncated two byte sequence at the end
-  EXPECT_EQ(normalize_name("a\xC3").stripped, U"a");
+  EXPECT_EQ(normalize_name("a\xC3"), U"a");
 }
 
-TEST(StreetName, CollapseDigraphs) {
-  // what's typed three ways only converges in the retry pass
-  EXPECT_EQ(normalize_name("Müller").stripped, U"muller");
-  EXPECT_EQ(normalize_name("Mueller").stripped, U"mueller");
-  EXPECT_EQ(collapse_digraphs(normalize_name("Mueller")).stripped, U"muller");
-  EXPECT_EQ(collapse_digraphs(normalize_name("Müller")).stripped, U"muller");
-
-  const auto expected = collapse_digraphs(normalize_name("Österbergstraße")).stripped;
-  EXPECT_EQ(expected, U"osterbergstrasse");
-  EXPECT_EQ(collapse_digraphs(normalize_name("Osterbergstrasse")).stripped, expected);
-  EXPECT_EQ(collapse_digraphs(normalize_name("Oesterbergstrasse")).stripped, expected);
-}
-
-TEST(StreetName, CollapseDigraphsKeepsTokens) {
-  const auto collapsed = collapse_digraphs(normalize_name("Österberg Straße"));
-  EXPECT_EQ(collapsed.tokens, (std::vector<std::u32string>{U"osterberg", U"strasse"}));
-  EXPECT_EQ(collapsed.stripped, U"osterbergstrasse");
+TEST(StreetName, NormalizeKeepsDigraphs) {
+  // an umlaut loses its diacritic, a typed digraph stays as it is
+  EXPECT_EQ(normalize_name("Müller"), U"muller");
+  EXPECT_EQ(normalize_name("Mueller"), U"mueller");
+  EXPECT_EQ(normalize_name("Österbergstraße"), U"osterbergstrasse");
 }
 
 names_t names(std::initializer_list<std::string> names) {
