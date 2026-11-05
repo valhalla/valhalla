@@ -2,6 +2,7 @@
 #include "baldr/custom_attributes_tile.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "mjolnir/way_edges_processor.h"
@@ -11,9 +12,11 @@
 #include <osmium/osm/way.hpp>
 #include <rapidjson/document.h>
 
+#include <algorithm>
 #include <ctime>
 #include <filesystem>
 #include <format>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 #include <unordered_map>
@@ -157,12 +160,107 @@ struct WritableCustomAttributesTar {
   }
 };
 
+// Sets every attribute of each shortcut from the base edges it supersedes. Returns the number of
+// shortcuts written.
+size_t aggregate_shortcuts(GraphReader& reader,
+                           WritableCustomAttributesTar& cab_tar,
+                           ShortcutAggregation mode,
+                           std::unordered_set<uint64_t>& touched_tiles) {
+  const size_t n = cab_tar.names.size();
+  const double init = mode == ShortcutAggregation::kMin   ? std::numeric_limits<double>::max()
+                      : mode == ShortcutAggregation::kMax ? std::numeric_limits<double>::lowest()
+                                                          : 0.0;
+  std::vector<double> agg(n);
+  size_t shortcuts = 0, failed = 0;
+
+  for (const auto& tile_id : reader.GetTileSet()) {
+    if (tile_id.level() >= TileHierarchy::levels().back().level) {
+      continue;
+    }
+    const auto cab = cab_tar.tiles.find(tile_id.value);
+    if (cab == cab_tar.tiles.end()) {
+      continue;
+    }
+    if (reader.OverCommitted()) {
+      reader.Trim();
+    }
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    if (!tile) {
+      continue;
+    }
+
+    const uint32_t edge_count = std::min<uint32_t>(tile->header()->directededgecount(),
+                                                   cab->second.header->directed_edge_count);
+    GraphId shortcut_id = tile_id;
+    for (uint32_t i = 0; i < edge_count; ++i, ++shortcut_id) {
+      if (!tile->directededge(i)->is_shortcut()) {
+        continue;
+      }
+      const auto base_ids = reader.RecoverShortcut(shortcut_id);
+      if (base_ids.size() == 1 && base_ids.front() == shortcut_id) {
+        ++failed;
+        continue;
+      }
+
+      std::fill(agg.begin(), agg.end(), init);
+      double total_length = 0.0;
+      for (const auto& base_id : base_ids) {
+        const auto base_cab = cab_tar.tiles.find(base_id.tile_base().value);
+        if (base_cab == cab_tar.tiles.end() ||
+            base_id.id() >= base_cab->second.header->directed_edge_count) {
+          continue;
+        }
+        const auto* base_edge = reader.directededge(base_id);
+        if (!base_edge) {
+          continue;
+        }
+        const double length = base_edge->length();
+        const float* values = base_cab->second.data + static_cast<size_t>(base_id.id()) * n;
+        for (size_t a = 0; a < n; ++a) {
+          switch (mode) {
+            case ShortcutAggregation::kMean:
+              agg[a] += values[a] * length;
+              break;
+            case ShortcutAggregation::kMin:
+              agg[a] = std::min(agg[a], static_cast<double>(values[a]));
+              break;
+            case ShortcutAggregation::kMax:
+              agg[a] = std::max(agg[a], static_cast<double>(values[a]));
+              break;
+            case ShortcutAggregation::kNone:
+              break;
+          }
+        }
+        total_length += length;
+      }
+      if (total_length <= 0.0) {
+        ++failed;
+        continue;
+      }
+
+      float* out = cab->second.data + static_cast<size_t>(i) * n;
+      for (size_t a = 0; a < n; ++a) {
+        out[a] = static_cast<float>(mode == ShortcutAggregation::kMean ? agg[a] / total_length
+                                                                       : agg[a]);
+      }
+      touched_tiles.insert(tile_id.value);
+      ++shortcuts;
+    }
+  }
+
+  if (failed) {
+    LOG_WARN("{} shortcuts could not be recovered or had no base edge values", failed);
+  }
+  return shortcuts;
+}
+
 } // namespace
 
 size_t add_custom_attributes(const boost::property_tree::ptree& config,
                              const std::vector<std::string>& input_files,
                              const std::vector<std::string>& tag_keys,
-                             const std::string& lua_script) {
+                             const std::string& lua_script,
+                             ShortcutAggregation shortcuts) {
   const auto tar_path = config.get_optional<std::string>("mjolnir.custom_attributes_extract");
   if (!tar_path) {
     throw std::runtime_error("mjolnir.custom_attributes_extract is not set");
@@ -192,7 +290,7 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
            cab_tar.names.size());
 
   GraphReader reader(config.get_child("mjolnir"));
-  const auto ways_edges = collect_way_edges(reader);
+  const auto ways_edges = collect_way_edges(reader, "", kAllAccess);
   LOG_INFO("Collected edges for {} ways", ways_edges.size());
 
   size_t ways_passed = 0, values_written = 0, invalid_entries = 0, edges_missing = 0;
@@ -246,6 +344,12 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
       }
     }
     pbf.close();
+  }
+
+  if (shortcuts != ShortcutAggregation::kNone) {
+    LOG_INFO("Aggregating shortcut values from their base edges");
+    const auto count = aggregate_shortcuts(reader, cab_tar, shortcuts, touched_tiles);
+    LOG_INFO("Wrote values for {} shortcuts", count);
   }
 
   const auto now = static_cast<uint64_t>(std::time(nullptr));

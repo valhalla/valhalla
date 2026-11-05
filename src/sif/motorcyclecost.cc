@@ -444,7 +444,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = kDensityFactor[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
-  factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+  factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
+            CustomAttributesFactor(edgeid, tile);
   if (edge->toll()) {
     factor += toll_factor_;
   }

@@ -83,7 +83,9 @@ function custom_attributes(tags)
 end
 ```
 
-Way edges come from `collect_way_edges` (`valhalla/mjolnir/way_edges_processor.h`), so only edges with forward auto access get values. Shortcut edges are not written.
+Way edges come from `collect_way_edges` (`valhalla/mjolnir/way_edges_processor.h`) with `kAllAccess`, so every edge with forward access for any mode gets values.
+
+After the ways are written, every shortcut edge gets each attribute aggregated from the base edges it supersedes, chosen with `--shortcuts`: `mean` (default, weighted by base edge length), `min`, `max`, or `none` to leave shortcuts untouched. Without shortcut values, routes that use shortcuts on levels 0 and 1 ignore the custom attributes there.
 
 ## Configuration
 

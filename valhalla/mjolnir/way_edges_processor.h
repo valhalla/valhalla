@@ -1,5 +1,6 @@
 #pragma once
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 
@@ -21,10 +22,13 @@ struct EdgeAndDirection {
  *
  * @param reader GraphReader to access graph data
  * @param filename Optional file path for additional edge information
+ * @param access_mask Only edges with forward access for any of these modes are collected
  * @return Map of way IDs to their associated edges and directions
  */
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
-collect_way_edges(baldr::GraphReader& reader, const std::string& filename = "");
+collect_way_edges(baldr::GraphReader& reader,
+                  const std::string& filename = "",
+                  uint32_t access_mask = baldr::kAutoAccess);
 
 } // namespace mjolnir
 } // namespace valhalla

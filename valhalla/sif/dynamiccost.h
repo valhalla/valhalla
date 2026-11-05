@@ -1290,6 +1290,19 @@ public:
 
 protected:
   /**
+   * Returns the weighted sum of the edge's custom attributes, to be added to the edge factor.
+   * Returns 0 if the request sets no custom attribute weights or the tile has no sidecar data.
+   */
+  float CustomAttributesFactor(const baldr::GraphId& edgeid,
+                               const baldr::graph_tile_ptr& tile) const {
+    if (custom_attribute_weights_.empty()) {
+      return 0.0f;
+    }
+    const auto* cat = tile->custom_attributes_tile();
+    return cat ? cat->weighted_sum(edgeid.id(), custom_attribute_weights_) : 0.0f;
+  }
+
+  /**
    * Returns the averaged factor for an edge fraction based on user provided custom factors
    * along linear features. If no custom factors are present for an edge, returns 1.
    */
@@ -1481,6 +1494,8 @@ protected:
   // Ordered attribute names from Costing.custom_attribute_names (filled by ParseAutoCostOptions
   // from mjolnir.custom_attributes_names). Position i corresponds to column i in the .cab sidecar.
   std::vector<std::string> custom_attribute_names_;
+  // Request weights per attribute position, empty if all are 0
+  std::vector<float> custom_attribute_weights_;
 
 public:
   const std::vector<std::string>& custom_attribute_names() const {

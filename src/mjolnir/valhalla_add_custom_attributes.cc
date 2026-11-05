@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 int main(int argc, char** argv) {
@@ -18,6 +19,7 @@ int main(int argc, char** argv) {
   std::vector<std::string> input_files;
   std::vector<std::string> tag_keys;
   std::string lua_path;
+  std::string shortcuts = "mean";
 
   try {
     // clang-format off
@@ -36,6 +38,8 @@ int main(int argc, char** argv) {
       ("k,tag-keys", "Comma-separated OSM tag keys, ways with none of them are skipped",
         cxxopts::value<std::vector<std::string>>(tag_keys))
       ("l,lua", "Path to the Lua script", cxxopts::value<std::string>(lua_path))
+      ("s,shortcuts", "How shortcut edges get values from their base edges: mean (length-weighted), "
+        "min, max or none", cxxopts::value<std::string>(shortcuts)->default_value("mean"))
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
@@ -59,6 +63,18 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  const std::unordered_map<std::string, valhalla::mjolnir::ShortcutAggregation> modes = {
+      {"none", valhalla::mjolnir::ShortcutAggregation::kNone},
+      {"mean", valhalla::mjolnir::ShortcutAggregation::kMean},
+      {"min", valhalla::mjolnir::ShortcutAggregation::kMin},
+      {"max", valhalla::mjolnir::ShortcutAggregation::kMax},
+  };
+  const auto mode = modes.find(shortcuts);
+  if (mode == modes.end()) {
+    LOG_ERROR("--shortcuts must be one of mean, min, max, none, got: {}", shortcuts);
+    return EXIT_FAILURE;
+  }
+
   std::ifstream lua_file(lua_path);
   if (!lua_file) {
     LOG_ERROR("Failed to open Lua script: {}", lua_path);
@@ -68,7 +84,8 @@ int main(int argc, char** argv) {
   lua_script << lua_file.rdbuf();
 
   try {
-    valhalla::mjolnir::add_custom_attributes(config, input_files, tag_keys, lua_script.str());
+    valhalla::mjolnir::add_custom_attributes(config, input_files, tag_keys, lua_script.str(),
+                                             mode->second);
   } catch (const std::exception& e) {
     LOG_ERROR(e.what());
     return EXIT_FAILURE;

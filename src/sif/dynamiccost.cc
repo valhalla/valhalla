@@ -115,6 +115,7 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 // speed)
 constexpr float kDefaultSpeedPenaltyFactor = 0.05f;
 constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPenaltyFactor, 1.0f};
+constexpr ranged_default_t<float> kCustomAttributeWeightRange{-1.0f, 0.0f, 1.0f};
 
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
@@ -229,6 +230,22 @@ DynamicCost::DynamicCost(const Costing& costing,
   SetCostFactorEdges(costing.options());
   for (const auto& name : costing.custom_attribute_names()) {
     custom_attribute_names_.push_back(name);
+  }
+
+  const auto& weights = costing.options().use_custom_attributes();
+  if (!weights.empty() && !custom_attribute_names_.empty()) {
+    custom_attribute_weights_.assign(custom_attribute_names_.size(), 0.0f);
+    bool any = false;
+    for (size_t i = 0; i < custom_attribute_names_.size(); ++i) {
+      if (auto it = weights.find(custom_attribute_names_[i]); it != weights.end()) {
+        bool clamped = false;
+        custom_attribute_weights_[i] = kCustomAttributeWeightRange(it->second, clamped);
+        any |= custom_attribute_weights_[i] != 0.0f;
+      }
+    }
+    if (!any) {
+      custom_attribute_weights_.clear();
+    }
   }
 }
 
@@ -483,6 +500,19 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   auto speed_types = rapidjson::get_child_optional(json, "/speed_types");
   if (speed_types || !co->has_flow_mask_case())
     co->set_flow_mask(SpeedMask_Parse(speed_types));
+
+  // use_custom_attributes: {"attr_name": weight, ...}
+  if (const auto attrs = rapidjson::get_child_optional(json, "/use_custom_attributes");
+      attrs && attrs->IsObject()) {
+    auto* weights = co->mutable_use_custom_attributes();
+    for (auto it = attrs->MemberBegin(); it != attrs->MemberEnd(); ++it) {
+      if (it->name.IsString() && it->value.IsNumber()) {
+        bool clamped = false;
+        (*weights)[it->name.GetString()] =
+            kCustomAttributeWeightRange(it->value.GetFloat(), clamped);
+      }
+    }
+  }
 
   // named costing
   auto name = rapidjson::get_optional<std::string>(json, "/name");

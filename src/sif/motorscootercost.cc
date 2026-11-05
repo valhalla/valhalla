@@ -470,7 +470,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = 1.0f + (kDensityFactor[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
                  grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
-                 SpeedPenalty(edge, tile, time_info, flow_sources, speed);
+                 SpeedPenalty(edge, tile, time_info, flow_sources, speed) +
+                 CustomAttributesFactor(edgeid, tile);
 
   if (edge->destonly()) {
     factor += kDestinationOnlyFactor;
