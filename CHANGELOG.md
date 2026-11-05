@@ -8,6 +8,7 @@
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
+   * ADDED: `street_hint` location parameter to prefer streets matching a name when correlating [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**

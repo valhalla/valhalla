@@ -158,12 +158,11 @@ std::u32string normalize_name(std::string_view name) {
   return normalized;
 }
 
-// TODO: ref regime, evidence floor, surplus, retries
-std::vector<float> score(std::string_view hint, const std::vector<names_t>& pool) {
-  std::vector<float> scores(pool.size(), 0.f);
+std::pair<size_t, float> score_candidates(std::string_view hint, const std::vector<names_t>& pool) {
+  std::pair<size_t, float> best{0, 0.f};
   const auto hint_grams = get_trigrams(normalize_name(hint));
   if (hint_grams.empty())
-    return scores;
+    return best;
 
   // dedupe the names of all candidate edges before building the weights
   ankerl::unordered_dense::map<std::string_view, uint32_t> document_by_name;
@@ -171,6 +170,9 @@ std::vector<float> score(std::string_view hint, const std::vector<names_t>& pool
   std::vector<std::pair<size_t, uint32_t>> cands_to_grams;
   for (size_t i = 0; i < pool.size(); ++i) {
     for (const auto& name : pool[i]) {
+      // TODO(nils): refs like A1 need extra logic
+      if (name.second)
+        continue;
       auto [it, added] = document_by_name.try_emplace(name.first, pool_grams_unique.size());
       if (added)
         pool_grams_unique.push_back(get_trigrams(normalize_name(name.first)));
@@ -191,28 +193,12 @@ std::vector<float> score(std::string_view hint, const std::vector<names_t>& pool
   for (const auto& grams : pool_grams_unique)
     pool_grams_scores.push_back(score_candidate(hint_grams, hint_weights, grams));
 
-  // for each candidate, hand back the max score of all its names
-  for (const auto [cand_idx, grams_idx] : cands_to_grams)
-    scores[cand_idx] = std::max(scores[cand_idx], pool_grams_scores[grams_idx]);
-
-  return scores;
-}
-
-std::vector<size_t>
-best_matches(std::string_view hint, const std::vector<names_t>& candidates, float threshold) {
-  const auto scores = score(hint, candidates);
-  std::vector<size_t> matches;
-  float best = threshold;
-  for (size_t i = 0; i < scores.size(); ++i) {
-    if (scores[i] < best)
-      continue;
-    if (scores[i] > best) {
-      best = scores[i];
-      matches.clear();
-    }
-    matches.push_back(i);
+  // only keep the best score with distance as tiebreaker
+  for (const auto [cand_idx, grams_idx] : cands_to_grams) {
+    if (pool_grams_scores[grams_idx] > best.second)
+      best = {cand_idx, pool_grams_scores[grams_idx]};
   }
-  return matches;
+  return best;
 }
 
 } // namespace street_name

@@ -14,18 +14,25 @@ namespace street_name {
 // (name, is route number) as returned by EdgeInfo::GetNames(bool)
 using names_t = std::vector<std::pair<std::string, bool>>;
 
-// lowercases, transliterates and drops anything that isn't alphanumeric, which is what makes
-// `Hermannstraße` and `Hermann-Straße` the same string. Used on both the hint and the pool names
+/**
+ * Normalizes a street name: lowercases, decomposes and strips non-alphanumeric characters.
+ * Used on both the hint and the pool names.
+ *
+ * @param name the string to be normalized
+ * @returns the utf-32 representation of the normalized string
+ */
 std::u32string normalize_name(std::string_view name);
 
-// one score in [0, 1] per candidate, the max over its names. All candidates' names form the rarity
-// corpus, so a pool has to be scored as a whole.
-std::vector<float> score(std::string_view hint, const std::vector<names_t>& candidates);
-
-// indices of the candidates sharing the best score in candidates' order, none if that score is
-// below threshold
-std::vector<size_t>
-best_matches(std::string_view hint, const std::vector<names_t>& candidates, float threshold);
+/**
+ * Calculates the hint score for each candidate using inverse document frequency weighting on trigrams
+ * over the whole candidate pool. A candidate's score is the max over its names.
+ *
+ * @param hint the request's street name hint
+ * @param pool the collection of all candidates' names
+ * @returns (candidate index, score) of the best candidate, the first in pool order among equal
+ *          scores. A score of 0 means no candidate shares anything with the hint
+ */
+std::pair<size_t, float> score_candidates(std::string_view hint, const std::vector<names_t>& pool);
 
 } // namespace street_name
 } // namespace loki

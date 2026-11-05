@@ -918,7 +918,7 @@ private:
     if (pool.empty() || pp.location->street_hint().empty())
       return false;
 
-    // closest first, best_matches keeps that order
+    // closest first, so the closest of equally scored candidates wins
     std::sort(pool.begin(), pool.end());
 
     // an edge spanning several bins was projected once per bin with the same point
@@ -935,39 +935,46 @@ private:
     for (const auto& candidate : pool) {
       pool_names.emplace_back(candidate.edge_info->GetNames(false));
     }
-    const auto matches = street_name::best_matches(pp.location->street_hint(), pool_names,
-                                                   pp.location->street_hint_threshold());
+
+    // we only keep the best match
+    const auto [best_idx, best_hint_score] =
+        street_name::score_candidates(pp.location->street_hint(), pool_names);
+
+    // we keep the best score regardless of the threshold, so it's in the response
+    auto* correlation = pp.location->mutable_correlation();
+    correlation->set_street_hint_score(best_hint_score);
+    // nothing in common is never a match
+    if (best_hint_score <= 0.f || best_hint_score < pp.location->street_hint_threshold())
+      return false;
 
     auto is_reachable = [&pp](const directed_reach& reach) {
       return reach.outbound >= pp.location->minimum_outbound_reachability() &&
              reach.inbound >= pp.location->minimum_inbound_reachability();
     };
 
-    // a hint yields the closest best match and its opposing edge, the next one only stands in if
-    // that didn't correlate. always snap along the edge: a node snap would bring in every other
-    // street at that node
-    const auto before = pp.location->correlation().edges_size();
-    for (const auto i : matches) {
-      auto& candidate = pool[i];
-      // it's possible that it isnt reachable but the opposing is, switch to that if so
-      if (!is_reachable(get_reach(candidate.edge_id, candidate.edge))) {
-        const DirectedEdge* opp_edge = nullptr;
-        graph_tile_ptr opp_tile = candidate.tile;
-        auto opp_edgeid = reader.GetOpposingEdgeId(candidate.edge_id, opp_edge, opp_tile);
-        if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) ||
-            search_filter(opp_edge, *costing, opp_tile, pp.location->search_filter()) ||
-            !is_reachable(get_reach(opp_edgeid, opp_edge)))
-          continue;
+    // a hint yields the closest best match and its opposing edge. always snap along the edge
+    auto& candidate = pool[best_idx];
+    // it's possible that it isnt reachable but the opposing is, switch to that if so
+    if (!is_reachable(get_reach(candidate.edge_id, candidate.edge))) {
+      const DirectedEdge* opp_edge = nullptr;
+      graph_tile_ptr opp_tile = candidate.tile;
+      auto opp_edgeid = reader.GetOpposingEdgeId(candidate.edge_id, opp_edge, opp_tile);
+      if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) ||
+          search_filter(opp_edge, *costing, opp_tile, pp.location->search_filter()) ||
+          !is_reachable(get_reach(opp_edgeid, opp_edge)))
+        return false;
 
-        candidate.edge_id = opp_edgeid;
-        candidate.edge = opp_edge;
-        candidate.tile = opp_tile;
-      }
+      candidate.edge_id = opp_edgeid;
+      candidate.edge = opp_edge;
+      candidate.tile = opp_tile;
+    }
 
-      // add to the correlated edges possibly
-      correlate_edge(*pp.location, candidate);
-      if (pp.location->correlation().edges_size() > before)
-        return true;
+    // add to the correlated edges possibly
+    const auto edge_count_before = correlation->edges_size();
+    correlate_edge(*pp.location, candidate);
+    if (correlation->edges_size() > edge_count_before) {
+      correlation->set_street_hint_matched(true);
+      return true;
     }
     return false;
   }

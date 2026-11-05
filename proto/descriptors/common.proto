@@ -103,6 +103,8 @@ message Correlation {
   double distance_from_leg_origin = 6;
   uint32 route_index = 7;     // primarily for matchings index in osrm map matching
   uint32 waypoint_index = 8;  // primarily for matched point index in osrm map matching
+  float street_hint_score = 9;    // best street hint score within its radius, also below the threshold
+  bool street_hint_matched = 10;  // whether the edges were correlated because of the street hint
 }
 
 message Location {

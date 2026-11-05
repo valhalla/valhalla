@@ -81,67 +81,70 @@ names_t names(std::initializer_list<std::string> names) {
   return result;
 }
 
-TEST(StreetName, ScoreWeighsByRarity) {
-  // the fixture of the design notes, the generic is everywhere so the core decides
-  const std::vector<names_t> candidates{names({"Bergstraße"}), names({"Burgstraße"}),
+TEST(StreetName, ScoreExactName) {
+  // the fixture of the design notes
+  const std::vector<names_t> candidates{names({"Burgstraße"}), names({"Bergstraße"}),
                                         names({"Bahnhofstraße"}), names({"Schulweg"})};
-  const auto scores = score("Bergstr", candidates);
-  ASSERT_EQ(scores.size(), 4u);
-  EXPECT_NEAR(scores[0], 1.f, 0.005f);
-  EXPECT_NEAR(scores[1], 0.42f, 0.005f);
-  EXPECT_NEAR(scores[2], 0.09f, 0.005f);
-  EXPECT_EQ(scores[3], 0.f);
+  const auto [idx, score] = score_candidates("Bergstr", candidates);
+  EXPECT_EQ(idx, 1u);
+  EXPECT_NEAR(score, 1.f, 0.005f);
+}
+
+TEST(StreetName, ScoreWeighsByRarity) {
+  // the alleys share 3 grams with the hint but so does everyone else, Bahnhofstraße shares 1 rare
+  const std::vector<names_t> candidates{names({"Lindenallee"}), names({"Bahnhofstraße"}),
+                                        names({"Parkallee"}), names({"Schlossallee"}),
+                                        names({"Rosenallee"})};
+  const auto [idx, score] = score_candidates("Hofallee", candidates);
+  EXPECT_EQ(idx, 1u);
+  EXPECT_NEAR(score, 0.27f, 0.005f);
 }
 
 TEST(StreetName, ScoreCountsNamesNotEdges) {
-  // more edges of Bergstraße must not make its grams look common, nor does a name without grams
+  // more edges of Bahnhofstraße must not make its grams look common, nor does a name without grams
   // count towards the corpus
-  const std::vector<names_t> candidates{names({"Bergstraße"}),
-                                        names({"Bergstraße"}),
-                                        names({"Bergstraße"}),
-                                        names({"Burgstraße"}),
-                                        names({"Bahnhofstraße"}),
-                                        names({"Schulweg"}),
-                                        names({"B 1"})};
-  const auto scores = score("Bergstr", candidates);
-  EXPECT_NEAR(scores[2], 1.f, 0.005f);
-  EXPECT_NEAR(scores[3], 0.42f, 0.005f);
-  EXPECT_EQ(scores[6], 0.f);
+  const auto single = score_candidates("Bergstr", {names({"Burgstraße"}), names({"Bahnhofstraße"}),
+                                                   names({"Schulweg"})});
+  const auto repeated =
+      score_candidates("Bergstr",
+                       {names({"Burgstraße"}), names({"Bahnhofstraße"}), names({"Bahnhofstraße"}),
+                        names({"Bahnhofstraße"}), names({"Schulweg"}), names({"B 1"})});
+  EXPECT_EQ(single.first, 0u);
+  EXPECT_EQ(repeated.first, 0u);
+  EXPECT_FLOAT_EQ(single.second, repeated.second);
 }
 
 TEST(StreetName, ScoreTakesBestName) {
-  const std::vector<names_t> candidates{names({"Burgstraße", "Bergstraße"}), names({"Schulweg"})};
-  const auto scores = score("Bergstr", candidates);
-  EXPECT_NEAR(scores[0], 1.f, 0.005f);
-  EXPECT_EQ(scores[1], 0.f);
+  const std::vector<names_t> candidates{names({"Burgstraße"}), names({"Schulweg", "Bergstraße"})};
+  const auto [idx, score] = score_candidates("Bergstr", candidates);
+  EXPECT_EQ(idx, 1u);
+  EXPECT_NEAR(score, 1.f, 0.005f);
+}
+
+TEST(StreetName, ScoreTakesFirstOfEqual) {
+  const std::vector<names_t> candidates{names({"Burgstraße"}), names({"Bergstraße"}),
+                                        names({"Bergstraße"})};
+  EXPECT_EQ(score_candidates("Bergstr", candidates).first, 1u);
 }
 
 TEST(StreetName, ScoreSingleName) {
   // smoothing keeps a lone name scorable, it's plain containment then
-  const auto scores = score("Primus-Truber-Str", {names({"Primus-Truber-Straße"})});
-  EXPECT_NEAR(scores[0], 1.f, 0.005f);
+  EXPECT_NEAR(score_candidates("Primus-Truber-Str", {names({"Primus-Truber-Straße"})}).second, 1.f,
+              0.005f);
 }
 
 TEST(StreetName, ScoreUnseenGramsWeighMost) {
   // `mozartstr` shares only the generic with them, the unseen core has to outweigh it
   const std::vector<names_t> candidates{names({"Bergstraße"}), names({"Burgstraße"}),
                                         names({"Bahnhofstraße"})};
-  for (const auto s : score("Mozartstr", candidates))
-    EXPECT_LT(s, 0.2f);
+  EXPECT_LT(score_candidates("Mozartstr", candidates).second, 0.2f);
 }
 
 TEST(StreetName, ScoreWithoutGrams) {
-  const std::vector<names_t> candidates{names({"Bergstraße"}), names({"B"}), names({})};
-  EXPECT_EQ(score("Be", candidates), (std::vector<float>{0.f, 0.f, 0.f}));
-  EXPECT_EQ(score("Bergstr", candidates)[1], 0.f);
-  EXPECT_EQ(score("Bergstr", candidates)[2], 0.f);
-}
-
-TEST(StreetName, BestMatches) {
-  const std::vector<names_t> candidates{names({"Burgstraße"}), names({"Bergstraße"}),
-                                        names({"Bergstraße"}), names({"Schulweg"})};
-  EXPECT_EQ(best_matches("Bergstr", candidates, 0.6f), (std::vector<size_t>{1, 2}));
-  EXPECT_TRUE(best_matches("Schillerstr", candidates, 0.6f).empty());
+  const std::vector<names_t> candidates{names({"B"}), names({}), names({"Bergstraße"})};
+  EXPECT_EQ(score_candidates("Be", candidates).second, 0.f);
+  EXPECT_EQ(score_candidates("Xyz", candidates).second, 0.f);
+  EXPECT_EQ(score_candidates("Bergstr", candidates).first, 2u);
 }
 
 } // namespace

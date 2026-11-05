@@ -540,11 +540,13 @@ TEST_F(StreetHint, HintTakesClosestBestMatch) {
   EXPECT_EQ(get_locate_edge_ids(do_locate("Bergstr")), get_way_edge_ids("G", "H"));
 }
 
-TEST_F(StreetHint, HintSkipsUnreachableBestMatch) {
-  // the island GH can't reach 3 nodes, so the next best match stands in
-  const auto api =
-      do_locate("Bergstr", [](valhalla::Location& loc) { loc.set_minimum_reachability(3); });
-  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("A", "B"));
+TEST_F(StreetHint, HintUnreachableKeepsBaseline) {
+  // the island GH is the closest best match but can't reach 3 nodes, the baseline stays
+  auto reach = [](valhalla::Location& loc) { loc.set_minimum_reachability(3); };
+  const auto api = do_locate("Bergstr", reach);
+  EXPECT_EQ(get_locate_edge_ids(api), get_locate_edge_ids(do_locate("", reach)));
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
+  EXPECT_FALSE(api.options().locations(0).correlation().street_hint_matched());
 }
 
 TEST_F(StreetHint, RouteStartsOnHintedStreet) {
@@ -559,6 +561,52 @@ TEST_F(StreetHint, RouteStartsOnHintedStreet) {
   hinted["/locations/0/street_hint"] = "Bahnhofstr";
   result = gurka::do_action(Options::route, map, {"1", "B"}, "auto", hinted);
   gurka::assert::raw::expect_path(result, {"Bahnhofstraße", "Kirchweg", "Kirchweg"});
+}
+
+TEST_F(StreetHint, ResponsesReportHint) {
+  // 1 matches, A has no hint and B's hint matches nothing
+  const std::vector<std::string> waypoints{"1", "A", "B"};
+  std::string json;
+  rapidjson::Document response;
+  std::unordered_map<std::string, std::string> options{
+      {"/locations/0/minimum_reachability", "0"}, {"/locations/1/minimum_reachability", "0"},
+      {"/locations/2/minimum_reachability", "0"}, {"/locations/0/street_hint", "Bahnhofstr"},
+      {"/locations/2/street_hint", "Hauptstr"},
+  };
+
+  auto check = [](const rapidjson::Value& matched, const rapidjson::Value& unhinted,
+                  const rapidjson::Value& unmatched) {
+    EXPECT_STREQ(matched["street_hint"].GetString(), "Bahnhofstr");
+    EXPECT_NEAR(matched["street_hint_score"].GetDouble(), 1., 0.001);
+    EXPECT_TRUE(matched["street_hint_matched"].GetBool());
+
+    EXPECT_FALSE(unhinted.HasMember("street_hint"));
+    EXPECT_FALSE(unhinted.HasMember("street_hint_score"));
+    EXPECT_FALSE(unhinted.HasMember("street_hint_matched"));
+
+    EXPECT_STREQ(unmatched["street_hint"].GetString(), "Hauptstr");
+    EXPECT_LT(unmatched["street_hint_score"].GetDouble(), 0.6);
+    EXPECT_FALSE(unmatched["street_hint_matched"].GetBool());
+  };
+
+  // normal valhalla request
+  gurka::do_action(Options::route, map, waypoints, "auto", options, {}, &json);
+  response.Parse(json);
+  const auto& locations = response["trip"]["locations"];
+  check(locations[0], locations[1], locations[2]);
+
+  // osrm request
+  options["/format"] = "osrm";
+  gurka::do_action(Options::route, map, waypoints, "auto", options, {}, &json);
+  response.Parse(json);
+  const auto& osrm_waypoints = response["waypoints"];
+  check(osrm_waypoints[0], osrm_waypoints[1], osrm_waypoints[2]);
+
+  // locate
+  options.erase("/format");
+  gurka::do_action(Options::locate, map, waypoints, "auto", options, {}, &json);
+  response.Parse(json);
+  check(response[0], response[1], response[2]);
 }
 
 TEST(locate, basic_properties) {
