@@ -1276,10 +1276,10 @@ protected:
                              bool depart_at = false) {
     const std::string date_time =
         depart_at ? R"(,"date_time":{"type":1,"value":"2026-11-05T10:00"})" : "";
-    const std::string request = std::format(
-        R"({{"locations":[{},{}],"costing":"truck","costing_options":{{"truck":{{{}}}}}{}}})",
-        location(map, from, exclude_restricted), location(map, to, exclude_restricted),
-        costing_options, date_time);
+    const std::string request = std::
+        format(R"({{"locations":[{},{}],"costing":"truck","costing_options":{{"truck":{{{}}}}}{}}})",
+               location(map, from, exclude_restricted), location(map, to, exclude_restricted),
+               costing_options, date_time);
     return gurka::do_action(valhalla::Options::route, map, request);
   }
 
