@@ -157,14 +157,13 @@ def main() -> None:
         "--attribute-defs",
         type=str,
         required=True,
-        help="attribute names written to attributes.json inside the tar "
-        "(e.g. 'scenic,walkability').",
+        help="attribute names written to attributes.json inside the tar (e.g. 'scenic,walkability').",
     )
     parser.add_argument(
         "--default-values",
         type=str,
         default="0.0",
-        help="Comma-separated default values, one per attribute (default: 0)."
+        help="Comma-separated default values, one per attribute (default: 0).",
     )
     args = parser.parse_args()
 
