@@ -4,7 +4,7 @@ Valhalla allows custom attributes to be set per edge via a separate tar archive 
 
 ## How it works
 
-The sidecar is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.cab`. A `.cab` file is a compact binary:
+The sidecar is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.gph`. A `.gph` file is a compact binary:
 
 ```
 [CustomAttributesTileHeader (see `custom_attributes_tile.h`)]
@@ -50,7 +50,7 @@ Options:
 
 The script reads only the `GraphTileHeader` from each tile to determine `directededgecount`. It does **not** modify the main tile tar.
 
-After writing the initial archive, replace individual `.cab` entries in-place to populate real values. The in-memory format is simple enough to update with any language that supports `struct.pack` or equivalent. The sidecar is mmap'd read-write by the update process, read-only by the routing service — the same arrangement as `traffic.tar`.
+After writing the initial archive, replace individual `.gph` entries in-place to populate real values. The in-memory format is simple enough to update with any language that supports `struct.pack` or equivalent. The sidecar is mmap'd read-write by the update process, read-only by the routing service — the same arrangement as `traffic.tar`.
 
 **Important:** Always regenerate or update the sidecar from the same tile set it was built against. Edge indices are stable within a tileset version but will shift if tiles are rebuilt from new OSM data. There is no cross-check between the sidecar and the main tileset at load time; a mismatched sidecar silently applies values to the wrong edges.
 
@@ -134,7 +134,7 @@ The custom attributes contribute additively to the edge cost factor:
 factor += Σ (attr_i * weight_i)   for all i where weight_i ≠ 0
 ```
 
-`factor` is then multiplied by the base edge traversal time. A `cab_value` of `1.0` with `weight=1.0` adds `1.0` to `factor` — equivalent to the maximum highway avoidance bias. Negative weights reduce the factor and can make an edge more attractive.
+`factor` is then multiplied by the base edge traversal time. A value of `1.0` with `weight=1.0` adds `1.0` to `factor` — equivalent to the maximum highway avoidance bias. Negative weights reduce the factor and can make an edge more attractive.
 
 The factor penalty is proportional to edge traversal time: a slow 10 km/h urban street receives a larger absolute cost increase than a fast 100 km/h motorway for the same attribute value. This is intentional for penalizing time-weighted exposure (e.g. noise, pollution), but may not suit all use cases.
 
@@ -159,7 +159,7 @@ All per-edge attribute values for each matched edge are available in `trace_attr
 
 Enable it by adding `"edge.custom_attribute": true` to the `filters.attributes` list. The object is omitted when no sidecar is loaded. Keys are the attribute names from `attributes.json`; attributes beyond the declared names are keyed by their numeric index string (`"0"`, `"1"`, ...).
 
-`use_custom_attributes` in the costing options does **not** affect the values returned here — `custom_attributes` always contains the raw `.cab` floats, independent of the routing weights.
+`use_custom_attributes` in the costing options does **not** affect the values returned here — `custom_attributes` always contains the raw `.gph` floats, independent of the routing weights.
 
 ## Binary format reference
 

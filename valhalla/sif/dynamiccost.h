@@ -1434,7 +1434,7 @@ protected:
   bool has_allowed_linear_edges_{false};
 
   // Ordered attribute names from Costing.custom_attribute_names (filled by ParseAutoCostOptions
-  // from mjolnir.custom_attributes_names). Position i corresponds to column i in the .cab sidecar.
+  // from mjolnir.custom_attributes_names). Position i is column i of a custom attributes tile.
   std::vector<std::string> custom_attribute_names_;
 
 public:

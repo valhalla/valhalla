@@ -386,7 +386,7 @@ message Costing {
 
   // Internal: ordered attribute names from mjolnir.custom_attributes_names config.
   // Populated during request parsing so the costing constructor can map request keys to
-  // positional indices in the .cab sidecar. Setting this in a request has no effect.
+  // positional indices in the custom attributes tiles. Setting this in a request has no effect.
   repeated string custom_attribute_names = 5;
 }
 
@@ -567,6 +567,6 @@ message Options {
   repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
   uint32 expansion_max_distance = 66;                              // Maximum path distance in meters for expansion. 0 = disabled.
   // Internal: ordered attribute names from mjolnir.custom_attributes_names; populated by worker.cc
-  // from server config so costing models can map request keys to positional indices in the .cab sidecar.
+  // from server config so costing models can map request keys to positional indices in the custom attributes tiles.
   repeated string custom_attribute_names = 67;
 }

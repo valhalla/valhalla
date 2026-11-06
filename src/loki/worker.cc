@@ -145,7 +145,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   // Inject custom attribute names from the tar descriptor into every Costing entry so the
-  // costing constructor can map use_custom_attributes request keys to .cab column indices.
+  // costing constructor can map use_custom_attributes request keys to custom attributes tile columns.
   const auto& ca_names = reader->GetCustomAttributeNames();
   if (!ca_names.empty()) {
     for (auto& costing_pair : *options.mutable_costings()) {

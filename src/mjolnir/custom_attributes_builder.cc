@@ -101,18 +101,18 @@ private:
   lua_State* state_;
 };
 
-struct WritableCab {
+struct WritableTile {
   CustomAttributesTileHeader* header;
   float* data;
 };
 
-// .cab entries of the tar keyed by tile base id, plus the attribute names from attributes.json
-struct WritableCustomAttributesTar {
+// tiles of the tar keyed by tile base id, plus the attribute names from attributes.json
+struct WriteableCustomAttributesExtract {
   midgard::tar archive;
-  std::unordered_map<uint64_t, WritableCab> tiles;
+  std::unordered_map<uint64_t, WritableTile> tiles;
   std::vector<std::string> names;
 
-  explicit WritableCustomAttributesTar(const std::string& path) : archive(path, false) {
+  explicit WriteableCustomAttributesExtract(const std::string& path) : archive(path, false) {
     archive.for_each([this](const std::string& name, const char* data, size_t size) {
       std::filesystem::path p{name};
       if (p.filename() == "attributes.json") {
@@ -127,7 +127,7 @@ struct WritableCustomAttributesTar {
         }
         return true;
       }
-      if (p.extension() != ".cab") {
+      if (p.extension() != ".gph") {
         return true;
       }
       if (size < sizeof(CustomAttributesTileHeader)) {
@@ -173,23 +173,23 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
 
   CustomAttributesLua lua(lua_script);
 
-  WritableCustomAttributesTar cab_tar(*tar_path);
-  if (cab_tar.names.empty() || cab_tar.tiles.empty()) {
-    throw std::runtime_error(*tar_path + " has no attributes.json names or no usable .cab tiles");
+  WriteableCustomAttributesExtract ca_extract(*tar_path);
+  if (ca_extract.names.empty() || ca_extract.tiles.empty()) {
+    throw std::runtime_error(*tar_path + " has no attributes.json names or no usable tiles");
   }
   std::unordered_map<std::string, uint32_t> column;
-  for (uint32_t i = 0; i < cab_tar.names.size(); ++i) {
-    column.emplace(cab_tar.names[i], i);
+  for (uint32_t i = 0; i < ca_extract.names.size(); ++i) {
+    column.emplace(ca_extract.names[i], i);
   }
-  for (const auto& [id, cab] : cab_tar.tiles) {
-    if (cab.header->num_attributes != cab_tar.names.size()) {
+  for (const auto& [id, tile] : ca_extract.tiles) {
+    if (tile.header->num_attributes != ca_extract.names.size()) {
       throw std::runtime_error(
           std::format("Tile {} has {} attributes, attributes.json lists {}", GraphId(id),
-                      static_cast<uint32_t>(cab.header->num_attributes), cab_tar.names.size()));
+                      static_cast<uint32_t>(tile.header->num_attributes), ca_extract.names.size()));
     }
   }
-  LOG_INFO("Custom attributes tar: {} tiles, {} attributes", cab_tar.tiles.size(),
-           cab_tar.names.size());
+  LOG_INFO("Custom attributes tar: {} tiles, {} attributes", ca_extract.tiles.size(),
+           ca_extract.names.size());
 
   GraphReader reader(config.get_child("mjolnir"));
   const auto ways_edges = collect_way_edges(reader);
@@ -231,14 +231,14 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
           }
           for (const auto& edge : way_edges->second) {
             const auto tile_id = edge.edgeid.tile_base().value;
-            const auto cab = cab_tar.tiles.find(tile_id);
-            if (cab == cab_tar.tiles.end() ||
-                edge.edgeid.id() >= cab->second.header->directed_edge_count) {
+            const auto tile = ca_extract.tiles.find(tile_id);
+            if (tile == ca_extract.tiles.end() ||
+                edge.edgeid.id() >= tile->second.header->directed_edge_count) {
               ++edges_missing;
               continue;
             }
-            const size_t n = cab->second.header->num_attributes;
-            cab->second.data[static_cast<size_t>(edge.edgeid.id()) * n + col->second] = value;
+            const size_t n = tile->second.header->num_attributes;
+            tile->second.data[static_cast<size_t>(edge.edgeid.id()) * n + col->second] = value;
             touched_tiles.insert(tile_id);
             ++values_written;
           }
@@ -250,14 +250,14 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
 
   const auto now = static_cast<uint64_t>(std::time(nullptr));
   for (const auto tile_id : touched_tiles) {
-    cab_tar.tiles[tile_id].header->last_update = now;
+    ca_extract.tiles[tile_id].header->last_update = now;
   }
 
   if (invalid_entries) {
     LOG_WARN("Lua returned {} entries that were not attribute name -> number", invalid_entries);
   }
   if (edges_missing) {
-    LOG_WARN("{} edge values had no matching .cab tile or edge index", edges_missing);
+    LOG_WARN("{} edge values had no matching tile or edge index", edges_missing);
   }
   LOG_INFO("Passed {} ways to Lua, wrote {} values into {} tiles", ways_passed, values_written,
            touched_tiles.size());
