@@ -166,7 +166,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
         if (corrupt_blocks) {
           LOG_WARN("Custom attributes extract had {} corrupt blocks", corrupt_blocks);
         }
-        // Read attribute names from the descriptor embedded in the tar.
+        // Read attribute definitions from the descriptor embedded in the tar.
         custom_attributes_archive->for_each(
             [this](const std::string& name, const char* data, size_t size) -> bool {
               std::filesystem::path p{name};
@@ -174,27 +174,14 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
               if (p.filename() != "attributes.json")
                 return true;
               try {
-                rapidjson::Document doc;
-                doc.Parse(data, size);
-                if (doc.IsArray()) {
-                  for (const auto& v : doc.GetArray()) {
-                    if (v.IsString())
-                      custom_attribute_names.emplace_back(v.GetString(), v.GetStringLength());
-                  }
-                }
+                custom_attribute_defs = baldr::ParseCustomAttributeDefs(std::string_view(data, size));
               } catch (const std::exception& e) {
-                LOG_WARN("Could not parse custom attributes descriptor: {}", e.what());
+                LOG_ERROR("Could not parse custom attributes descriptor: {}", e.what());
               }
               return false; // stop after first match
             });
-        // CustomAttributesTileHeader::num_attributes is 16 bits wide
-        if (custom_attribute_names.size() > 0xFFFF) {
-          LOG_ERROR("Custom attributes descriptor lists {} names, at most 65535 are supported",
-                    custom_attribute_names.size());
-          custom_attribute_names.clear();
-        }
-        if (!custom_attribute_names.empty()) {
-          LOG_INFO("Custom attribute names: {} attribute(s) loaded", custom_attribute_names.size());
+        if (!custom_attribute_defs.empty()) {
+          LOG_INFO("Custom attributes: {} attribute(s) loaded", custom_attribute_defs.size());
         }
       }
     } catch (const std::exception& e) {

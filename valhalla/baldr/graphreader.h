@@ -469,8 +469,8 @@ public:
     return !tile_extract_->traffic_tiles.empty();
   }
 
-  const std::vector<std::string>& GetCustomAttributeNames() const {
-    return tile_extract_->custom_attribute_names;
+  const std::vector<CustomAttributeDef>& GetCustomAttributeDefs() const {
+    return tile_extract_->custom_attribute_defs;
   }
 
   /**
@@ -996,7 +996,7 @@ protected:
     std::shared_ptr<midgard::tar> archive;
     std::shared_ptr<midgard::tar> traffic_archive;
     std::shared_ptr<midgard::tar> custom_attributes_archive;
-    std::vector<std::string> custom_attribute_names;
+    std::vector<CustomAttributeDef> custom_attribute_defs;
     uint64_t checksum;
   };
   std::shared_ptr<const tile_extract_t> tile_extract_;

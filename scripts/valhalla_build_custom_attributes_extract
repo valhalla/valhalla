@@ -6,6 +6,7 @@ Build a custom_attributes.tar from an existing valhalla_tiles.tar.
 import argparse
 import io
 import json
+import math
 import struct
 import sys
 import tarfile
@@ -19,8 +20,11 @@ DIRECTEDGE_BITS = 21
 
 GRAPHID_BITS = 46
 
-# must match CUSTOM_ATTRIBUTES_TAR_VERSION in valhalla/baldr/custom_attributes_tile.h
+# must match CUSTOM_ATTRIBUTES_TILE_VERSION in valhalla/baldr/custom_attributes_tile.h
 CUSTOM_ATTRIBUTES_TILE_VERSION = 1
+
+# must match CustomAttributeType in valhalla/baldr/custom_attributes_tile.h: struct format code, min, max
+ATTRIBUTE_TYPES = {"uint8": ("B", 0, 255)}
 
 # same index layout as valhalla_build_extract: offset, tile id, size
 INDEX_BIN_FORMAT = "<QLL"
@@ -44,28 +48,70 @@ def _tile_id(tile_bytes: bytes) -> int:
     return graphid_word & ((1 << GRAPHID_BITS) - 1)
 
 
+def _parse_attribute_defs(raw: str) -> list[dict]:
+    """Parse and validate the attributes.json array, filling in the default scale."""
+    defs = json.loads(raw)
+    if not isinstance(defs, list) or not defs:
+        raise ValueError("must be a non-empty JSON array")
+
+    names = set()
+    row_size = 0
+    for d in defs:
+        if not isinstance(d, dict) or not isinstance(d.get("name"), str) or not d["name"]:
+            raise ValueError(f"each attribute needs a non-empty string name: {d!r}")
+        if d["name"] in names:
+            raise ValueError(f"attribute name {d['name']!r} is used twice")
+        names.add(d["name"])
+        if d.get("type") not in ATTRIBUTE_TYPES:
+            raise ValueError(f"attribute {d['name']!r} needs a type out of {sorted(ATTRIBUTE_TYPES)}")
+        scale = d.setdefault("scale", 1.0)
+        if (
+            isinstance(scale, bool)
+            or not isinstance(scale, (int, float))
+            or not math.isfinite(scale)
+            or scale == 0
+        ):
+            raise ValueError(f"attribute {d['name']!r} needs a finite, non-zero scale")
+        row_size += struct.calcsize("<" + ATTRIBUTE_TYPES[d["type"]][0])
+
+    # CustomAttributesTileHeader::row_size is 16 bits wide
+    if row_size > 0xFFFF:
+        raise ValueError(f"attributes take {row_size} bytes per edge, at most 65535 are supported")
+    return defs
+
+
+def _encode_row(defs: list[dict], values: list[float]) -> bytes:
+    """Encode one edge's values as round(value / scale) in each attribute's type."""
+    row = b""
+    for d, value in zip(defs, values):
+        fmt, lo, hi = ATTRIBUTE_TYPES[d["type"]]
+        raw = round(value / d["scale"])
+        if not lo <= raw <= hi:
+            raise ValueError(
+                f"default value {value} of {d['name']!r} is {raw} after scaling, "
+                f"outside the {d['type']} range [{lo}, {hi}]"
+            )
+        row += struct.pack("<" + fmt, raw)
+    return row
+
+
 def _build_custom_attributes_tile(
     tile_id: int,
     edge_count: int,
     num_attributes: int,
-    default_values: list[float],
+    row: bytes,
 ) -> bytes:
-    """Build binary custom attributes tile for one graph tile."""
-    # tile_id, last_update, num_attributes:16 | spare:48, directed_edge_count, version
+    """Build binary custom attributes tile for one graph tile, every edge set to row."""
+    # tile_id, last_update, num_attributes:16 | row_size:16 | spare:32, directed_edge_count, version
     header = struct.pack(
         "<QQQII",
         tile_id,
         int(time.time()),
-        num_attributes,
+        num_attributes | (len(row) << 16),
         edge_count,
         CUSTOM_ATTRIBUTES_TILE_VERSION,
     )
-    # default_values has one entry per attribute; replicate across all edges
-    values = [
-        default_values[a % len(default_values)] for _ in range(edge_count) for a in range(num_attributes)
-    ]
-    data = struct.pack(f"<{edge_count * num_attributes}f", *values)
-    return header + data
+    return header + row * edge_count
 
 
 def _add_bytes_to_tar(tf: tarfile.TarFile, name: str, data: bytes) -> None:
@@ -91,9 +137,8 @@ def _write_index_to_tar(output_tar: str, tile_ids: dict[str, int]) -> None:
 def build(
     valhalla_tar: str,
     output_tar: str,
-    num_attributes: int,
-    default_values: list[float],
-    attribute_names: list[str],
+    attribute_defs: list[dict],
+    row: bytes,
 ) -> None:
     tiles_skipped = 0
     # (output path, tile id, edge count) for every usable tile
@@ -122,13 +167,11 @@ def build(
 
     with tarfile.open(output_tar, "w:") as dst_tf:
         _add_bytes_to_tar(dst_tf, INDEX_FILE, bytes(INDEX_BIN_SIZE * len(tiles)))
-        manifest = json.dumps(attribute_names, ensure_ascii=False).encode()
+        manifest = json.dumps(attribute_defs, ensure_ascii=False).encode()
         _add_bytes_to_tar(dst_tf, "attributes.json", manifest)
 
         for tiles_processed, (out_path, tile_id, edge_count) in enumerate(tiles, 1):
-            out_bytes = _build_custom_attributes_tile(
-                tile_id, edge_count, num_attributes, default_values
-            )
+            out_bytes = _build_custom_attributes_tile(tile_id, edge_count, len(attribute_defs), row)
             _add_bytes_to_tar(dst_tf, out_path, out_bytes)
 
             if tiles_processed % 500 == 0:
@@ -173,13 +216,15 @@ def main() -> None:
         "--attribute-defs",
         type=str,
         required=True,
-        help="attribute names written to attributes.json inside the tar (e.g. 'scenic,walkability').",
+        help="JSON array of attribute definitions written to attributes.json inside the tar, e.g. "
+        '\'[{"name": "scenic", "type": "uint8", "scale": 0.01}]\'. '
+        "Supported types: uint8. Values are stored as round(value / scale), scale defaults to 1.",
     )
     parser.add_argument(
         "--default-values",
         type=str,
         default="0.0",
-        help="Comma-separated default values, one per attribute (default: 0).",
+        help="Comma-separated default values before scaling, one per attribute (default: 0).",
     )
     args = parser.parse_args()
 
@@ -198,24 +243,24 @@ def main() -> None:
     if not tiles_tar or not output_tar:
         parser.error("config must set both mjolnir.tile_extract and mjolnir.custom_attributes_extract")
 
-    names = [n.strip() for n in args.attribute_defs.split(",") if n.strip()]
-    if not names:
-        parser.error("--attribute-defs must contain at least one non-empty name")
+    try:
+        defs = _parse_attribute_defs(args.attribute_defs)
+    except ValueError as e:
+        parser.error(f"--attribute-defs: {e}")
 
-    # shouldn't happen
-    num_attributes = len(names)
-    if num_attributes > 0xFFFF:
-        parser.error(f"--attribute-defs has {num_attributes} names, at most 65535 are supported")
-
-    default_values = _parse_default_values(args.default_values, num_attributes)
+    default_values = _parse_default_values(args.default_values, len(defs))
+    try:
+        row = _encode_row(defs, default_values)
+    except ValueError as e:
+        parser.error(f"--default-values: {e}")
 
     print(f"Reading tiles from : {tiles_tar}", file=sys.stderr)
     print(f"Writing output to  : {output_tar}", file=sys.stderr)
-    print(f"Attribute names    : {names}", file=sys.stderr)
-    print(f"Attributes per edge: {num_attributes}", file=sys.stderr)
+    print(f"Attributes         : {defs}", file=sys.stderr)
+    print(f"Bytes per edge     : {len(row)}", file=sys.stderr)
     print(f"Edge values        : {default_values}", file=sys.stderr)
 
-    build(tiles_tar, output_tar, num_attributes, default_values, names)
+    build(tiles_tar, output_tar, defs, row)
 
 
 if __name__ == "__main__":

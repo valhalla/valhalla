@@ -1433,13 +1433,12 @@ protected:
   double min_linear_cost_factor_;
   bool has_allowed_linear_edges_{false};
 
-  // Ordered attribute names from Costing.custom_attribute_names (filled by ParseAutoCostOptions
-  // from mjolnir.custom_attributes_names). Position i is column i of a custom attributes tile.
-  std::vector<std::string> custom_attribute_names_;
+  // Custom attribute definitions. Order is the tiles' column order.
+  std::vector<baldr::CustomAttributeDef> custom_attribute_defs_;
 
 public:
-  const std::vector<std::string>& custom_attribute_names() const {
-    return custom_attribute_names_;
+  const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs() const {
+    return custom_attribute_defs_;
   }
 
 protected:

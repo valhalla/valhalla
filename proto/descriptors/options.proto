@@ -384,10 +384,16 @@ message Costing {
     bool filter_closures = 4;
   }
 
-  // Internal: ordered attribute names from mjolnir.custom_attributes_names config.
-  // Populated during request parsing so the costing constructor can map request keys to
-  // positional indices in the custom attributes tiles. Setting this in a request has no effect.
-  repeated string custom_attribute_names = 5;
+  // for internal use only: attributes.json of the custom attributes extract, in column order.
+  // populated during request parsing so the costing can map request keys to
+  // custom attributes' columns. Setting this in a request has no effect.
+  message CustomAttributeDef {
+    string name = 1;
+    uint32 type = 2; // baldr::CustomAttributeType
+    float scale = 3;
+    uint32 offset = 4; // in bits
+  }
+  repeated CustomAttributeDef custom_attribute_defs = 5;
 }
 
 message LinearFeatureCost {

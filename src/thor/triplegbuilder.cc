@@ -1624,12 +1624,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   if (controller(kEdgeCustomAttribute)) {
     if (const auto* cat = graphtile->custom_attributes_tile()) {
-      const auto& attr_names = costing->custom_attribute_names();
-      const uint32_t n = cat->num_attributes();
       auto* attrs = trip_edge->mutable_custom_attributes();
-      for (uint32_t a = 0; a < n; ++a) {
-        const std::string& key = a < attr_names.size() ? attr_names[a] : std::to_string(a);
-        (*attrs)[key] = cat->value(idx, a);
+      for (const auto& def : costing->custom_attribute_defs()) {
+        (*attrs)[def.name] = cat->value(idx, def);
       }
     }
   }

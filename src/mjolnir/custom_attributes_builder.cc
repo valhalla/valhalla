@@ -9,8 +9,9 @@
 #include <osmium/io/pbf_input.hpp>
 #include <osmium/io/reader.hpp>
 #include <osmium/osm/way.hpp>
-#include <rapidjson/document.h>
 
+#include <algorithm>
+#include <cmath>
 #include <ctime>
 #include <filesystem>
 #include <format>
@@ -103,54 +104,63 @@ private:
 
 struct WritableTile {
   CustomAttributesTileHeader* header;
-  float* data;
+  uint8_t* data;
 };
 
-// tiles of the tar keyed by tile base id, plus the attribute names from attributes.json
+// stores value / scale in the column, returns false if it had to be clamped to the type's range
+bool encode(uint8_t* row, const CustomAttributeDef& def, float value) {
+  const double raw = std::round(static_cast<double>(value) / def.scale);
+  switch (def.type) {
+    case CustomAttributeType::kUint8:
+      row[def.offset / 8] = static_cast<uint8_t>(std::clamp(raw, 0.0, 255.0));
+      return raw >= 0.0 && raw <= 255.0;
+  }
+  return false;
+}
+
+// tiles of the tar keyed by tile base id, plus the attribute definitions from attributes.json
 struct WriteableCustomAttributesExtract {
   midgard::tar archive;
   std::unordered_map<uint64_t, WritableTile> tiles;
-  std::vector<std::string> names;
+  std::vector<CustomAttributeDef> defs;
 
   explicit WriteableCustomAttributesExtract(const std::string& path) : archive(path, false) {
     archive.for_each([this](const std::string& name, const char* data, size_t size) {
       std::filesystem::path p{name};
+
+      // TODO: use index.bin
+
       if (p.filename() == "attributes.json") {
-        rapidjson::Document doc;
-        doc.Parse(data, size);
-        if (doc.IsArray()) {
-          for (const auto& v : doc.GetArray()) {
-            if (v.IsString()) {
-              names.emplace_back(v.GetString(), v.GetStringLength());
-            }
-          }
-        }
+        defs = ParseCustomAttributeDefs({data, size});
         return true;
       }
+
+      // ignore unknown files
       if (p.extension() != ".gph") {
         return true;
       }
+
       if (size < sizeof(CustomAttributesTileHeader)) {
         LOG_WARN("Skipping {}: too small for header ({} bytes)", name, size);
         return true;
       }
       auto* header = reinterpret_cast<CustomAttributesTileHeader*>(const_cast<char*>(data));
-      if (header->custom_attributes_tile_version != CUSTOM_ATTRIBUTES_TAR_VERSION) {
+      if (header->custom_attributes_tile_version != CUSTOM_ATTRIBUTES_TILE_VERSION) {
         LOG_WARN("Skipping {}: version {} != {}", name, header->custom_attributes_tile_version,
-                 CUSTOM_ATTRIBUTES_TAR_VERSION);
+                 CUSTOM_ATTRIBUTES_TILE_VERSION);
         return true;
       }
-      const size_t required = sizeof(CustomAttributesTileHeader) +
-                              static_cast<size_t>(header->directed_edge_count) *
-                                  static_cast<size_t>(header->num_attributes) * sizeof(float);
+      const size_t required =
+          sizeof(CustomAttributesTileHeader) +
+          static_cast<size_t>(header->directed_edge_count) * static_cast<size_t>(header->row_size);
       if (size < required) {
         LOG_WARN("Skipping {}: {} bytes, expected {}", name, size, required);
         return true;
       }
       try {
         auto id = GraphId::FromTilePath(name);
-        tiles[id.value] = {header, reinterpret_cast<float*>(const_cast<char*>(data) +
-                                                            sizeof(CustomAttributesTileHeader))};
+        tiles[id.value] = {header, reinterpret_cast<uint8_t*>(const_cast<char*>(data) +
+                                                              sizeof(CustomAttributesTileHeader))};
       } catch (...) { LOG_WARN("Skipping {}: not a tile path", name); }
       return true;
     });
@@ -174,28 +184,32 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
   CustomAttributesLua lua(lua_script);
 
   WriteableCustomAttributesExtract ca_extract(*tar_path);
-  if (ca_extract.names.empty() || ca_extract.tiles.empty()) {
-    throw std::runtime_error(*tar_path + " has no attributes.json names or no usable tiles");
+  if (ca_extract.defs.empty() || ca_extract.tiles.empty()) {
+    throw std::runtime_error(*tar_path + " has no attributes.json definitions or no usable tiles");
   }
-  std::unordered_map<std::string, uint32_t> column;
-  for (uint32_t i = 0; i < ca_extract.names.size(); ++i) {
-    column.emplace(ca_extract.names[i], i);
+  std::unordered_map<std::string, const CustomAttributeDef*> column;
+  for (const auto& def : ca_extract.defs) {
+    column.emplace(def.name, &def);
   }
+  const uint32_t row_size = custom_attributes_row_size(ca_extract.defs);
   for (const auto& [id, tile] : ca_extract.tiles) {
-    if (tile.header->num_attributes != ca_extract.names.size()) {
+    if (tile.header->num_attributes != ca_extract.defs.size() || tile.header->row_size != row_size) {
       throw std::runtime_error(
-          std::format("Tile {} has {} attributes, attributes.json lists {}", GraphId(id),
-                      static_cast<uint32_t>(tile.header->num_attributes), ca_extract.names.size()));
+          std::format("Tile {} has {} attributes in {} bytes, attributes.json lists {} in {} bytes",
+                      GraphId(id), static_cast<uint32_t>(tile.header->num_attributes),
+                      static_cast<uint32_t>(tile.header->row_size), ca_extract.defs.size(),
+                      row_size));
     }
   }
   LOG_INFO("Custom attributes tar: {} tiles, {} attributes", ca_extract.tiles.size(),
-           ca_extract.names.size());
+           ca_extract.defs.size());
 
   GraphReader reader(config.get_child("mjolnir"));
   const auto ways_edges = collect_way_edges(reader);
   LOG_INFO("Collected edges for {} ways", ways_edges.size());
 
-  size_t ways_passed = 0, values_written = 0, invalid_entries = 0, edges_missing = 0;
+  size_t ways_passed = 0, values_written = 0, values_clamped = 0, invalid_entries = 0,
+         edges_missing = 0;
   std::unordered_set<std::string> unknown_names;
   std::unordered_set<uint64_t> touched_tiles;
 
@@ -229,6 +243,10 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
             }
             return;
           }
+          if (!std::isfinite(value)) {
+            ++invalid_entries;
+            return;
+          }
           for (const auto& edge : way_edges->second) {
             const auto tile_id = edge.edgeid.tile_base().value;
             const auto tile = ca_extract.tiles.find(tile_id);
@@ -237,8 +255,8 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
               ++edges_missing;
               continue;
             }
-            const size_t n = tile->second.header->num_attributes;
-            tile->second.data[static_cast<size_t>(edge.edgeid.id()) * n + col->second] = value;
+            uint8_t* row = tile->second.data + static_cast<size_t>(edge.edgeid.id()) * row_size;
+            values_clamped += !encode(row, *col->second, value);
             touched_tiles.insert(tile_id);
             ++values_written;
           }
@@ -254,7 +272,11 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
   }
 
   if (invalid_entries) {
-    LOG_WARN("Lua returned {} entries that were not attribute name -> number", invalid_entries);
+    LOG_WARN("Lua returned {} entries that were not attribute name -> finite number",
+             invalid_entries);
+  }
+  if (values_clamped) {
+    LOG_WARN("{} edge values were outside their attribute's range and got clamped", values_clamped);
   }
   if (edges_missing) {
     LOG_WARN("{} edge values had no matching tile or edge index", edges_missing);

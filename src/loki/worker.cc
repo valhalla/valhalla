@@ -144,15 +144,19 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   }
 
-  // Inject custom attribute names from the tar descriptor into every Costing entry so the
+  // Inject custom attribute definitions from the tar descriptor into every Costing entry so the
   // costing constructor can map use_custom_attributes request keys to custom attributes tile columns.
-  const auto& ca_names = reader->GetCustomAttributeNames();
-  if (!ca_names.empty()) {
+  const auto& ca_defs = reader->GetCustomAttributeDefs();
+  if (!ca_defs.empty()) {
     for (auto& costing_pair : *options.mutable_costings()) {
       auto* costing = &costing_pair.second;
-      if (costing->custom_attribute_names_size() == 0) {
-        for (const auto& name : ca_names) {
-          costing->add_custom_attribute_names(name);
+      if (costing->custom_attribute_defs_size() == 0) {
+        for (const auto& def : ca_defs) {
+          auto* pbf_def = costing->add_custom_attribute_defs();
+          pbf_def->set_name(def.name);
+          pbf_def->set_type(static_cast<uint32_t>(def.type));
+          pbf_def->set_scale(def.scale);
+          pbf_def->set_offset(def.offset);
         }
       }
     }

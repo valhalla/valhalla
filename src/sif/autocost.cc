@@ -346,7 +346,7 @@ public:
   float alley_factor_;                          // Avoid alleys factor.
   float toll_factor_;                           // Factor applied when road has a toll
   float surface_factor_;                        // How much the surface factors are applied.
-  std::vector<float> custom_attribute_weights_; // Per-attribute weights indexed by attribute position
+  std::vector<baldr::WeightedCustomAttribute> custom_attribute_weights_; // Columns used in EdgeCost
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
@@ -404,23 +404,15 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   weight_ = costing_options.weight();
 
   const auto& attr_map = costing_options.use_custom_attributes();
-  if (!attr_map.empty()) {
-    // custom_attribute_names_ was filled by DynamicCost base constructor from
-    // costing.custom_attribute_names(), which ParseAutoCostOptions populates from
-    // mjolnir.custom_attributes_names. Build a dense weight vector indexed by attribute position.
-    if (!custom_attribute_names_.empty()) {
-      custom_attribute_weights_.assign(custom_attribute_names_.size(), 0.0f);
-      for (size_t i = 0; i < custom_attribute_names_.size(); ++i) {
-        auto it = attr_map.find(custom_attribute_names_[i]);
-        if (it != attr_map.end()) {
-          bool clamped = false;
-          custom_attribute_weights_[i] = kCustomAttributeWeightRange(it->second, clamped);
-        }
-      }
-      if (std::all_of(custom_attribute_weights_.begin(), custom_attribute_weights_.end(),
-                      [](float w) { return w == 0.0f; })) {
-        custom_attribute_weights_.clear();
-      }
+  for (const auto& def : custom_attribute_defs_) {
+    auto it = attr_map.find(def.name);
+    if (it == attr_map.end()) {
+      continue;
+    }
+    bool clamped = false;
+    const float weight = kCustomAttributeWeightRange(it->second, clamped);
+    if (weight != 0.0f) {
+      custom_attribute_weights_.push_back({def.offset, def.type, weight * def.scale});
     }
   }
 }
