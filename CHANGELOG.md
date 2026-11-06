@@ -22,6 +22,7 @@
    * FIXED: Vietnamese arrival phrases use "bên trái/bên phải" for the destination side [#6447](https://github.com/valhalla/valhalla/pull/6447)
    * FIXED: Apply configured CostMatrix hierarchy limits to `/optimized_route` [#6441](https://github.com/valhalla/valhalla/issues/6441)
    * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
+   * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
@@ -31,6 +32,7 @@
    * ADDED: `kCycleStreet` use [#6407](https://github.com/valhalla/valhalla/pull/6407)
    * CHANGED: a `tile_url` connection times out after 5 s instead of curl's default of 300 s, so a tile server that doesn't answer fails fast [#6424](https://github.com/valhalla/valhalla/pull/6424)
    * BREAKING: warning instead of error on failed linear cost factor edge walk [#6443](https://github.com/valhalla/valhalla/pull/6443) 
+   * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
