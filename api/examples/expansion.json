@@ -1,0 +1,92 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[
+						13.433306,
+						52.519379
+					],
+					[
+						13.433171,
+						52.518964
+					]
+				]
+			},
+			"properties": {
+				"duration": 3,
+				"distance": 5,
+				"cost": 3
+			}
+		},
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[
+						13.433171,
+						52.518964
+					],
+					[
+						13.433096,
+						52.518735
+					]
+				]
+			},
+			"properties": {
+				"duration": 22,
+				"distance": 31,
+				"cost": 22
+			}
+		},
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[
+						13.433171,
+						52.518964
+					],
+					[
+						13.433306,
+						52.519379
+					]
+				]
+			},
+			"properties": {
+				"duration": 29,
+				"distance": 41,
+				"cost": 29
+			}
+		},
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[
+						13.433171,
+						52.518964
+					],
+					[
+						13.433036,
+						52.51898
+					]
+				]
+			},
+			"properties": {
+				"duration": 10,
+				"distance": 14,
+				"cost": 640
+			}
+		}
+	],
+	"properties": {
+		"algorithm": "dijkstras"
+	}
+}
