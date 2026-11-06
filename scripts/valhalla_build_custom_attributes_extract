@@ -44,15 +44,6 @@ def _tile_id(tile_bytes: bytes) -> int:
     return graphid_word & ((1 << GRAPHID_BITS) - 1)
 
 
-def _custom_attributes_tile_path(path: str) -> str:
-    """Strip a .gz suffix from the tile path, normalising separators to '/'."""
-    path = path.replace("\\", "/")
-    for suffix in (".gph.gz", ".gph"):
-        if path.endswith(suffix):
-            return path[: -len(suffix)] + ".gph"
-    raise ValueError(f"Unexpected tile suffix in path: {path!r}")
-
-
 def _build_custom_attributes_tile(
     tile_id: int,
     edge_count: int,
@@ -110,7 +101,7 @@ def build(
     with tarfile.open(valhalla_tar, "r:*") as src_tf:
         for member in src_tf.getmembers():
             name = member.name.replace("\\", "/")
-            if not (name.endswith(".gph") or name.endswith(".gph.gz")):
+            if not name.endswith(".gph"):
                 continue
 
             f = src_tf.extractfile(member)
@@ -127,7 +118,7 @@ def build(
                 tiles_skipped += 1
                 continue
 
-            tiles.append((_custom_attributes_tile_path(name), tile_id, edge_count))
+            tiles.append((name, tile_id, edge_count))
 
     with tarfile.open(output_tar, "w:") as dst_tf:
         _add_bytes_to_tar(dst_tf, INDEX_FILE, bytes(INDEX_BIN_SIZE * len(tiles)))
