@@ -341,11 +341,11 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_;                            // Vehicle type: car (default), motorcycle, etc
-  float highway_factor_;                        // Factor applied when road is a motorway or trunk
-  float alley_factor_;                          // Avoid alleys factor.
-  float toll_factor_;                           // Factor applied when road has a toll
-  float surface_factor_;                        // How much the surface factors are applied.
+  VehicleType type_;     // Vehicle type: car (default), motorcycle, etc
+  float highway_factor_; // Factor applied when road is a motorway or trunk
+  float alley_factor_;   // Avoid alleys factor.
+  float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied.
   std::vector<baldr::WeightedCustomAttribute> custom_attribute_weights_; // Columns used in EdgeCost
 
   // Vehicle attributes (used for special restrictions and costing)
