@@ -57,3 +57,8 @@ wheelhouse
 proto/typescript/src
 proto/python/src
 proto/typescript/valhallajs-proto-*
+
+# rust bindings
+/Cargo.lock
+/target
+src/bindings/rust/examples/target
