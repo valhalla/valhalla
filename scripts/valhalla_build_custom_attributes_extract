@@ -22,6 +22,11 @@ GRAPHID_BITS = 46
 # must match CUSTOM_ATTRIBUTES_TAR_VERSION in valhalla/baldr/custom_attributes_tile.h
 CUSTOM_ATTRIBUTES_TILE_VERSION = 1
 
+# same index layout as valhalla_build_extract: offset, tile id, size
+INDEX_BIN_FORMAT = "<QLL"
+INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
+INDEX_FILE = "index.bin"
+
 
 def _directed_edge_count(tile_bytes: bytes) -> int:
     """Extract directededgecount_ from raw GraphTileHeader bytes."""
@@ -78,6 +83,20 @@ def _add_bytes_to_tar(tf: tarfile.TarFile, name: str, data: bytes) -> None:
     tf.addfile(info, io.BytesIO(data))
 
 
+def _write_index_to_tar(output_tar: str, tile_ids: dict[str, int]) -> None:
+    """Fill the index.bin placeholder, which must be the first file in the tar."""
+    index = []
+    with tarfile.open(output_tar, "r|") as tf:
+        for member in tf:
+            if member.name in tile_ids:
+                index.append((member.offset_data, tile_ids[member.name], member.size))
+
+    with open(output_tar, "r+b") as f:
+        f.seek(tarfile.BLOCKSIZE)
+        for entry in index:
+            f.write(struct.pack(INDEX_BIN_FORMAT, *entry))
+
+
 def build(
     valhalla_tar: str,
     output_tar: str,
@@ -85,45 +104,49 @@ def build(
     default_values: list[float],
     attribute_names: list[str],
 ) -> None:
-    with tarfile.open(valhalla_tar, "r:*") as src_tf, tarfile.open(output_tar, "w:") as dst_tf:
-        manifest = json.dumps(attribute_names, ensure_ascii=False).encode()
-        _add_bytes_to_tar(dst_tf, "attributes.json", manifest)
-
-        tiles_processed = 0
-        tiles_skipped = 0
-
+    tiles_skipped = 0
+    # (output path, tile id, edge count) for every usable tile
+    tiles: list[tuple[str, int, int]] = []
+    with tarfile.open(valhalla_tar, "r:*") as src_tf:
         for member in src_tf.getmembers():
             name = member.name.replace("\\", "/")
             if not (name.endswith(".gph") or name.endswith(".gph.gz")):
                 continue
 
-            out_path = _custom_attributes_tile_path(name)
-
             f = src_tf.extractfile(member)
             if f is None:
                 tiles_skipped += 1
                 continue
-            tile_bytes = f.read()
+            header_bytes = f.read(HEADER_COUNTS_OFFSET + 8)
 
             try:
-                edge_count = _directed_edge_count(tile_bytes)
-                tile_id = _tile_id(tile_bytes)
+                edge_count = _directed_edge_count(header_bytes)
+                tile_id = _tile_id(header_bytes)
             except ValueError as exc:
                 print(f"  WARNING: skipping {name}: {exc}", file=sys.stderr)
                 tiles_skipped += 1
                 continue
 
+            tiles.append((_custom_attributes_tile_path(name), tile_id, edge_count))
+
+    with tarfile.open(output_tar, "w:") as dst_tf:
+        _add_bytes_to_tar(dst_tf, INDEX_FILE, bytes(INDEX_BIN_SIZE * len(tiles)))
+        manifest = json.dumps(attribute_names, ensure_ascii=False).encode()
+        _add_bytes_to_tar(dst_tf, "attributes.json", manifest)
+
+        for tiles_processed, (out_path, tile_id, edge_count) in enumerate(tiles, 1):
             out_bytes = _build_custom_attributes_tile(
                 tile_id, edge_count, num_attributes, default_values
             )
             _add_bytes_to_tar(dst_tf, out_path, out_bytes)
-            tiles_processed += 1
 
             if tiles_processed % 500 == 0:
                 print(f"  {tiles_processed} tiles written ...", file=sys.stderr)
 
+    _write_index_to_tar(output_tar, {path: tile_id for path, tile_id, _ in tiles})
+
     print(
-        f"Done: {tiles_processed} tiles written, {tiles_skipped} skipped -> {output_tar}",
+        f"Done: {len(tiles)} tiles written, {tiles_skipped} skipped -> {output_tar}",
         file=sys.stderr,
     )
 
