@@ -1,31 +1,30 @@
-# Custom Attributes Sidecar
+# Custom Attributes 
 
-Per-directed-edge float attributes stored in a separate tar archive alongside the main tile set. Multiple named attributes can be stored per edge and independently weighted at request time. Use cases include routing penalties derived from data that changes independently of the OSM graph — traffic safety scores, corporate fleet restrictions, road quality surveys, etc. — without rebuilding tiles.
+Valhalla allows custom attributes to be set per edge via a separate tar archive referred to as the custom attributes extract. Storage of and access to these attributes works similar to live traffic: every tile has a corresponding custom attributes tile in a separate tar archive (the extract) whose layout is a header followed by an array of per-edge attributes. The index position of an edge in a tile is also the index of the edge in the custom attributes tile. Multiple named attributes can be stored per edge and independently used in costing at request time. Use cases include attributes that Valhalla does not support, either because they are not derived from OSM data, or because they are too specific or subjective to be supported in the public project. Examples are walkability scores, cycling safety scores derived from accident reports, or routes popular with fleet drivers.
 
 ## How it works
 
 The sidecar is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.cab`. A `.cab` file is a compact binary:
 
 ```
-[CustomAttributesTileHeader: uint64_t tile_id, uint64_t last_update, uint16_t num_attributes + 48 spare bits,
- uint32_t directed_edge_count, uint32_t custom_attributes_tile_version]
-[float attr[0][0], attr[0][1], ..., attr[0][num_attributes-1]]   ← edge 0
-[float attr[1][0], attr[1][1], ..., attr[1][num_attributes-1]]   ← edge 1
+[CustomAttributesTileHeader (see `custom_attributes_tile.h`)]
+[attr[0][0], attr[0][1], ..., attr[0][num_attributes-1]] edge 0
+[attr[1][0], attr[1][1], ..., attr[1][num_attributes-1]] edge 1
 ...
-[float attr[edge_count-1][0], ..., attr[edge_count-1][num_attributes-1]]
+[attr[edge_count-1][0], ..., attr[edge_count-1][num_attributes-1]]
 ```
 
-The data is row-major by edge: all attributes for edge 0, then all attributes for edge 1, etc. Each float corresponds to one (edge, attribute) pair. The local edge index is the same as `GraphId::id()`.
+The data is row-major by edge: all attributes for edge 0, then all attributes for edge 1, etc. Currently, each 8-bit unsigned integer stores a single edge attribute, but the format can be extended to support more widths and types. The local edge index is the same as `GraphId::id()`.
 
 The tar also contains a single `attributes.json` file at its root:
 
 ```json
-["scenic", "surface_quality"]
+[{"name": "scenic", "type": "uint8"}, {"name": "walkability", "type": "uint8"}]
 ```
 
-This JSON array declares the attribute names in column order (column 0 = first name, column 1 = second name, etc.). `GraphReader` reads this file once at startup — no config entry is needed for the names.
+This JSON array declares the attribute names in column order (column 0 = first name, column 1 = second name, etc.).
 
-`GraphReader` loads the archive at startup (read-only mmap). The archive is held open so an external process can update it while the service runs — the same pattern used by the live traffic overlay. The `GraphTile` wrapper (`CustomAttributesTile`) marks its pointers `const volatile` for the same reason.
+`GraphReader` loads the archive at startup (read-only mmap). The archive is held open so an external process can update it while the service runs, analogous to how live traffic works. 
 
 ## Building the sidecar tar
 
