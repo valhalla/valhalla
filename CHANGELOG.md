@@ -29,6 +29,7 @@
    * BREAKING: warning instead of error on failed linear cost factor edge walk [#6443](https://github.com/valhalla/valhalla/pull/6443) 
    * UPDATED: timezone database to 2026f [#6454](https://github.com/valhalla/valhalla/pull/6454)
    * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
+   * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
