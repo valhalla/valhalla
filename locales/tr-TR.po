@@ -83,27 +83,27 @@ msgstr "<RELATIVE_DIRECTION>."
 #. e.g. Bear left onto Arlen Road.
 msgctxt "instructions.bear.phrases.1"
 msgid "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear right onto Belair Road/US 1 Business. Continue on US 1 Business.
 msgctxt "instructions.bear.phrases.2"
 msgid "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin. <STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin. <STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Bear left to stay on US 15 South.
 msgctxt "instructions.bear.phrases.3"
 msgid "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION> yönelin."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear right at Mannenbashi East.
 msgctxt "instructions.bear.phrases.4"
 msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION> yönelin."
+msgstr "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear left toward Baltimore.
 msgctxt "instructions.bear.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION> yönelin."
+msgstr "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a yönelin."
 
 msgctxt "instructions.bear.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -144,32 +144,32 @@ msgstr "sağ"
 #. e.g. Bear right.
 msgctxt "instructions.bear_verbal.phrases.0"
 msgid "Bear <RELATIVE_DIRECTION>."
-msgstr "<RELATIVE_DIRECTION> yönelin."
+msgstr "<RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear left onto Arlen Road.
 msgctxt "instructions.bear_verbal.phrases.1"
 msgid "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear right onto Belair Road, U.S. 1 Business.
 msgctxt "instructions.bear_verbal.phrases.2"
 msgid "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin."
+msgstr "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear left to stay on U.S. 15 South.
 msgctxt "instructions.bear_verbal.phrases.3"
 msgid "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION> yönelin."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear right at Mannenbashi East.
 msgctxt "instructions.bear_verbal.phrases.4"
 msgid "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
-msgstr "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION> yönelin."
+msgstr "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a yönelin."
 
 #. e.g. Bear left toward Baltimore.
 msgctxt "instructions.bear_verbal.phrases.5"
 msgid "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION> yönelin."
+msgstr "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a yönelin."
 
 msgctxt "instructions.bear_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -225,7 +225,7 @@ msgstr "Devam edin."
 #. e.g. Continue on 10th Avenue.
 msgctxt "instructions.continue.phrases.1"
 msgid "Continue on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine devam edin."
+msgstr "<STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue.phrases.2"
@@ -278,12 +278,12 @@ msgstr "<LENGTH> boyunca devam edin."
 #. e.g. Continue on 10th Avenue.
 msgctxt "instructions.continue_verbal.phrases.2"
 msgid "Continue on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine devam edin."
+msgstr "<STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Continue on 10th Avenue for 3 miles.
 msgctxt "instructions.continue_verbal.phrases.3"
 msgid "Continue on <STREET_NAMES> for <LENGTH>."
-msgstr "<STREET_NAMES> caddesinde <LENGTH> boyunca devam edin."
+msgstr "<STREET_NAMES> üzerinde <LENGTH> boyunca devam edin."
 
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue_verbal.phrases.4"
@@ -381,7 +381,7 @@ msgstr "Decam edin."
 #. e.g. Continue on 10th Avenue.
 msgctxt "instructions.continue_verbal_alert.phrases.1"
 msgid "Continue on <STREET_NAMES>."
-msgstr "<STREET_NAMES>caddesine devam edin."
+msgstr "<STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Continue at Mannenbashi East.
 msgctxt "instructions.continue_verbal_alert.phrases.2"
@@ -572,12 +572,12 @@ msgstr "Feribota binin."
 #. e.g. Take the Millersburg Ferry.
 msgctxt "instructions.enter_ferry.phrases.1"
 msgid "Take the <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine dönün."
+msgstr "<STREET_NAMES> yönüne dönün."
 
 #. e.g. Take the Bridgeport - Port Jefferson Ferry.
 msgctxt "instructions.enter_ferry.phrases.2"
 msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
-msgstr "<STREET_NAMES> caddesine dönün <FERRY_LABEL>."
+msgstr "<STREET_NAMES> yönüne dönün <FERRY_LABEL>."
 
 #. e.g. Take the ferry toward Cape May.
 msgctxt "instructions.enter_ferry.phrases.3"
@@ -624,12 +624,12 @@ msgstr "Feribota binin."
 #. e.g. Take the Millersburg Ferry.
 msgctxt "instructions.enter_ferry_verbal.phrases.1"
 msgid "Take the <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine dönün."
+msgstr "<STREET_NAMES> yönüne dönün."
 
 #. e.g. Take the Bridgeport - Port Jefferson Ferry.
 msgctxt "instructions.enter_ferry_verbal.phrases.2"
 msgid "Take the <STREET_NAMES> <FERRY_LABEL>."
-msgstr "<STREET_NAMES> caddesine dönün <FERRY_LABEL>."
+msgstr "<STREET_NAMES> yönüne dönün <FERRY_LABEL>."
 
 #. e.g. Take the ferry toward Cape May.
 msgctxt "instructions.enter_ferry_verbal.phrases.3"
@@ -690,12 +690,12 @@ msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan çıkın."
 #. e.g. Enter the roundabout and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.2"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.3"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru devam edin."
+msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> yönüne devam edin."
 
 #. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.4"
@@ -705,12 +705,12 @@ msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> iş
 #. e.g. Enter the roundabout and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.5"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "Döner kavşağa girin ve <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.6"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin."
+msgstr "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Enter the roundabout and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.7"
@@ -720,42 +720,42 @@ msgstr "Döner kavşağa girin ve <TOWARD_SIGN> işaretine doğru çıkın."
 #. e.g. Enter Dupont Circle.
 msgctxt "instructions.enter_roundabout.phrases.8"
 msgid "Enter <STREET_NAMES>"
-msgstr "<STREET_NAMES> caddesine girin"
+msgstr "<STREET_NAMES> yoluna girin"
 
 #. e.g. Enter Dupont Circle and take the 1st exit.
 msgctxt "instructions.enter_roundabout.phrases.9"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
-msgstr "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan çıkın."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.10"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.11"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.12"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesine girin ve<ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın."
 
 #. e.g. Enter Dupont Circle and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout.phrases.13"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322.
 msgctxt "instructions.enter_roundabout.phrases.14"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin."
+msgstr "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Enter Dupont Circle and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <TOWARD_SIGN> işaretine doğru çıkın."
 
 msgctxt "instructions.enter_roundabout.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -847,12 +847,12 @@ msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan çıkın."
 #. e.g. Enter the roundabout and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.2"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.3"
 msgid "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın."
+msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter the roundabout and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.4"
@@ -862,12 +862,12 @@ msgstr "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> iş
 #. e.g. Enter the roundabout and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.5"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "Döner kavşağa girin <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "Döner kavşağa girin <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter the roundabout and take the exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.6"
 msgid "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın."
+msgstr "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter the roundabout and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.7"
@@ -877,42 +877,42 @@ msgstr "Döner kavşağa girin ve <TOWARD_SIGN> işaretine doğru çıkın."
 #. e.g. Enter Dupont Circle.
 msgctxt "instructions.enter_roundabout_verbal.phrases.8"
 msgid "Enter <STREET_NAMES>"
-msgstr "<STREET_NAMES> caddesine girin"
+msgstr "<STREET_NAMES> yoluna girin"
 
 #. e.g. Enter Dupont Circle and take the 1st exit.
 msgctxt "instructions.enter_roundabout_verbal.phrases.9"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
-msgstr "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan çıkın."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.10"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve<ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.11"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter Dupont Circle and take the 3rd exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.12"
 msgid "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın."
 
 #. e.g. Enter Dupont Circle and take the exit onto Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.13"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street.
 msgctxt "instructions.enter_roundabout_verbal.phrases.14"
 msgid "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>caddesine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın."
 
 #. e.g. Enter Dupont Circle and take the exit toward Baltimore.
 msgctxt "instructions.enter_roundabout_verbal.phrases.15"
 msgid "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
+msgstr "<STREET_NAMES> yoluna girin ve <TOWARD_SIGN> işaretine doğru çıkın."
 
 msgctxt "instructions.enter_roundabout_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1155,12 +1155,12 @@ msgstr "Döner kavşaktan çıkın"
 #. e.g. Exit the roundabout onto Philadelphia Road/MD 7.
 msgctxt "instructions.exit_roundabout.phrases.1"
 msgid "Exit the roundabout onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru döner kavşaktan çıkın."
+msgstr "<STREET_NAMES> yönüne döner kavşaktan çıkın."
 
 #. e.g. Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.
 msgctxt "instructions.exit_roundabout.phrases.2"
 msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru döner kavşaktan çıkın. <STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> yönüne döner kavşaktan çıkın. <STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Exit the roundabout toward Baltimore.
 msgctxt "instructions.exit_roundabout.phrases.3"
@@ -1203,12 +1203,12 @@ msgstr "Döner kavşaktan çıkın."
 #. e.g. Exit the roundabout onto Philadelphia Road, Maryland 7.
 msgctxt "instructions.exit_roundabout_verbal.phrases.1"
 msgid "Exit the roundabout onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru döner kavşaktan çıkın."
+msgstr "<STREET_NAMES> yönüne döner kavşaktan çıkın."
 
 #. e.g. Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.
 msgctxt "instructions.exit_roundabout_verbal.phrases.2"
 msgid "Exit the roundabout onto <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru döner kavşaktan çıkın."
+msgstr "<BEGIN_STREET_NAMES> yönüne döner kavşaktan çıkın."
 
 #. e.g. Exit the roundabout toward Baltimore.
 msgctxt "instructions.exit_roundabout_verbal.phrases.3"
@@ -1392,12 +1392,12 @@ msgstr "<NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kal�
 #. e.g. Keep right to take I 895 South.
 msgctxt "instructions.keep.phrases.2"
 msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> yönüne girmek için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right to take exit 62 onto I 895 South.
 msgctxt "instructions.keep.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> yönüne giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right toward Annapolis.
 msgctxt "instructions.keep.phrases.4"
@@ -1412,7 +1412,7 @@ msgstr ""
 #. e.g. Keep right to take I 895 South toward Annapolis.
 msgctxt "instructions.keep.phrases.6"
 msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> yönüne girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right to take exit 62 onto I 895 South toward Annapolis.
 msgctxt "instructions.keep.phrases.7"
@@ -1453,7 +1453,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "orta"
 
 msgctxt "instructions.keep.replacement.relative_directions.2"
 msgid "right"
@@ -1464,22 +1464,22 @@ msgstr "sağ"
 #. e.g. Keep right to stay on I 95 South.
 msgctxt "instructions.keep_to_stay_on.phrases.0"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep left to take exit 62 to stay on I 95 South.
 msgctxt "instructions.keep_to_stay_on.phrases.1"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep left to stay on I 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on.phrases.2"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep left to take exit 62 to stay on I 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 msgctxt "instructions.keep_to_stay_on.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1515,7 +1515,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "orta"
 
 msgctxt "instructions.keep_to_stay_on.replacement.relative_directions.2"
 msgid "right"
@@ -1526,22 +1526,22 @@ msgstr "sağ"
 #. e.g. Keep right to stay on Interstate 95 South.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.0"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep left to take exit 62 to stay on Interstate 95 South.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.1"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep left to stay on I 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.2"
 msgid "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.
 msgctxt "instructions.keep_to_stay_on_verbal.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1577,7 +1577,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "orta"
 
 msgctxt "instructions.keep_to_stay_on_verbal.replacement.relative_directions.2"
 msgid "right"
@@ -1598,12 +1598,12 @@ msgstr "<NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.
 #. e.g. Keep right to take Interstate 8 95 South.
 msgctxt "instructions.keep_verbal.phrases.2"
 msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> yönüne girmek için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right to take exit 62 onto Interstate 8 95 South.
 msgctxt "instructions.keep_verbal.phrases.3"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> yönüne <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right toward Annapolis.
 msgctxt "instructions.keep_verbal.phrases.4"
@@ -1618,12 +1618,12 @@ msgstr "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkıştan çıkmak içi
 #. e.g. Keep right to take Interstate 8 95 South toward Annapolis.
 msgctxt "instructions.keep_verbal.phrases.6"
 msgid "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> yönüne girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 #. e.g. Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis.
 msgctxt "instructions.keep_verbal.phrases.7"
 msgid "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
-msgstr "<STREET_NAMES> caddesinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+msgstr "<STREET_NAMES> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
 
 msgctxt "instructions.keep_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -1659,7 +1659,7 @@ msgstr "sol"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.1"
 msgid "straight"
-msgstr ""
+msgstr "orta"
 
 msgctxt "instructions.keep_verbal.replacement.relative_directions.2"
 msgid "right"
@@ -1683,12 +1683,12 @@ msgstr "<RELATIVE_DIRECTION>dan yola katılın."
 #. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
 msgctxt "instructions.merge.phrases.2"
 msgid "Merge onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru yola katılın."
+msgstr "<STREET_NAMES> yoluna katılın."
 
 #. e.g. Merge right onto I 83 South.
 msgctxt "instructions.merge.phrases.3"
 msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>dan yola katılın."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>dan yola katılın."
 
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge.phrases.4"
@@ -1749,12 +1749,12 @@ msgstr "<RELATIVE_DIRECTION> doğru yola katılın."
 #. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
 msgctxt "instructions.merge_verbal.phrases.2"
 msgid "Merge onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine katılın."
+msgstr "<STREET_NAMES> yoluna katılın."
 
 #. e.g. Merge right onto I 83 South.
 msgctxt "instructions.merge_verbal.phrases.3"
 msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<RELATIVE_DIRECTION> doğru <STREET_NAMES>caddesine katılın."
+msgstr "<RELATIVE_DIRECTION> doğru <STREET_NAMES> yoluna katılın."
 
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.4"
@@ -1852,7 +1852,7 @@ msgstr "<LENGTH> boyunca devam edin."
 #. e.g. Continue on Main Street, Vermont 30 for 1 tenth of a mile.
 msgctxt "instructions.post_transition_verbal.phrases.1"
 msgid "Continue on <STREET_NAMES> for <LENGTH>."
-msgstr "<STREET_NAMES> caddesinde <LENGTH> boyunca devam edin."
+msgstr "<STREET_NAMES> üzerinde <LENGTH> boyunca devam edin."
 
 msgctxt "instructions.post_transition_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
@@ -2150,17 +2150,17 @@ msgstr "<RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın."
 #. e.g. Make a sharp right onto Flatbush Avenue.
 msgctxt "instructions.sharp.phrases.1"
 msgid "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
 
 #. e.g. Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.
 msgctxt "instructions.sharp.phrases.2"
 msgid "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın. <STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın. <STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Make a sharp right to stay on Sunstone Drive.
 msgctxt "instructions.sharp.phrases.3"
 msgid "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın."
 
 #. e.g. Make a sharp right at Mannenbashi East.
 msgctxt "instructions.sharp.phrases.4"
@@ -2216,17 +2216,17 @@ msgstr "<RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın."
 #. e.g. Make a sharp right onto Flatbush Avenue.
 msgctxt "instructions.sharp_verbal.phrases.1"
 msgid "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
 
 #. e.g. Make a sharp left onto North Bond Street, U.S. 1 Business.
 msgctxt "instructions.sharp_verbal.phrases.2"
 msgid "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
+msgstr "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
 
 #. e.g. Make a sharp right to stay on Sunstone Drive.
 msgctxt "instructions.sharp_verbal.phrases.3"
 msgid "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın."
 
 #. e.g. Make a sharp right at Mannenbashi East.
 msgctxt "instructions.sharp_verbal.phrases.4"
@@ -2286,12 +2286,12 @@ msgstr "<CARDINAL_DIRECTION> yönüne ilerleyin."
 #. e.g. Head north on the mountain bike trail
 msgctxt "instructions.start.phrases.1"
 msgid "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
 msgctxt "instructions.start.phrases.2"
 msgid "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin. <STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin. <STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Drive east.
 #. e.g. Drive north.
@@ -2302,12 +2302,12 @@ msgstr "<CARDINAL_DIRECTION> yönüne doğru sürün."
 #. e.g. Drive southwest on 5th Avenue.
 msgctxt "instructions.start.phrases.5"
 msgid "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru sürün."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru sürün."
 
 #. e.g. Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
 msgctxt "instructions.start.phrases.6"
 msgid "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru sürün. <STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru sürün. <STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Walk east.
 #. e.g. Walk north.
@@ -2319,12 +2319,12 @@ msgstr "<CARDINAL_DIRECTION> yönüne yürüyün."
 #. e.g. Walk west on the walkway
 msgctxt "instructions.start.phrases.9"
 msgid "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne yürüyün."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne yürüyün."
 
 #. e.g. Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
 msgctxt "instructions.start.phrases.10"
 msgid "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne yürüyün.<STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne yürüyün.<STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Bike east.
 #. e.g. Bike north.
@@ -2337,12 +2337,12 @@ msgstr "<CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
 #. e.g. Bike north on the mountain bike trail
 msgctxt "instructions.start.phrases.17"
 msgid "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
 
 #. e.g. Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.
 msgctxt "instructions.start.phrases.18"
 msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin. <STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin. <STREET_NAMES> üzerinde devam edin."
 
 msgctxt "instructions.start.replacement.cardinal_directions.0"
 msgid "north"
@@ -2419,17 +2419,17 @@ msgstr "<LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin."
 #. e.g. Head southwest on 5th Avenue.
 msgctxt "instructions.start_verbal.phrases.2"
 msgid "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Head southwest on 5th Avenue for 1 tenth of a mile.
 msgctxt "instructions.start_verbal.phrases.3"
 msgid "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
-msgstr "<STREET_NAMES> caddesinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Head south on North Prince Street, U.S. 2 22.
 msgctxt "instructions.start_verbal.phrases.4"
 msgid "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Drive east.
 #. e.g. Drive north.
@@ -2446,17 +2446,17 @@ msgstr "<LENGTH> boyunca <CARDINAL_DIRECTION> yönüne sürün."
 #. e.g. Drive southwest on 5th Avenue.
 msgctxt "instructions.start_verbal.phrases.7"
 msgid "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Drive southwest on 5th Avenue for 1 tenth of a mile.
 msgctxt "instructions.start_verbal.phrases.8"
 msgid "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
-msgstr "<STREET_NAMES> caddesinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Drive south on North Prince Street, U.S. 2 22.
 msgctxt "instructions.start_verbal.phrases.9"
 msgid "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin."
 
 #. e.g. Walk east.
 #. e.g. Walk north.
@@ -2473,17 +2473,17 @@ msgstr "<CARDINAL_DIRECTION> yönünde <LENGTH> boyunca yürüyün."
 #. e.g. Walk southwest on 5th Avenue.
 msgctxt "instructions.start_verbal.phrases.12"
 msgid "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru yürüyün."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru yürüyün."
 
 #. e.g. Walk southwest on 5th Avenue for 1 tenth of a mile.
 msgctxt "instructions.start_verbal.phrases.13"
 msgid "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru <LENGTH> boyunca yürüyün."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru <LENGTH> boyunca yürüyün."
 
 #. e.g. Walk south on North Prince Street, U.S. 2 22.
 msgctxt "instructions.start_verbal.phrases.14"
 msgid "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru yürüyün."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru yürüyün."
 
 #. e.g. Bike east.
 #. e.g. Bike north.
@@ -2500,17 +2500,17 @@ msgstr "<CARDINAL_DIRECTION> yönüne <LENGTH> boyunca bisikletinizle ilerleyin.
 #. e.g. Bike southwest on 5th Avenue.
 msgctxt "instructions.start_verbal.phrases.17"
 msgid "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
 
 #. e.g. Bike southwest on 5th Avenue for 1 tenth of a mile.
 msgctxt "instructions.start_verbal.phrases.18"
 msgid "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
-msgstr "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönünde <LENGTH> boyunca bisikletinizle ilerleyin."
+msgstr "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönünde <LENGTH> boyunca bisikletinizle ilerleyin."
 
 #. e.g. Bike south on North Prince Street, U.S. 2 22.
 msgctxt "instructions.start_verbal.phrases.19"
 msgid "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
+msgstr "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
 
 msgctxt "instructions.start_verbal.replacement.cardinal_directions.0"
 msgid "north"
@@ -3025,17 +3025,17 @@ msgstr "<RELATIVE_DIRECTION>a dönün."
 #. e.g. Turn right onto Flatbush Avenue.
 msgctxt "instructions.turn.phrases.1"
 msgid "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün."
 
 #. e.g. Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.
 msgctxt "instructions.turn.phrases.2"
 msgid "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.<STREET_NAMES> caddesine devam edin."
+msgstr "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün.<STREET_NAMES> üzerinde devam edin."
 
 #. e.g. Turn right to stay on Sunstone Drive.
 msgctxt "instructions.turn.phrases.3"
 msgid "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a dönün."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a dönün."
 
 #. e.g. Turn right at Mannenbashi East.
 msgctxt "instructions.turn.phrases.4"
@@ -3091,17 +3091,17 @@ msgstr "<RELATIVE_DIRECTION>a dönün."
 #. e.g. Turn right onto Flatbush Avenue.
 msgctxt "instructions.turn_verbal.phrases.1"
 msgid "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün."
 
 #. e.g. Turn left onto North Bond Street, U.S. 1 Business.
 msgctxt "instructions.turn_verbal.phrases.2"
 msgid "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
-msgstr "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün."
+msgstr "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün."
 
 #. e.g. Turn right to stay on Sunstone Drive.
 msgctxt "instructions.turn_verbal.phrases.3"
 msgid "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a dönün."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a dönün."
 
 #. e.g. Turn right at Mannenbashi East.
 msgctxt "instructions.turn_verbal.phrases.4"
@@ -3157,27 +3157,27 @@ msgstr "<RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 #. e.g. Make a right U-turn onto Bunker Hill Road.
 msgctxt "instructions.uturn.phrases.1"
 msgid "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesi üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<STREET_NAMES> üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn to stay on Bunker Hill Road.
 msgctxt "instructions.uturn.phrases.2"
 msgid "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn at Devonshire Road.
 msgctxt "instructions.uturn.phrases.3"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
-msgstr "<CROSS_STREET_NAMES> caddesinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<CROSS_STREET_NAMES> üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn at Devonshire Road onto Jonestown Road/US 22.
 msgctxt "instructions.uturn.phrases.4"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
-msgstr "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> yönüne <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.
 msgctxt "instructions.uturn.phrases.5"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-msgstr "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a right U-turn at Mannenbashi East.
 msgctxt "instructions.uturn.phrases.6"
@@ -3233,27 +3233,27 @@ msgstr "<RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 #. e.g. Make a right U-turn onto Bunker Hill Road.
 msgctxt "instructions.uturn_verbal.phrases.1"
 msgid "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn to stay on Bunker Hill Road.
 msgctxt "instructions.uturn_verbal.phrases.2"
 msgid "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
-msgstr "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn at Devonshire Road.
 msgctxt "instructions.uturn_verbal.phrases.3"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
-msgstr "<CROSS_STREET_NAMES> caddesinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<CROSS_STREET_NAMES> üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22.
 msgctxt "instructions.uturn_verbal.phrases.4"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
-msgstr "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> yönüne <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.
 msgctxt "instructions.uturn_verbal.phrases.5"
 msgid "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-msgstr "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+msgstr "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
 
 #. e.g. Make a right U-turn at Mannenbashi East.
 msgctxt "instructions.uturn_verbal.phrases.6"
