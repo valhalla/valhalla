@@ -103,6 +103,8 @@ message Correlation {
   double distance_from_leg_origin = 6;
   uint32 route_index = 7;     // primarily for matchings index in osrm map matching
   uint32 waypoint_index = 8;  // primarily for matched point index in osrm map matching
+  float street_hint_score = 9;    // best street hint score within its radius, also below the threshold
+  bool street_hint_matched = 10;  // whether the edges were correlated because of the street hint
 }
 
 message Location {
@@ -178,6 +180,9 @@ message Location {
   oneof has_minimum_outbound_reachability {
     uint32 minimum_outbound_reachability = 32;
   }
+  string street_hint = 33;
+  uint32 street_hint_radius = 34;
+  float street_hint_threshold = 35;
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
   string time_zone_offset = 91;

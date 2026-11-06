@@ -158,6 +158,7 @@ set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include 
 set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 set(flatbush_include_dir ${VALHALLA_SOURCE_DIR}/third_party/flatbush)
+set(utf8proc_dir ${VALHALLA_SOURCE_DIR}/third_party/utf8proc)
 
 if (PREFER_EXTERNAL_DEPS)
   # date

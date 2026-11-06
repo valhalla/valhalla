@@ -131,6 +131,14 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
 baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape);
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer);
 
+/**
+ * Writes the location's street hint, best score and whether it was used to correlate edges
+ *
+ * @param location the input location
+ * @param writer the JSON writer instance
+ */
+void street_hint(const valhalla::Location& location, rapidjson::writer_wrapper_t& writer);
+
 // Elevation serialization support
 
 /**

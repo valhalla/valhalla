@@ -54,7 +54,8 @@ inline bool operator==(const Location& a, const Location& b) {
          a.has_minimum_inbound_reachability_case() == b.has_minimum_inbound_reachability_case() &&
          a.minimum_inbound_reachability() == b.minimum_inbound_reachability() &&
          a.has_minimum_outbound_reachability_case() == b.has_minimum_outbound_reachability_case() &&
-         a.minimum_outbound_reachability() == b.minimum_outbound_reachability();
+         a.minimum_outbound_reachability() == b.minimum_outbound_reachability() &&
+         a.street_hint() == b.street_hint();
 }
 } // namespace baldr
 } // namespace valhalla

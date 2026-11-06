@@ -2,6 +2,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"
+#include "loki/street_name.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/util.h"
 
@@ -213,7 +214,8 @@ struct projector_wrapper {
       : binner(make_binner(point_ll_from_latlng(location->ll()))), location(location),
         bin_center_approximator(bin_center), sq_radius(midgard::sqr(double(location->radius()))),
         sq_cutoff(midgard::sqr(double(location->search_cutoff()))),
-        project(point_ll_from_latlng(location->ll())) {
+        hint_radius(location->street_hint().empty() ? 0. : location->street_hint_radius()),
+        sq_hint_radius(midgard::sqr(hint_radius)), project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -256,7 +258,7 @@ struct projector_wrapper {
       double distance;
       std::tie(tile_index, bin_index, distance) = binner();
       if (distance > location->search_cutoff() ||
-          (reachable.size() && distance > location->radius() &&
+          (reachable.size() && distance > location->radius() && distance > hint_radius &&
            distance > std::sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
@@ -290,6 +292,10 @@ struct projector_wrapper {
   std::vector<candidate_t> reachable;
   double closest_external_reachable = std::numeric_limits<double>::max();
   double sq_cutoff;
+  double hint_radius;
+  double sq_hint_radius;
+  // every candidate within the hint radius, regardless of what the radius rules keep
+  std::vector<candidate_t> hint_pool;
 
   // critical data
   projector_t project;
@@ -630,8 +636,9 @@ struct bin_handler_t {
             continue;
           }
           // if we don't have any reachable candidates yet, we can't reject any edge within
-          // the cutoff distance
-          if (p_itr->reachable.empty()) {
+          // the cutoff distance, nor any within the hint radius
+          if (p_itr->reachable.empty() ||
+              (p_itr->hint_radius > 0 && dsqr <= midgard::sqr(p_itr->hint_radius + radius))) {
             all_prefiltered = false;
             break;
           }
@@ -778,6 +785,20 @@ struct bin_handler_t {
           }
         }
 
+        // record candidates for matching street name hint
+        if (c_itr->sq_distance < p_itr->sq_hint_radius) {
+          auto& hinted = p_itr->hint_pool.emplace_back();
+          hinted.sq_distance = c_itr->sq_distance;
+          hinted.distance = c_itr->distance;
+          hinted.point = c_itr->point;
+          hinted.index = c_itr->index;
+          hinted.bounding_circle = circle;
+          hinted.edge_id = edge_id;
+          hinted.edge = edge;
+          hinted.edge_info.emplace(tile->edgeinfo(edge));
+          hinted.tile = tile;
+        }
+
         // which batch of findings will this go into
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
 
@@ -890,6 +911,74 @@ struct bin_handler_t {
   }
 
 private:
+  // correlates the candidates matching the location's street name hint, returns whether any of them
+  // made it into the location's edges
+  bool correlate_hint(projector_wrapper& pp) {
+    auto& pool = pp.hint_pool;
+    if (pool.empty() || pp.location->street_hint().empty())
+      return false;
+
+    // closest first, so the closest of equally scored candidates wins
+    std::sort(pool.begin(), pool.end());
+
+    // an edge spanning several bins was projected once per bin with the same point
+    ankerl::unordered_dense::set<uint64_t> seen;
+    pool.erase(std::remove_if(pool.begin(), pool.end(),
+                              [&seen](const candidate_t& c) {
+                                return !seen.insert(c.edge_id).second;
+                              }),
+               pool.end());
+
+    // record all names first, deduping happens when scoring
+    std::vector<street_name::names_t> pool_names;
+    pool_names.reserve(pool.size());
+    for (const auto& candidate : pool) {
+      pool_names.emplace_back(candidate.edge_info->GetNames(false));
+    }
+
+    // we only keep the best match
+    const auto [best_idx, best_hint_score] =
+        street_name::score_candidates(pp.location->street_hint(), pool_names);
+
+    // we keep the best score regardless of the threshold, so it's in the response
+    auto* correlation = pp.location->mutable_correlation();
+    correlation->set_street_hint_score(best_hint_score);
+    // nothing in common is never a match
+    if (best_hint_score <= 0.f || best_hint_score < pp.location->street_hint_threshold())
+      return false;
+
+    auto is_reachable = [&pp](const directed_reach& reach) {
+      return reach.outbound >= pp.location->minimum_outbound_reachability() &&
+             reach.inbound >= pp.location->minimum_inbound_reachability();
+    };
+
+    // a hint yields the closest best match and its opposing edge. always snap along the edge
+    auto& candidate = pool[best_idx];
+    // it's possible that it isnt reachable but the opposing is, switch to that if so
+    if (!is_reachable(get_reach(candidate.edge_id, candidate.edge))) {
+      const DirectedEdge* opp_edge = nullptr;
+      graph_tile_ptr opp_tile = candidate.tile;
+      auto opp_edgeid = reader.GetOpposingEdgeId(candidate.edge_id, opp_edge, opp_tile);
+      if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) ||
+          search_filter(opp_edge, *costing, opp_tile, pp.location->search_filter()) ||
+          !is_reachable(get_reach(opp_edgeid, opp_edge)))
+        return false;
+
+      candidate.edge_id = opp_edgeid;
+      candidate.edge = opp_edge;
+      candidate.tile = opp_tile;
+    }
+
+    // add to the correlated edges possibly
+    const auto edge_count_before = correlation->edges_size();
+    correlate_edge(*pp.location, candidate);
+    if (correlation->edges_size() > edge_count_before) {
+      correlation->set_street_hint_matched(true);
+      return true;
+    }
+    return false;
+  }
+
   // create the PathLocation corresponding to the best projection of the given candidate
   void finalize() {
     // at this point we have candidates for each location so now we
@@ -906,8 +995,10 @@ private:
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
       std::sort(pp.reachable.begin(), pp.reachable.end());
       // keep a look up around so we dont add duplicates with worse scores
-      correlated_edges.reserve(pp.reachable.size());
+      correlated_edges.reserve(pp.reachable.size() + pp.hint_pool.size());
       correlated_edges.clear();
+      // first add the max 2 edges which have had the highest scored hint match
+      const int hint_end = correlate_hint(pp) ? pp.location->correlation().edges_size() : 0;
       // go through getting all the results for this one
       for (const auto& candidate : pp.reachable) {
         auto pp_pt = point_ll_from_latlng(pp.location->ll());
@@ -937,6 +1028,14 @@ private:
 
       auto* edges = pp.location->mutable_correlation()->mutable_edges();
       auto* filtered_edges = pp.location->mutable_correlation()->mutable_filtered_edges();
+
+      // with a matching hint, what would have been correlated without it is only the fallback
+      if (hint_end > 0) {
+        for (auto it = edges->begin() + hint_end; it != edges->end(); ++it) {
+          *filtered_edges->Add() = std::move(*it);
+        }
+        edges->erase(edges->begin() + hint_end, edges->end());
+      }
 
       // if it was a through location with a heading its pretty confusing.
       // does the user want to come into and exit the location at the preferred

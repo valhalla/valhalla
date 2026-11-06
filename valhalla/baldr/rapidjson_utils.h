@@ -318,6 +318,10 @@ public:
     return buffer.GetString();
   }
 
+  inline int get_precision() {
+    return writer.GetMaxDecimalPlaces();
+  }
+
   inline void set_precision(int precision) {
     writer.SetMaxDecimalPlaces(precision);
   }

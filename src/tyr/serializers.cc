@@ -269,6 +269,7 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape) {
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer) {
   writer("type", "LineString");
   writer.start_array("coordinates");
+  const auto before = writer.get_precision();
   writer.set_precision(tyr::kCoordinatePrecision);
   for (const auto& p : shape) {
     writer.start_array();
@@ -276,10 +277,18 @@ void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer
     writer(p.lat());
     writer.end_array();
   }
-  writer.set_precision(kDefaultPrecision);
+  writer.set_precision(before);
   writer.end_array();
 }
 
+void street_hint(const valhalla::Location& location, rapidjson::writer_wrapper_t& writer) {
+  writer("street_hint", location.street_hint());
+  const auto before = writer.get_precision();
+  writer.set_precision(kDefaultPrecision);
+  writer("street_hint_score", location.correlation().street_hint_score());
+  writer("street_hint_matched", location.correlation().street_hint_matched());
+  writer.set_precision(before);
+}
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
@@ -415,6 +424,13 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
                                       .Distance(to_ll(location.correlation().edges(0).ll())),
                                   3});
 
+  if (!location.street_hint().empty()) {
+    waypoint->emplace("street_hint", location.street_hint());
+    waypoint->emplace("street_hint_score",
+                      json::fixed_t{location.correlation().street_hint_score(), 3});
+    waypoint->emplace("street_hint_matched", location.correlation().street_hint_matched());
+  }
+
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count",
@@ -467,6 +483,10 @@ void waypoint(const valhalla::Location& location,
   // TODO: since distance was normalized in thor - need to recalculate here
   //       in the future we shall have store separately from score
   writer("distance", to_ll(location.ll()).Distance(to_ll(location.correlation().edges(0).ll())));
+
+  if (!location.street_hint().empty()) {
+    valhalla::tyr::street_hint(location, writer);
+  }
 
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
