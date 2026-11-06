@@ -151,11 +151,49 @@ public:
     decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
     if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
-      // open, create and truncate the file
-      std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::trunc);
-      // seek to the new size and put a null char
-      f.seekp(new_count * sizeof(T) - 1);
-      f.write("\0", 1);
+      bool allocated = false;
+#ifndef _WIN32
+      const int fd = open(new_file_name.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
+      if (fd == -1) {
+        throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
+      }
+#if defined(__APPLE__)
+      // Try contiguous allocation first
+      fstore_t store{F_ALLOCATECONTIG | F_ALLOCATEALL, F_PEOFPOSMODE, 0, target_size, 0};
+      allocated = fcntl(fd, F_PREALLOCATE, &store) != -1;
+      if (!allocated) {
+        // Fall back to non-contiguous allocation
+        store.fst_flags = F_ALLOCATEALL;
+        if (fcntl(fd, F_PREALLOCATE, &store) != -1) {
+          allocated = true;
+        } else if (errno == ENOSPC) {
+          // No space, fail early rather than on a page fault later.
+          throw std::runtime_error(new_file_name + "(fallocate): " + strerror(errno));
+        }
+      }
+      // F_PREALLOCATE reserves past EOF; ftruncate sets the size
+      if (allocated && ftruncate(fd, target_size) == -1) {
+        throw std::runtime_error(new_file_name + "(ftruncate): " + strerror(errno));
+      }
+#else
+      const int rc = posix_fallocate(fd, 0, target_size);
+      allocated = rc == 0;
+      if (rc == ENOSPC) {
+        // No space, fail early rather than on a page fault later.
+        throw std::runtime_error(new_file_name + "(fallocate): " + strerror(rc));
+      }
+#endif
+      if (close(fd) == -1) {
+        throw std::runtime_error(new_file_name + "(close): " + strerror(errno));
+      }
+#endif
+      if (!allocated) {
+        // open, create and truncate the file
+        std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::trunc);
+        // seek to the new size and put a null char
+        f.seekp(new_count * sizeof(T) - 1);
+        f.write("\0", 1);
+      }
     }
     // map it
     map(new_file_name, new_count, advice);

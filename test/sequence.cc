@@ -9,6 +9,14 @@
 #include <utility>
 #include <vector>
 
+#ifndef _WIN32
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <cerrno>
+#endif
+
 using namespace valhalla::midgard;
 using valhalla::mjolnir::OSMWayNode;
 
@@ -223,6 +231,71 @@ TEST(Sequence, Iterator) {
 
   --i;
   EXPECT_EQ(i.position(), 0) << "Pre-decrement operator wasn't right";
+}
+
+bool fallocate_supported([[maybe_unused]] off_t size) {
+#ifdef _WIN32
+  return false;
+#else
+  const std::string file_name = "fallocate.probe";
+  const int fd = open(file_name.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
+  if (fd == -1) {
+    throw std::runtime_error("Failed to open file for fallocate probe: " +
+                             std::string(strerror(errno)));
+  }
+  int rc = 0;
+#if defined(__APPLE__)
+  // Try contiguous allocation first
+  fstore_t store{F_ALLOCATECONTIG | F_ALLOCATEALL, F_PEOFPOSMODE, 0, size, 0};
+  if (fcntl(fd, F_PREALLOCATE, &store) == -1) {
+    // Fall back to non-contiguous allocation
+    store.fst_flags = F_ALLOCATEALL;
+    if (fcntl(fd, F_PREALLOCATE, &store) == -1) {
+      rc = errno;
+    }
+  }
+  if (rc == 0 && ftruncate(fd, size) == -1) {
+    rc = errno;
+  }
+#else
+  rc = posix_fallocate(fd, 0, size);
+#endif
+  close(fd);
+  bool allocated = false;
+  if (rc == 0) {
+    struct stat s;
+    allocated = stat(file_name.c_str(), &s) == 0 &&
+                static_cast<uint64_t>(s.st_blocks) * 512 >= static_cast<uint64_t>(size);
+  }
+  std::filesystem::remove(file_name);
+  if (rc == EOPNOTSUPP) {
+    return false;
+  }
+  if (rc != 0) {
+    throw std::runtime_error("Failed fallocate probe: " + std::string(strerror(rc)));
+  }
+  return allocated;
+#endif
+}
+
+// create should allocate space to prevent fragmentation
+TEST(Sequence, CreateAllocates) {
+  constexpr size_t count = 8 * 1024 * 1024;
+  if (!fallocate_supported(count * sizeof(uint64_t)))
+    GTEST_SKIP() << "filesystem does not support fallocate";
+  const std::string file_name = "allocate.bin";
+  {
+    mem_map<uint64_t> memmap;
+    memmap.create(file_name, count);
+  }
+  ASSERT_EQ(std::filesystem::file_size(file_name), count * sizeof(uint64_t));
+#ifndef _WIN32
+  struct stat s;
+  ASSERT_EQ(stat(file_name.c_str(), &s), 0);
+  EXPECT_GE(static_cast<uint64_t>(s.st_blocks) * 512, static_cast<uint64_t>(s.st_size))
+      << "create allocate failed on a filesystem that supports fallocate";
+#endif
+  std::filesystem::remove(file_name);
 }
 
 } // namespace
