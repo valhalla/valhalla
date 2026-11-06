@@ -1,6 +1,5 @@
 #include "sif/autocost.h"
 #include "baldr/accessrestriction.h"
-#include "baldr/custom_attributes_tile.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
@@ -74,7 +73,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kCustomAttributeWeightRange{-1.0f, 0.0f, 1.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
@@ -346,7 +344,6 @@ public:
   float alley_factor_;   // Avoid alleys factor.
   float toll_factor_;    // Factor applied when road has a toll
   float surface_factor_; // How much the surface factors are applied.
-  std::vector<baldr::WeightedCustomAttribute> custom_attribute_weights_; // Columns used in EdgeCost
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
@@ -402,19 +399,6 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   width_ = costing_options.width();
   length_ = costing_options.length();
   weight_ = costing_options.weight();
-
-  const auto& attr_map = costing_options.use_custom_attributes();
-  for (const auto& def : custom_attribute_defs_) {
-    auto it = attr_map.find(def.name);
-    if (it == attr_map.end()) {
-      continue;
-    }
-    bool clamped = false;
-    const float weight = kCustomAttributeWeightRange(it->second, clamped);
-    if (weight != 0.0f) {
-      custom_attribute_weights_.push_back({def.offset, def.type, weight * def.scale});
-    }
-  }
 }
 
 // Check if access is allowed on the specified edge.
@@ -541,17 +525,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
-  float custom_attr_factor = 0.0f;
-  if (!custom_attribute_weights_.empty()) {
-    if (const auto* cat = tile->custom_attributes_tile()) {
-      custom_attr_factor = cat->weighted_sum(edgeid.id(), custom_attribute_weights_);
-    }
-  }
-
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-            edge->toll() * toll_factor_ + custom_attr_factor;
+            edge->toll() * toll_factor_ + CustomAttributesFactor(tile, edgeid);
 
   switch (edge->use()) {
     case Use::kAlley:
@@ -745,19 +722,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability, warnings);
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed, warnings);
-  // Parse use_custom_attributes: {"attr_name": weight, ...}
-  if (const auto attrs = rapidjson::get_child_optional(json, "/use_custom_attributes")) {
-    if (attrs->IsObject()) {
-      auto* weights = co->mutable_use_custom_attributes();
-      for (auto it = attrs->MemberBegin(); it != attrs->MemberEnd(); ++it) {
-        if (it->name.IsString() && it->value.IsNumber()) {
-          bool clamped = false;
-          (*weights)[it->name.GetString()] =
-              kCustomAttributeWeightRange(it->value.GetFloat(), clamped);
-        }
-      }
-    }
-  }
 }
 
 cost_ptr_t CreateAutoCost(const Costing& costing_options) {

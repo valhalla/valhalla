@@ -1302,6 +1302,20 @@ protected:
   }
 
   /**
+   * Returns the weighted sum of the edge's custom attributes to add to the edge factor, or 0 if
+   * the request weights none of them or the tile has no custom attributes.
+   */
+  float CustomAttributesFactor(const baldr::graph_tile_ptr& tile,
+                               const baldr::GraphId& edgeid) const {
+    if (custom_attribute_weights_.empty()) {
+      return 0.f;
+    }
+    const auto* custom_attributes = tile->custom_attributes_tile();
+    return custom_attributes ? custom_attributes->weighted_sum(edgeid.id(), custom_attribute_weights_)
+                             : 0.f;
+  }
+
+  /**
    * Calculate `track` costs based on tracks preference.
    * @param use_tracks value of tracks preference in range [0; 1]
    */
@@ -1435,6 +1449,8 @@ protected:
 
   // Custom attribute definitions. Order is the tiles' column order.
   std::vector<baldr::CustomAttributeDef> custom_attribute_defs_;
+  // Columns with a non-zero request weight, the weight multiplied by the column's scale
+  std::vector<baldr::WeightedCustomAttribute> custom_attribute_weights_;
 
 public:
   const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs() const {
