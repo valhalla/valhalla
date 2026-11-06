@@ -447,8 +447,12 @@ protected:
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
+               const baldr::GraphId& edgeid,
                uint16_t disallow_mask = kDisallowNone) const override {
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+    if (AllowedLinearFeature(edgeid)) {
+      return true;
+    }
+    return DynamicCost::Allowed(edge, tile, edgeid, disallow_mask) && !edge->bss_connection() &&
            (avoid_bad_surfaces_ != 1.0f || edge->surface() <= worst_allowed_surface_);
   }
 };
