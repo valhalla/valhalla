@@ -357,7 +357,7 @@ struct bin_handler_t {
         auto layer = info.layer();
         // do we want this edge, note we have to re-evaluate the filter check because we may be
         // seeing these edges a second time (filtered out before)
-        if (costing->Allowed(edge, tile, kDisallowShortcut) &&
+        if (costing->Allowed(edge, tile, id, kDisallowShortcut) &&
             !search_filter(edge, id, *costing, tile, location.search_filter())) {
           auto reach = get_reach(id, edge);
           valhalla::PathEdge path_edge;
@@ -392,7 +392,7 @@ struct bin_handler_t {
         if (!other_edge)
           continue;
 
-        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+        if (costing->Allowed(other_edge, other_tile, other_id, kDisallowShortcut) &&
             !search_filter(other_edge, other_id, *costing, other_tile, location.search_filter())) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
@@ -508,7 +508,8 @@ struct bin_handler_t {
       graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
-      if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+      if (other_edge &&
+          costing->Allowed(other_edge, other_tile, opposing_edge_id, kDisallowShortcut) &&
           !search_filter(other_edge, opposing_edge_id, *costing, other_tile,
                          location.search_filter())) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
@@ -588,8 +589,10 @@ struct bin_handler_t {
     // filtered then the reaches of both edges are the same
 
     const DirectedEdge* opp_edge = nullptr;
-    if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
-        costing->Allowed(opp_edge, tile, kDisallowShortcut)) {
+    GraphId opp_edge_id;
+    if (reach.outbound > 0 && reach.inbound > 0 &&
+        (opp_edge_id = reader.GetOpposingEdgeId(edge_id, opp_edge, tile)) &&
+        costing->Allowed(opp_edge, tile, opp_edge_id, kDisallowShortcut)) {
       directed_reaches[opp_edge] = reach;
     }
     return reach;
@@ -679,10 +682,10 @@ struct bin_handler_t {
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
+      if (!costing->Allowed(edge, tile, edge_id, kDisallowShortcut)) {
         // but if we couldnt get it or its filtered too then we move on
         if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
-            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
+            !costing->Allowed(opp_edge, opp_tile, opp_edgeid, kDisallowShortcut))
           continue;
         // if we will continue with the opposing edge lets swap it in
         std::swap(edge, opp_edge);
@@ -769,7 +772,7 @@ struct bin_handler_t {
                          reach.inbound >= p_itr->location->minimum_inbound_reachability();
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
+            costing->Allowed(opp_edge, opp_tile, opp_edgeid, kDisallowShortcut) &&
             !search_filter(opp_edge, opp_edgeid, *costing, opp_tile,
                            p_itr->location->search_filter())) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);

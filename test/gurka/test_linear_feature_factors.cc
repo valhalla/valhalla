@@ -924,3 +924,81 @@ TEST(LinearFeature, allow_in_costmatrix) {
     }
   }
 }
+
+TEST(LinearFeature, allow_in_candidate_search) {
+  const std::string ascii_map = R"(
+    A----B--x--C----D
+  )";
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  constexpr std::string_view json_request = R"(
+  {{
+    "locations": [
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
+    ],
+    {}
+    "costing": "{}"
+  }}
+  )";
+
+  // the tag that closes BC for the given costings
+  const std::vector<std::pair<std::string, std::vector<std::string>>> access_tags = {
+      {"motor_vehicle", {"auto", "bus", "taxi", "truck", "motor_scooter", "motorcycle"}},
+      {"bicycle", {"bicycle"}},
+      {"foot", {"pedestrian"}},
+  };
+
+  for (const auto& [access_tag, costings] : access_tags) {
+    const gurka::ways ways = {
+        {"AB", {{"highway", "unclassified"}}},
+        {"BC", {{"highway", "unclassified"}, {access_tag, "no"}}},
+        {"CD", {{"highway", "unclassified"}}},
+    };
+    auto map =
+        gurka::buildtiles(layout, ways, {}, {},
+                          VALHALLA_BUILD_DIR "test/data/linear_feature_allow_search_" + access_tag);
+
+    baldr::GraphReader reader(map.config.get_child("mjolnir"));
+    const auto bc = std::get<0>(gurka::findEdgeByNodes(reader, map.nodes, "B", "C"));
+    const auto cb = std::get<0>(gurka::findEdgeByNodes(reader, map.nodes, "C", "B"));
+
+    loki::loki_worker_t loki_worker(map.config);
+    thor::thor_worker_t thor_worker(map.config);
+    for (const auto& costing : costings) {
+      SCOPED_TRACE(costing);
+      auto route = [&](const std::string& linear_cost_factors, Api& request) {
+        auto json_str = std::format(json_request, map.nodes.at("A").lng(), map.nodes.at("A").lat(),
+                                    map.nodes.at("x").lng(), map.nodes.at("x").lat(),
+                                    linear_cost_factors, costing);
+
+        ParseApi(json_str, Options::route, request);
+        loki_worker.route(request);
+        loki_worker.cleanup();
+        thor_worker.route(request);
+        thor_worker.cleanup();
+      };
+
+      auto correlates_to_bc = [&](const Api& request) {
+        for (const auto& edge : request.options().locations(1).correlation().edges()) {
+          if (edge.graph_id() == bc || edge.graph_id() == cb) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      Api without;
+      route("", without);
+      EXPECT_FALSE(correlates_to_bc(without));
+      gurka::assert::raw::expect_path(without, {"AB"});
+
+      Api with;
+      route(std::format(R"("linear_cost_factors": [{{"shape": "{}", "allow_types": ["all"]}}],)",
+                        encode_shape({"B", "C"}, map.nodes)),
+            with);
+      EXPECT_TRUE(correlates_to_bc(with));
+      gurka::assert::raw::expect_path(with, {"AB", "BC"});
+    }
+  }
+}

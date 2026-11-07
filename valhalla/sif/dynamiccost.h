@@ -429,11 +429,13 @@ public:
    *
    * @param edge           the edge that should or shouldnt be allowed
    * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param edgeid         the id of the edge
    * @param disallow_mask  a mask that controls additional properties that should disallow the edge
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
                               const baldr::graph_tile_ptr&,
+                              const baldr::GraphId&,
                               uint16_t disallow_mask = kDisallowNone) const {
     auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||

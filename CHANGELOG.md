@@ -5,6 +5,7 @@
    * CHANGED: replace `memset` with C++20 default member initializers for bitfields in `DirectedEdge`, `NodeInfo`, and `GraphTileHeader`; drop empty default constructors where possible [#6128](https://github.com/valhalla/valhalla/issues/6128)
    * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
    * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
+   * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
 * **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
@@ -22,6 +23,7 @@
    * FIXED: Vietnamese arrival phrases use "bên trái/bên phải" for the destination side [#6447](https://github.com/valhalla/valhalla/pull/6447)
    * FIXED: Apply configured CostMatrix hierarchy limits to `/optimized_route` [#6441](https://github.com/valhalla/valhalla/issues/6441)
    * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
+   * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
