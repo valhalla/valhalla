@@ -792,6 +792,31 @@ public:
     return destonly_access_restr_mask;
   }
 
+  /**
+   * Checks the edge's access restrictions (height, weight, etc.) against the vehicle, for
+   * filtering location candidates. Time-dependent restrictions and those that exempt
+   * destinations are skipped.
+   *
+   * @param edge    The edge to check
+   * @param tile    The edge's tile
+   * @param edgeid  The edge's id
+   * @return true if the vehicle is within every such restriction on the edge
+   */
+  inline bool MeetsAccessRestrictions(const baldr::DirectedEdge* edge,
+                                      const baldr::graph_tile_ptr& tile,
+                                      const baldr::GraphId& edgeid) const {
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_))
+      return true;
+
+    for (const auto& restriction : tile->GetAccessRestrictions(edgeid.id(), access_mask_)) {
+      if (restriction.except_destination())
+        continue;
+      if (!ModeSpecificAllowed(restriction))
+        return false;
+    }
+    return true;
+  }
+
   /***
    * Evaluates mode-specific and time-dependent access restrictions, including a binary
    * search to get the tile's access restrictions.
