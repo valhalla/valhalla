@@ -2,7 +2,6 @@ name: rust
 
 # this workflow:
 # - builds and tests the Rust bindings on master & PR pushes
-# - checks that the packaged crate builds
 # - publishes the `valhalla` crate from master when its version isn't on crates.io yet
 
 on:
@@ -94,33 +93,6 @@ jobs:
           cargo test
           cargo test --manifest-path src/bindings/rust/examples/Cargo.toml
 
-  package:
-    name: package
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Install deps
-        run: |
-          sudo apt-get update --assume-yes
-          sudo apt-get install --yes --no-install-recommends \
-            ccache cmake libboost-dev libprotobuf-dev pkg-config protobuf-compiler zlib1g-dev
-
-      - name: Install Rust
-        run: |
-          rustup toolchain install stable --profile minimal --no-self-update
-          rustup default stable
-
-      - name: Setup ccache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ccache
-          key: ccache-rust-package-${{ github.sha }}
-          restore-keys: |
-            ccache-rust-package-
-
       - name: Publish dry run
         run: cargo publish --dry-run
 
@@ -157,7 +129,7 @@ jobs:
   publish:
     name: publish ${{ needs.check_version.outputs.version }}
     runs-on: ubuntu-24.04
-    needs: [build, package, check_version]
+    needs: [build, check_version]
     if: ${{ needs.check_version.outputs.should_publish == 'true' && github.ref == 'refs/heads/master' }}
     environment: crates-io
     permissions:

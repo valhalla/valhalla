@@ -456,6 +456,13 @@ components:
           type: boolean
           default: false
           description: Whether to exclude ferry routes.
+        exclude_restricted:
+          type: boolean
+          default: false
+          description: >
+            Whether to exclude roads whose access restrictions the costing's vehicle exceeds, such as height, width,
+            length, weight, axle load, axle count and hazmat. If true, routes can't start or end on such edges. Time-dependent restrictions and those that exempt destinations are not
+            considered.
         exclude_steps:
           type: boolean
           description: > 
