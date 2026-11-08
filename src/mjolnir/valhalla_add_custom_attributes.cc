@@ -24,9 +24,9 @@ int main(int argc, char** argv) {
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_PRINT_VERSION + "\n\n"
-      "a program that writes per-way values computed by a Lua script into an existing\n"
-      "custom attributes tar (mjolnir.custom_attributes_extract). The Lua script must define\n"
-      "custom_attributes(tags) returning a table of attribute name -> number.\n\n");
+      "a program that transforms OSM way tags to custom attributes using a provided Lua script.\n"
+      "Requires an existing custom attributes extract (mjolnir.custom_attributes_extract). The Lua script must define\n"
+      "a function custom_attributes(tags) returning a table of attribute name -> number.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
@@ -40,7 +40,8 @@ int main(int argc, char** argv) {
     // clang-format on
 
     options.parse_positional({"input_files"});
-    options.positional_help("OSM PBF file(s)");
+    options.positional_help("OSM PBF file(s) used to build the initial tileset.");
+
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, &config))
       return EXIT_SUCCESS;

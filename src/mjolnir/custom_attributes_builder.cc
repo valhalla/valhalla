@@ -35,9 +35,9 @@ namespace {
 
 constexpr const char* kLuaFunction = "custom_attributes";
 
-class CustomAttributesLua {
+class custom_attributes_lua {
 public:
-  explicit CustomAttributesLua(const std::string& script) : state_(luaL_newstate()) {
+  explicit custom_attributes_lua(const std::string& script) : state_(luaL_newstate()) {
     luaL_openlibs(state_);
     if (luaL_dostring(state_, script.c_str())) {
       std::string error = lua_tostring(state_, -1);
@@ -53,17 +53,20 @@ public:
     }
   }
 
-  CustomAttributesLua(const CustomAttributesLua&) = delete;
-  CustomAttributesLua& operator=(const CustomAttributesLua&) = delete;
+  custom_attributes_lua(const custom_attributes_lua&) = delete;
+  custom_attributes_lua& operator=(const custom_attributes_lua&) = delete;
 
-  ~CustomAttributesLua() {
+  ~custom_attributes_lua() {
     lua_close(state_);
   }
 
-  // Calls custom_attributes(tags) and hands every string -> number entry of the result to emit.
-  // Returns the number of entries that were not string -> number.
-  template <typename Emit> size_t call(const osmium::Way& way, Emit&& emit) {
+  // Calls custom_attributes(tags) and hands every string -> number entry of the result to the
+  // callback. Returns the number of entries that were not string -> number.
+  template <typename attribute_callback_t>
+  size_t call(const osmium::Way& way, attribute_callback_t&& callback) {
     lua_getglobal(state_, kLuaFunction);
+
+    // prepare the tags as a table
     lua_newtable(state_);
     for (const auto& tag : way.tags()) {
       lua_pushstring(state_, tag.key());
@@ -71,6 +74,7 @@ public:
       lua_rawset(state_, -3);
     }
 
+    // call the user provided lua function
     if (lua_pcall(state_, 1, 1, 0)) {
       std::string error = lua_tostring(state_, -1);
       lua_pop(state_, 1);
@@ -82,10 +86,10 @@ public:
     if (lua_istable(state_, -1)) {
       lua_pushnil(state_);
       while (lua_next(state_, -2) != 0) {
-        // check the key type before lua_tostring, which would convert a number key in place
+        // check the types before converting and passing to the user callback
         if (lua_type(state_, -2) == LUA_TSTRING && lua_type(state_, -1) == LUA_TNUMBER) {
-          emit(std::string_view(lua_tostring(state_, -2)),
-               static_cast<float>(lua_tonumber(state_, -1)));
+          callback(std::string_view(lua_tostring(state_, -2)),
+                   static_cast<float>(lua_tonumber(state_, -1)));
         } else {
           ++invalid;
         }
@@ -102,7 +106,7 @@ private:
   lua_State* state_;
 };
 
-struct WritableTile {
+struct writable_tile {
   CustomAttributesTileHeader* header;
   uint8_t* data;
 };
@@ -119,12 +123,12 @@ bool encode(uint8_t* row, const CustomAttributeDef& def, float value) {
 }
 
 // tiles of the tar keyed by tile base id, plus the attribute definitions from attributes.json
-struct WriteableCustomAttributesExtract {
+struct writable_extract {
   midgard::tar archive;
-  std::unordered_map<uint64_t, WritableTile> tiles;
+  std::unordered_map<uint64_t, writable_tile> tiles;
   std::vector<CustomAttributeDef> defs;
 
-  explicit WriteableCustomAttributesExtract(const std::string& path) : archive(path, false) {
+  explicit writable_extract(const std::string& path) : archive(path, false) {
     archive.for_each([this](const std::string& name, const char* data, size_t size) {
       std::filesystem::path p{name};
 
@@ -173,24 +177,27 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
                              const std::vector<std::string>& input_files,
                              const std::vector<std::string>& tag_keys,
                              const std::string& lua_script) {
-  const auto tar_path = config.get_optional<std::string>("mjolnir.custom_attributes_extract");
-  if (!tar_path) {
+  const auto extract_path = config.get_optional<std::string>("mjolnir.custom_attributes_extract");
+  if (!extract_path) {
     throw std::runtime_error("mjolnir.custom_attributes_extract is not set");
   }
   if (tag_keys.empty()) {
     throw std::runtime_error("At least one OSM tag key is required");
   }
 
-  CustomAttributesLua lua(lua_script);
+  custom_attributes_lua lua(lua_script);
 
-  WriteableCustomAttributesExtract ca_extract(*tar_path);
+  writable_extract ca_extract(*extract_path);
   if (ca_extract.defs.empty() || ca_extract.tiles.empty()) {
-    throw std::runtime_error(*tar_path + " has no attributes.json definitions or no usable tiles");
+    throw std::runtime_error(*extract_path +
+                             " has no attributes.json definitions or no usable tiles");
   }
+
   std::unordered_map<std::string, const CustomAttributeDef*> column;
   for (const auto& def : ca_extract.defs) {
     column.emplace(def.name, &def);
   }
+
   const uint32_t row_size = custom_attributes_row_size(ca_extract.defs);
   for (const auto& [id, tile] : ca_extract.tiles) {
     if (tile.header->num_attributes != ca_extract.defs.size() || tile.header->row_size != row_size) {
@@ -219,6 +226,13 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
     while (osmium::memory::Buffer buffer = pbf.read()) {
       for (const auto& way : buffer.select<osmium::Way>()) {
         const auto& tags = way.tags();
+
+        const auto way_edges = ways_edges.find(static_cast<uint64_t>(way.id()));
+        if (way_edges == ways_edges.end()) {
+          continue;
+        }
+
+        // make the user pass a list of tag keys to quickly filter by
         bool interesting = false;
         for (const auto& key : tag_keys) {
           if (tags.has_key(key.c_str())) {
@@ -226,11 +240,8 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
             break;
           }
         }
+
         if (!interesting) {
-          continue;
-        }
-        const auto way_edges = ways_edges.find(static_cast<uint64_t>(way.id()));
-        if (way_edges == ways_edges.end()) {
           continue;
         }
 
