@@ -2,6 +2,7 @@
 #include "baldr/custom_attributes_tile.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "mjolnir/way_edges_processor.h"
@@ -35,6 +36,9 @@ namespace {
 
 constexpr const char* kLuaFunction = "custom_attributes";
 
+// which edges of a way, relative to the OSM way direction, a value returned by Lua applies to
+enum class edge_direction { kBoth, kForward, kBackward };
+
 class custom_attributes_lua {
 public:
   explicit custom_attributes_lua(const std::string& script) : state_(luaL_newstate()) {
@@ -61,7 +65,8 @@ public:
   }
 
   // Calls custom_attributes(tags) and hands every string -> number entry of the result to the
-  // callback. Returns the number of entries that were not string -> number.
+  // callback along with its direction. Lua returns either one table for both directions or a
+  // forward and a backward table. Returns the number of entries that were not string -> number.
   template <typename attribute_callback_t>
   size_t call(const osmium::Way& way, attribute_callback_t&& callback) {
     lua_getglobal(state_, kLuaFunction);
@@ -75,34 +80,55 @@ public:
     }
 
     // call the user provided lua function
-    if (lua_pcall(state_, 1, 1, 0)) {
+    if (lua_pcall(state_, 1, 2, 0)) {
       std::string error = lua_tostring(state_, -1);
       lua_pop(state_, 1);
       throw std::runtime_error(
           std::format("Lua {}() failed for way {}: {}", kLuaFunction, way.id(), error));
     }
 
+    const int top = lua_gettop(state_);
     size_t invalid = 0;
-    if (lua_istable(state_, -1)) {
-      lua_pushnil(state_);
-      while (lua_next(state_, -2) != 0) {
-        // check the types before converting and passing to the user callback
-        if (lua_type(state_, -2) == LUA_TSTRING && lua_type(state_, -1) == LUA_TNUMBER) {
-          callback(std::string_view(lua_tostring(state_, -2)),
-                   static_cast<float>(lua_tonumber(state_, -1)));
-        } else {
-          ++invalid;
-        }
-        lua_pop(state_, 1);
-      }
-    } else if (!lua_isnil(state_, -1)) {
-      ++invalid;
+
+    // if the second result is nil, only a single table was returned,
+    // apply it to both forward and backward edges
+    if (lua_isnil(state_, top)) {
+      invalid += walk_table(top - 1, edge_direction::kBoth, callback);
+    } else {
+      invalid += walk_table(top - 1, edge_direction::kForward, callback);
+      invalid += walk_table(top, edge_direction::kBackward, callback);
     }
-    lua_pop(state_, 1);
+    lua_pop(state_, 2);
     return invalid;
   }
 
 private:
+  // walks a table returned from the user provided lua function and passes each entry to the callback.
+  // Returns the number of invalid entries, a non-table, non-nil value counts as one.
+  template <typename attribute_callback_t>
+  size_t walk_table(int index, edge_direction direction, attribute_callback_t& callback) {
+    if (lua_isnil(state_, index)) {
+      return 0;
+    }
+    if (!lua_istable(state_, index)) {
+      return 1;
+    }
+
+    size_t invalid = 0;
+    lua_pushnil(state_);
+    while (lua_next(state_, index) != 0) {
+      // check the types before converting and passing to the user callback
+      if (lua_type(state_, -2) == LUA_TSTRING && lua_type(state_, -1) == LUA_TNUMBER) {
+        callback(std::string_view(lua_tostring(state_, -2)),
+                 static_cast<float>(lua_tonumber(state_, -1)), direction);
+      } else {
+        ++invalid;
+      }
+      lua_pop(state_, 1);
+    }
+    return invalid;
+  }
+
   lua_State* state_;
 };
 
@@ -120,6 +146,14 @@ bool encode(uint8_t* row, const CustomAttributeDef& def, float value) {
       return raw >= 0.0 && raw <= 255.0;
   }
   return false;
+}
+
+float decode(const uint8_t* row, const CustomAttributeDef& def) {
+  switch (def.type) {
+    case CustomAttributeType::kUint8:
+      return row[def.offset / 8] * def.scale;
+  }
+  return 0.0f;
 }
 
 // tiles of the tar keyed by tile base id, plus the attribute definitions from attributes.json
@@ -169,14 +203,110 @@ struct writable_extract {
       return true;
     });
   }
+
+  // the edge's row, or nullptr if the extract has no tile or row for it
+  uint8_t* row(const GraphId& edgeid) {
+    const auto tile = tiles.find(edgeid.tile_base().value);
+    if (tile == tiles.end() || edgeid.id() >= tile->second.header->directed_edge_count) {
+      return nullptr;
+    }
+    return tile->second.data + static_cast<size_t>(edgeid.id()) * tile->second.header->row_size;
+  }
 };
+
+// Writes every shortcut's values from the edges it replaces. Returns the number of shortcuts
+// written and adds their tiles to touched_tiles.
+size_t write_shortcuts(GraphReader& reader,
+                       writable_extract& ca_extract,
+                       ShortcutStrategy strategy,
+                       std::unordered_set<uint64_t>& touched_tiles) {
+  size_t written = 0, skipped = 0;
+  std::vector<float> values(ca_extract.defs.size());
+  std::vector<std::pair<uint8_t*, uint32_t>> edge_rows; // row and length of each replaced edge
+
+  // shortcuts only exist on the levels above the local level
+  for (uint8_t level = 0; level < TileHierarchy::levels().back().level; ++level) {
+    for (auto edge_id : reader.GetTileSet(level)) {
+      if (reader.OverCommitted()) {
+        reader.Trim();
+      }
+      graph_tile_ptr tile = reader.GetGraphTile(edge_id);
+      for (uint32_t n = 0; n < tile->header()->directededgecount(); ++n, ++edge_id) {
+        if (!tile->directededge(edge_id)->is_shortcut()) {
+          continue;
+        }
+        uint8_t* shortcut_row = ca_extract.row(edge_id);
+        if (!shortcut_row) {
+          ++skipped;
+          continue;
+        }
+        const auto edges = reader.RecoverShortcut(edge_id);
+
+        // RecoverShortcut returns the shortcut itself if it fails
+        if (edges.size() == 1 && edges.front() == edge_id) {
+          ++skipped;
+          continue;
+        }
+
+        edge_rows.clear();
+        for (const auto& id : edges) {
+          uint8_t* row = ca_extract.row(id);
+          const auto* edge = reader.directededge(id);
+          if (row && edge) {
+            edge_rows.emplace_back(row, std::max(edge->length(), 1u));
+          }
+        }
+        if (edge_rows.empty()) {
+          ++skipped;
+          continue;
+        }
+
+        for (size_t i = 0; i < ca_extract.defs.size(); ++i) {
+          const auto& def = ca_extract.defs[i];
+          float value = decode(edge_rows.front().first, def);
+          double weighted_sum = 0.0, total_length = 0.0;
+          for (const auto& [row, length] : edge_rows) {
+            const float edge_value = decode(row, def);
+            switch (strategy) {
+              case ShortcutStrategy::kMin:
+                value = std::min(value, edge_value);
+                break;
+              case ShortcutStrategy::kMax:
+                value = std::max(value, edge_value);
+                break;
+              default: // kMean
+                weighted_sum += static_cast<double>(edge_value) * length;
+                total_length += length;
+                break;
+            }
+          }
+          if (strategy == ShortcutStrategy::kMean) {
+            value = static_cast<float>(weighted_sum / total_length);
+          }
+          values[i] = value;
+        }
+        for (size_t i = 0; i < ca_extract.defs.size(); ++i) {
+          encode(shortcut_row, ca_extract.defs[i], values[i]);
+        }
+        touched_tiles.insert(edge_id.tile_base().value);
+        ++written;
+      }
+    }
+  }
+
+  if (skipped) {
+    LOG_WARN("{} shortcuts could not be recovered or have no custom attributes tile", skipped);
+  }
+  return written;
+}
 
 } // namespace
 
 size_t add_custom_attributes(const boost::property_tree::ptree& config,
                              const std::vector<std::string>& input_files,
                              const std::vector<std::string>& tag_keys,
-                             const std::string& lua_script) {
+                             const std::string& lua_script,
+                             ShortcutStrategy shortcut_strategy) {
   const auto extract_path = config.get_optional<std::string>("mjolnir.custom_attributes_extract");
   if (!extract_path) {
     throw std::runtime_error("mjolnir.custom_attributes_extract is not set");
@@ -212,7 +342,7 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
            ca_extract.defs.size());
 
   GraphReader reader(config.get_child("mjolnir"));
-  const auto ways_edges = collect_way_edges(reader);
+  const auto ways_edges = collect_way_edges(reader, "", kAllAccess);
   LOG_INFO("Collected edges for {} ways", ways_edges.size());
 
   size_t ways_passed = 0, values_written = 0, values_clamped = 0, invalid_entries = 0,
@@ -246,35 +376,42 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
         }
 
         ++ways_passed;
-        invalid_entries += lua.call(way, [&](std::string_view name, float value) {
-          const auto col = column.find(std::string(name));
-          if (col == column.end()) {
-            if (unknown_names.emplace(name).second) {
-              LOG_WARN("Lua returned unknown attribute '{}', ignoring it", name);
-            }
-            return;
-          }
-          if (!std::isfinite(value)) {
-            ++invalid_entries;
-            return;
-          }
-          for (const auto& edge : way_edges->second) {
-            const auto tile_id = edge.edgeid.tile_base().value;
-            const auto tile = ca_extract.tiles.find(tile_id);
-            if (tile == ca_extract.tiles.end() ||
-                edge.edgeid.id() >= tile->second.header->directed_edge_count) {
-              ++edges_missing;
-              continue;
-            }
-            uint8_t* row = tile->second.data + static_cast<size_t>(edge.edgeid.id()) * row_size;
-            values_clamped += !encode(row, *col->second, value);
-            touched_tiles.insert(tile_id);
-            ++values_written;
-          }
-        });
+        invalid_entries +=
+            lua.call(way, [&](std::string_view name, float value, edge_direction direction) {
+              const auto col = column.find(std::string(name));
+              if (col == column.end()) {
+                if (unknown_names.emplace(name).second) {
+                  LOG_WARN("Lua returned unknown attribute '{}', ignoring it", name);
+                }
+                return;
+              }
+              if (!std::isfinite(value)) {
+                ++invalid_entries;
+                return;
+              }
+              for (const auto& edge : way_edges->second) {
+                if (direction != edge_direction::kBoth &&
+                    edge.forward != (direction == edge_direction::kForward)) {
+                  continue;
+                }
+                uint8_t* row = ca_extract.row(edge.edgeid);
+                if (!row) {
+                  ++edges_missing;
+                  continue;
+                }
+                values_clamped += !encode(row, *col->second, value);
+                touched_tiles.insert(edge.edgeid.tile_base().value);
+                ++values_written;
+              }
+            });
       }
     }
     pbf.close();
+  }
+
+  size_t shortcuts_written = 0;
+  if (shortcut_strategy != ShortcutStrategy::kNone) {
+    shortcuts_written = write_shortcuts(reader, ca_extract, shortcut_strategy, touched_tiles);
   }
 
   const auto now = static_cast<uint64_t>(std::time(nullptr));
@@ -292,8 +429,8 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
   if (edges_missing) {
     LOG_WARN("{} edge values had no matching tile or edge index", edges_missing);
   }
-  LOG_INFO("Passed {} ways to Lua, wrote {} values into {} tiles", ways_passed, values_written,
-           touched_tiles.size());
+  LOG_INFO("Passed {} ways to Lua, wrote {} values and {} shortcuts into {} tiles", ways_passed,
+           values_written, shortcuts_written, touched_tiles.size());
   return values_written;
 }
 

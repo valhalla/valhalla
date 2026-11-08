@@ -24,7 +24,7 @@ void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirec
 } // namespace
 
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
-collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
+collect_way_edges(baldr::GraphReader& reader, const std::string& filename, uint16_t access_mask) {
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
   // Iterate through all tiles
@@ -50,8 +50,8 @@ collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
         continue;
       }
 
-      // Skip if the edge does not allow auto use
-      if (!(edge->forwardaccess() & baldr::kAutoAccess)) {
+      // Skip if the edge does not allow any of the requested modes
+      if (!(edge->forwardaccess() & access_mask)) {
         continue;
       }
 
