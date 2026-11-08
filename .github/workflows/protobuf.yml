@@ -43,7 +43,8 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
-      # trusted publishing (OIDC) needs npm >= 11.5.1, node 22 bundles npm 10
-      - run: npm install -g npm@latest
+      # trusted publishing (OIDC) needs npm >= 11.5.1, node 22 bundles npm 10;
+      # npm 12 blocks dependency install scripts, which grpc-tools needs to fetch protoc
+      - run: npm install -g npm@11
       - run: make release-ts
  
