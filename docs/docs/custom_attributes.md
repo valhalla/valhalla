@@ -41,7 +41,7 @@ After writing the initial extract, replace individual entries in-place to popula
 
 **Important:** Always regenerate or update the extract from the same tile set it was built against. Edge indices are stable within a tileset version but will shift if tiles are rebuilt from new OSM data. There is no cross-check between the sidecar and the main tileset at load time; a mismatched sidecar silently applies values to the wrong edges.
 
-## Filling the sidecar from OSM tags
+## Filling the extract from OSM tags
 
 `valhalla_add_custom_attributes` writes values derived from OSM way tags into an existing sidecar. It reads the graph and the sidecar from the config (`mjolnir.tile_extract` or `mjolnir.tile_dir`, and `mjolnir.custom_attributes_extract`), then streams the ways of the PBF the graph was built from.
 
@@ -52,7 +52,7 @@ valhalla_add_custom_attributes -c valhalla.json \
     planet.osm.pbf
 ```
 
-Ways that have none of the `--tag-keys` are skipped before Lua runs. The tags of the remaining ways are passed to `custom_attributes(tags)`, which returns a table of attribute name → number. Each value is written to every edge of that way. Names missing from `attributes.json` are reported once and ignored, and attributes the script does not return keep their current value.
+Ways that have none of the `--tag-keys` are skipped before Lua runs. Each value is written to every edge of that way. Names missing from `attributes.json` are reported once and ignored, and unused attributes are not touched.
 
 ```lua
 local smoothness = { excellent = 0.0, good = 0.1, intermediate = 0.3, bad = 0.6, very_bad = 1.0 }
@@ -63,17 +63,17 @@ function custom_attributes(tags)
     return { surface_quality = v }
   end
   if tags["surface"] == "gravel" then
-    return { surface_quality = 0.5 }
+    -- return a single table that will be applied to edges in both directions
+    -- OR return two tables, one for forward edges, one for the backward ones!
+    return { surface_quality = 0.5 }  --, { surface_quality = 0.5 }
   end
   return nil
 end
 ```
 
-Way edges come from `collect_way_edges` (`valhalla/mjolnir/way_edges_processor.h`), so only edges with forward auto access get values. Shortcut edges are not written.
-
 ## Configuration
 
-Add only `custom_attributes_extract` to the `mjolnir` section of your config. Attribute names come from `attributes.json` inside the tar — no separate config entry is needed.
+Add `custom_attributes_extract` to the `mjolnir` section of your config. 
 
 ```json
 {
@@ -84,8 +84,6 @@ Add only `custom_attributes_extract` to the `mjolnir` section of your config. At
   }
 }
 ```
-
-This key is optional — if the file does not exist or the key is omitted, routing proceeds normally with no custom attribute effect and no error.
 
 ## Using custom attributes in a route request
 
@@ -118,14 +116,12 @@ Supported costing models: `auto`, `bus`, `taxi`, `truck`, `motorcycle`, `motor_s
 The custom attributes contribute additively to the edge cost factor:
 
 ```
-factor += Σ (attr_i * weight_i)   for all i where weight_i ≠ 0
+factor += weighted sum of (attr_i * weight_i) for all i where weight_i ≠ 0
 ```
 
-`factor` is then multiplied by the base edge traversal time. A value of `1.0` with `weight=1.0` adds `1.0` to `factor` — equivalent to the maximum highway avoidance bias. Negative weights reduce the factor and can make an edge more attractive.
+`factor` is then multiplied by the base edge cost, along with the costing's other factors. An attribute value of `1.0` with `weight=1.0` adds `1.0` to `factor`. A higher factor makes an edge more costly.
 
-The factor penalty is proportional to edge traversal time: a slow 10 km/h urban street receives a larger absolute cost increase than a fast 100 km/h motorway for the same attribute value. This is intentional for penalizing time-weighted exposure (e.g. noise, pollution), but may not suit all use cases.
-
-## Inspecting custom attribute values via `trace_attributes`
+## Custom attributes in `trace_attributes`
 
 All per-edge attribute values for each matched edge are available in `trace_attributes` responses as a `custom_attributes` map:
 
@@ -144,26 +140,5 @@ All per-edge attribute values for each matched edge are available in `trace_attr
 }
 ```
 
-Enable it by adding `"edge.custom_attribute": true` to the `filters.attributes` list. The object is omitted when no sidecar is loaded. Keys are the attribute names from `attributes.json`; attributes beyond the declared names are keyed by their numeric index string (`"0"`, `"1"`, ...).
+Enable it by adding `"edge.custom_attribute": true` to the `filters.attributes` list. Keys are the attribute names from `attributes.json`.
 
-`use_custom_attributes` in the costing options does **not** affect the values returned here — `custom_attributes` always contains the raw `.gph` floats, independent of the routing weights.
-
-## Binary format reference
-
-```
-Offset              Size              Type        Field
-0                   8                 uint64_t    tile_id (GraphId of the tile)
-8                   8                 uint64_t    last_update (seconds since epoch)
-16                  2                 uint16_t    num_attributes (bits 0-15 of a uint64_t)
-18                  6                             spare (bits 16-63, 0)
-24                  4                 uint32_t    directed_edge_count
-28                  4                 uint32_t    custom_attributes_tile_version (1)
-32                  4*N               float       attr[edge=0][attr=0..N-1]
-32+4*N              4*N               float       attr[edge=1][attr=0..N-1]
-...
-32+(edge_count-1)*N*4 4*N             float       attr[edge=edge_count-1][attr=0..N-1]
-```
-
-Total file size must equal `sizeof(CustomAttributesTileHeader) + edge_count * num_attributes * sizeof(float)` exactly. A mismatch causes the tile to be skipped with a `LOG_ERROR` at startup; routing for that tile proceeds without custom attributes.
-
-There is currently no format version field. Do not change the layout without updating both the C++ reader (`valhalla/baldr/custom_attributes_tile.h`) and the Python build script simultaneously.
