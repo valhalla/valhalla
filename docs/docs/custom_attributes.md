@@ -1,10 +1,10 @@
 # Custom Attributes 
 
-Valhalla allows custom attributes to be set per edge via a separate tar archive referred to as the custom attributes extract. Storage of and access to these attributes works similar to live traffic: every tile has a corresponding custom attributes tile in a separate tar archive (the extract) whose layout is a header followed by an array of per-edge attributes. The index position of an edge in a tile is also the index of the edge in the custom attributes tile. Multiple named attributes can be stored per edge and independently used in costing at request time. Use cases include attributes that Valhalla does not support, either because they are not derived from OSM data, or because they are too specific or subjective to be supported in the public project. Examples are walkability scores, cycling safety scores derived from accident reports, or routes popular with fleet drivers.
+Valhalla allows custom attributes to be set per edge via a separate extract referred to as the custom attributes extract. Storage of and access to these attributes works similar to live traffic: every tile has a corresponding custom attributes tile in a separate tar archive (the extract) whose layout is a header followed by an array of per-edge attributes. The index position of an edge in a tile is also the index of the edge in the custom attributes tile. Multiple named attributes can be stored per edge and independently used in costing at request time. Use cases include attributes that Valhalla does not support, either because they are not derived from OSM data, or because they are too specific or subjective to be supported in the public project. Examples are walkability scores, cycling safety scores derived from accident reports, or routes popular with fleet drivers.
 
 ## How it works
 
-The sidecar is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.gph`. A `.gph` file is a compact binary:
+The extract is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.gph`. A `.gph` file is a compact binary:
 
 ```
 [CustomAttributesTileHeader (see `custom_attributes_tile.h`)]
@@ -16,7 +16,7 @@ The sidecar is a tar archive (`custom_attributes.tar`) with the same directory s
 
 The data is row-major by edge: all attributes for edge 0, then all attributes for edge 1, etc. Currently, each 8-bit unsigned integer stores a single edge attribute, but the format can be extended to support more widths and types. The local edge index is the same as `GraphId::id()`.
 
-The tar also contains a single `attributes.json` file at its root:
+The extract also contains a single `attributes.json` file at its root:
 
 ```json
 [{"name": "scenic", "type": "uint8"}, {"name": "walkability", "type": "uint8"}]
@@ -24,35 +24,22 @@ The tar also contains a single `attributes.json` file at its root:
 
 This JSON array declares the attribute names in column order (column 0 = first name, column 1 = second name, etc.).
 
-`GraphReader` loads the archive at startup (read-only mmap). The archive is held open so an external process can update it while the service runs, analogous to how live traffic works. 
+`GraphReader` loads the extract at startup (read-only mmap). The archive is held open so an external process can update it while the service runs, analogous to how live traffic works. 
 
-## Building the sidecar tar
+## Building the extract
 
-`scripts/build_custom_attributes_tar.py` creates an initial sidecar from an existing `valhalla_tiles.tar`. All edges get default values. The `--attribute-names` flag is required and determines both the number of attributes per edge and the names written to `attributes.json` inside the tar.
+`scripts/build_custom_attributes_tar.py` creates an initial extract from an existing `valhalla_tiles.tar`. All edges get default values. The `--attribute-names` flag is required and determines both the number of attributes per edge and the names written to `attributes.json` inside the tar.
 
 ```bash
-python3 scripts/build_custom_attributes_tar.py \
+python3 scripts/valhalla_build_custom_attributes_extract \
     --config         valhalla.json \
-    --attribute-names scenic,surface_quality \
-    --default-values 0.0,0.0
+    --attribute-defs '[{"name": "scenic", "type": "uint8", "scale": 0.01}]' \
+    --default-values 0.0
 ```
 
-Options:
+After writing the initial extract, replace individual entries in-place to populate real values. The in-memory format is simple enough to update with any language that supports `struct.pack` or equivalent. The extract is memory mapped read-write by the update process, read-only by the routing service — the same arrangement as `traffic.tar`.
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-c`, `--config` | — | Valhalla config JSON. Reads tiles from `mjolnir.tile_extract`, writes the sidecar to `mjolnir.custom_attributes_extract` |
-| `-i`, `--inline-config` | `{}` | Inline JSON config, overrides `--config` if present. One of the two is required |
-| `--attribute-names` | required | Comma-separated names written to `attributes.json` in the tar. The number of names determines `num_attributes` per edge. |
-| `--default-values` | `0.0` | Comma-separated default floats, one per attribute. Fewer values than the name count repeats the last value. |
-| `--random` | off | Fill each slot with a random value in `[0.0, --random-max)` instead of the default |
-| `--random-max` | `1.0` | Upper bound (exclusive) for random values when `--random` is set |
-
-The script reads only the `GraphTileHeader` from each tile to determine `directededgecount`. It does **not** modify the main tile tar.
-
-After writing the initial archive, replace individual `.gph` entries in-place to populate real values. The in-memory format is simple enough to update with any language that supports `struct.pack` or equivalent. The sidecar is mmap'd read-write by the update process, read-only by the routing service — the same arrangement as `traffic.tar`.
-
-**Important:** Always regenerate or update the sidecar from the same tile set it was built against. Edge indices are stable within a tileset version but will shift if tiles are rebuilt from new OSM data. There is no cross-check between the sidecar and the main tileset at load time; a mismatched sidecar silently applies values to the wrong edges.
+**Important:** Always regenerate or update the extract from the same tile set it was built against. Edge indices are stable within a tileset version but will shift if tiles are rebuilt from new OSM data. There is no cross-check between the sidecar and the main tileset at load time; a mismatched sidecar silently applies values to the wrong edges.
 
 ## Filling the sidecar from OSM tags
 

@@ -137,23 +137,8 @@ struct writable_tile {
   uint8_t* data;
 };
 
-// stores value / scale in the column, returns false if it had to be clamped to the type's range
-bool encode(uint8_t* row, const CustomAttributeDef& def, float value) {
-  const double raw = std::round(static_cast<double>(value) / def.scale);
-  switch (def.type) {
-    case CustomAttributeType::kUint8:
-      row[def.offset / 8] = static_cast<uint8_t>(std::clamp(raw, 0.0, 255.0));
-      return raw >= 0.0 && raw <= 255.0;
-  }
-  return false;
-}
-
 float decode(const uint8_t* row, const CustomAttributeDef& def) {
-  switch (def.type) {
-    case CustomAttributeType::kUint8:
-      return row[def.offset / 8] * def.scale;
-  }
-  return 0.0f;
+  return decode_custom_attribute(row, def.offset, def.type) * def.scale;
 }
 
 // tiles of the tar keyed by tile base id, plus the attribute definitions from attributes.json
@@ -286,7 +271,7 @@ size_t write_shortcuts(GraphReader& reader,
           values[i] = value;
         }
         for (size_t i = 0; i < ca_extract.defs.size(); ++i) {
-          encode(shortcut_row, ca_extract.defs[i], values[i]);
+          encode_custom_attribute(shortcut_row, ca_extract.defs[i], values[i]);
         }
         touched_tiles.insert(edge_id.tile_base().value);
         ++written;
@@ -399,7 +384,7 @@ size_t add_custom_attributes(const boost::property_tree::ptree& config,
                   ++edges_missing;
                   continue;
                 }
-                values_clamped += !encode(row, *col->second, value);
+                values_clamped += !encode_custom_attribute(row, *col->second, value);
                 touched_tiles.insert(edge.edgeid.tile_base().value);
                 ++values_written;
               }

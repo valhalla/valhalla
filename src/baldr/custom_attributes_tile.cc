@@ -2,6 +2,7 @@
 
 #include <rapidjson/document.h>
 
+#include <algorithm>
 #include <cmath>
 #include <format>
 #include <unordered_set>
@@ -65,6 +66,16 @@ std::vector<CustomAttributeDef> ParseCustomAttributeDefs(std::string_view json) 
     defs.push_back(std::move(def));
   }
   return defs;
+}
+
+bool encode_custom_attribute(uint8_t* row, const CustomAttributeDef& def, float value) {
+  const double raw = std::round(static_cast<double>(value) / def.scale);
+  switch (def.type) {
+    case CustomAttributeType::kUint8:
+      row[def.offset / 8] = static_cast<uint8_t>(std::clamp(raw, 0.0, 255.0));
+      return raw >= 0.0 && raw <= 255.0;
+  }
+  return false;
 }
 
 uint32_t custom_attributes_row_size(const std::vector<CustomAttributeDef>& defs) {

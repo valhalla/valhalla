@@ -57,6 +57,20 @@ struct WeightedCustomAttribute {
   float weight;
 };
 
+// raw value of the column at the bit offset of an edge's row, without the scale
+inline float
+decode_custom_attribute(const volatile uint8_t* row, uint32_t offset, CustomAttributeType type) {
+  switch (type) {
+    case CustomAttributeType::kUint8:
+      return static_cast<float>(row[offset / 8]);
+  }
+  return 0.0f;
+}
+
+// stores round(value / scale) in the column, returns false if it had to be clamped to the type's
+// range
+bool encode_custom_attribute(uint8_t* row, const CustomAttributeDef& def, float value);
+
 /**
  * Parse attributes.json: [{"name": "scenic", "type": "uint8", "scale": 0.01}, ...].
  * Columns are laid out in array order, padded only to put byte-sized types on a byte boundary;
@@ -139,7 +153,7 @@ public:
     if (!row || def.offset + custom_attribute_bits(def.type) > header_->row_size * 8u) {
       return 0.0f;
     }
-    return decode(row, def.offset, def.type) * def.scale;
+    return decode_custom_attribute(row, def.offset, def.type) * def.scale;
   }
 
   /**
@@ -159,7 +173,7 @@ public:
     float sum = 0.0f;
     for (const auto& attribute : attributes) {
       if (attribute.offset + custom_attribute_bits(attribute.type) <= row_bits) {
-        sum += decode(row, attribute.offset, attribute.type) * attribute.weight;
+        sum += decode_custom_attribute(row, attribute.offset, attribute.type) * attribute.weight;
       }
     }
     return sum;
@@ -191,14 +205,6 @@ protected:
       return nullptr;
     }
     return data_ + static_cast<size_t>(edge_index) * header_->row_size;
-  }
-
-  static float decode(const volatile uint8_t* row, uint32_t offset, CustomAttributeType type) {
-    switch (type) {
-      case CustomAttributeType::kUint8:
-        return static_cast<float>(row[offset / 8]);
-    }
-    return 0.0f;
   }
 
 private:
