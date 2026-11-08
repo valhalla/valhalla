@@ -304,6 +304,10 @@ void loki_worker_t::resolve_linear_cost_factors(Api& api) {
 
   const auto failed_lines = add_cost_factor_edges(none_mode_costing, none_mode, *reader, options,
                                                   min_linear_cost_factor, max_linear_cost_edges);
+  // the costing used for candidate search predates the resolved edges
+  if (const auto& costing = mode_costing[static_cast<size_t>(mode)]) {
+    costing->SetCostFactorEdges(options.costings().at(options.costing_type()).options());
+  }
   if (!failed_lines.empty()) {
     std::string indices;
     for (const auto idx : failed_lines) {

@@ -82,7 +82,8 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     correlated.set_type(stop_type);
 
     // For avoiding recomputing projection later
-    const bool edge_included = !costing || costing->Allowed(edge, tile, sif::kDisallowShortcut);
+    const bool edge_included =
+        !costing || costing->Allowed(edge, tile, edgeid, sif::kDisallowShortcut);
 
     if (edge_included) {
       std::tie(point, sq_distance, segment, offset) =
@@ -106,7 +107,8 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
-    bool oppedge_included = !costing || costing->Allowed(opp_edge, opp_tile, sif::kDisallowShortcut);
+    bool oppedge_included =
+        !costing || costing->Allowed(opp_edge, opp_tile, opp_edgeid, sif::kDisallowShortcut);
 
     // Correlate its opp edge
     if (oppedge_included) {
