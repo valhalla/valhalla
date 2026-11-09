@@ -67,6 +67,10 @@ Containers of this image have the following custom environment variables being p
 | `serve_tiles` | `True` | `True` starts the valhalla service. |
 | `tileset_name` | `valhalla_tiles` | The name of the resulting graph on disk.<br>Very useful in case you want to build multiple datasets in the same directory. |
 | `traffic_name` | `""` | The name of the `traffic.tar`.<br>Setting this to be empty (i.e. `""`) will cause no traffic archive to be built.<br>Again, useful for serving multiple traffic archives from the same directory. |
+| `build_custom_attributes` | `False` | `True` builds a [custom attributes extract](../docs/docs/custom_attributes.md) from the tile tar if none exists yet, or whenever the tile tar was rebuilt. <br> `Force` rebuilds it on every start. Requires `build_tar` and `custom_attributes_defs`. |
+| `custom_attributes_name` | `custom_attributes` | The name of the custom attributes tar. |
+| `custom_attributes_defs` | `""` | JSON array of attribute definitions, e.g. `[{"name": "scenic", "type": "uint8", "scale": 0.01}]`. |
+| `custom_attributes_default_values` | `0.0` | Comma-separated default values, one per attribute, written to every edge. |
 | `update_existing_config` | `True` | `True` updates missing keys in existing `valhalla.json`.<br>Useful for updating stale config files to include newly introduced config parameters. |
 | `use_default_speeds_config` | `True` | `True` loads a JSON file used to enhance default speeds (or falls back to an existing `custom_files/default_speeds.json`) and sets the respective config entry. Read more [here](https://github.com/OpenStreetMapSpeeds/schema). |
 | `default_speeds_config_url` | [this url](https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json) | Remote location of the `default_speeds_config` JSON. |

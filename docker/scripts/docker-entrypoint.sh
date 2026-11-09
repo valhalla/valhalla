@@ -21,8 +21,38 @@ do_build_tar() {
       options="${options} --overwrite"
     fi 
     valhalla_build_extract ${options} || exit 1
+    tile_tar_rebuilt="True"
   fi
 }
+
+# the extract is indexed by edge position, so it's stale whenever the tile tar was rebuilt
+do_build_custom_attributes() {
+  if [[ "${build_custom_attributes}" != "True" && "${build_custom_attributes}" != "Force" ]]; then
+    return
+  fi
+  if [[ "${build_custom_attributes}" == "True" && -f "${CUSTOM_ATTRIBUTES_TAR}" && "${tile_tar_rebuilt}" == "False" ]]; then
+    echo "INFO: Found ${CUSTOM_ATTRIBUTES_TAR}, skipping custom attributes extract."
+    return
+  fi
+  if ! [[ -f "${TILE_TAR}" ]]; then
+    echo "WARNING: Custom attributes extract requested, but no tile tar found at ${TILE_TAR}, skipping."
+    return
+  fi
+  if [[ -z "${custom_attributes_defs}" ]]; then
+    echo "ERROR: build_custom_attributes is ${build_custom_attributes}, but custom_attributes_defs is empty."
+    exit 1
+  fi
+  echo ""
+  echo "======================================"
+  echo "= Building custom attributes extract ="
+  echo "======================================"
+  echo ""
+  valhalla_build_custom_attributes_extract -c "${CONFIG_FILE}" \
+    --attribute-defs "${custom_attributes_defs}" \
+    --default-values "${custom_attributes_default_values}" || exit 1
+}
+
+tile_tar_rebuilt="False"
 
 export server_threads=${server_threads:-$(nproc)}
 if [[ "$force_rebuild" == "True" ]]; then
@@ -39,6 +69,7 @@ if [[ $1 == "build_tiles" ]]; then
   else
     echo "WARNING: Skipping tar building. Expect degraded performance while using Valhalla."
   fi
+  do_build_custom_attributes
 
   # set 775/664 permissions on all created files
   find "${CUSTOM_FILES}" -type d -exec chmod 775 {} \;
@@ -59,6 +90,7 @@ if [[ $1 == "build_tiles" ]]; then
   fi
 elif [[ $1 == "tar_tiles" ]]; then
   do_build_tar "$build_tar"
+  do_build_custom_attributes
 else
   echo "ERROR: Unrecognized CMD: '$1'"
   exit 1
