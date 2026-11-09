@@ -389,9 +389,9 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
       baldr::GraphId opp_id;
 
       // bail if we wouldnt be allowed on this edge anyway, nor its opposing
-      if (!costing->Allowed(edge, tile) &&
+      if (!costing->Allowed(edge, tile, edge_id) &&
           (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).is_valid() ||
-           !costing->Allowed(opp_edge, opp_tile))) {
+           !costing->Allowed(opp_edge, opp_tile, opp_id))) {
         continue;
       }
 

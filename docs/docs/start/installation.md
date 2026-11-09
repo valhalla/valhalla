@@ -33,3 +33,15 @@ npm install @valhallajs/valhallajs
 ```
 
 For more details, see the [NodeJS README](../bindings/nodejs.md).
+
+## Via Rust bindings
+
+[![crates.io version](https://img.shields.io/crates/v/valhalla?label=valhalla)](https://crates.io/crates/valhalla)
+
+We publish Rust bindings to crates.io with [`valhalla`](https://crates.io/crates/valhalla), which builds Valhalla from source:
+
+```bash
+cargo add valhalla
+```
+
+For more details, see the [Rust README](../bindings/rust.md).

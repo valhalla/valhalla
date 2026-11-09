@@ -58,9 +58,14 @@ jobs:
           sed -i "0,/^## UNRELEASED/s//## Release Date: $(date +%Y-%m-%d) Valhalla $new_tag/" CHANGELOG.md
           sed -i "1i## UNRELEASED\n* **Removed**\n* **Bug Fix**\n* **Enhancement**\n" CHANGELOG.md
 
+          # bump the rust crate's patch version
+          crate_version=$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+          new_crate_version=$(echo "$crate_version" | awk -F. -v OFS=. '{$3 = $3 + 1; print}')
+          sed -i "0,/^version = .*/s//version = \"${new_crate_version}\"/" Cargo.toml
+
           branch="release-$new_tag"
           git checkout -B "$branch"
-          git add valhalla/valhalla.h CHANGELOG.md
+          git add valhalla/valhalla.h CHANGELOG.md Cargo.toml
           git commit -m "release version $new_tag"
           git push -u origin "$branch"
 
