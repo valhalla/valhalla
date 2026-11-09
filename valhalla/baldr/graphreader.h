@@ -534,6 +534,11 @@ public:
   }
 
   /**
+   * Lets downloads that failed with a retryable status be tried again
+   */
+  void ClearRetryableFailures();
+
+  /**
    * Returns the maximum number of threads that can
    * use the reader concurrently without blocking
    */
@@ -1012,8 +1017,9 @@ protected:
   // loads the remote index.bin into remote_tar_offsets_
   void load_remote_tar_offsets();
 
-  std::mutex _404s_lock;
-  std::unordered_set<GraphId> _404s;
+  // failed downloads and their HTTP status
+  std::mutex failed_downloads_lock_;
+  std::unordered_map<GraphId, long> failed_downloads_;
 
   std::unique_ptr<TileCache> cache_;
 

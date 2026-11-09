@@ -48,7 +48,7 @@ jobs:
 
   build_osx:
     # arm64 image; lowest available version for broad compatibility
-    runs-on: macos-14
+    runs-on: macos-15
     name: release
     needs: [lint]
     steps:

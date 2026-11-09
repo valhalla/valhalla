@@ -484,8 +484,12 @@ public:
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
+               const baldr::GraphId& edgeid,
                uint16_t disallow_mask = kDisallowNone) const override {
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && edge->use() < Use::kRailFerry &&
+    if (AllowedLinearFeature(edgeid)) {
+      return true;
+    }
+    return DynamicCost::Allowed(edge, tile, edgeid, disallow_mask) && edge->use() < Use::kRailFerry &&
            edge->sac_scale() <= max_hiking_difficulty_ &&
            (!edge->bss_connection() || project_on_bss_connection_);
   }
@@ -684,6 +688,11 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              uint8_t& restriction_idx,
                              uint8_t& destonly_access_restr_mask,
                              bool* edge_destonly) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(edgeid)) {
+    return true;
+  }
+
   if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
@@ -721,6 +730,11 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     uint8_t& restriction_idx,
                                     uint8_t& destonly_access_restr_mask,
                                     bool* edge_destonly) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(opp_edgeid)) {
+    return true;
+  }
+
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
@@ -790,8 +804,8 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const graph_tile_ptr& tile,
                                     const std::function<LimitedGraphReader()>& reader_getter,
                                     const bool edge_destonly) const {
-  // Special cases: fixed penalty for steps/stairs
-  if (edge->use() == Use::kSteps) {
+  // TODO: Consider separate transition penalties for ladders and steps.
+  if (edge->use() == Use::kSteps || edge->use() == Use::kLadder) {
     return {step_penalty_, 0.0f};
   }
   // fixed penalty for elevator edge
@@ -847,8 +861,8 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   // is ignored for now.
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
-  // Special cases: fixed penalty for steps/stairs
-  if (edge->use() == Use::kSteps) {
+  // TODO: Consider separate transition penalties for ladders and steps.
+  if (edge->use() == Use::kSteps || edge->use() == Use::kLadder) {
     return {step_penalty_, 0.0f};
   }
   // fixed penalty for elevator

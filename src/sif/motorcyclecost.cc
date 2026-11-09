@@ -279,10 +279,14 @@ public:
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
+               const baldr::GraphId& edgeid,
                uint16_t disallow_mask = kDisallowNone) const override {
+    if (AllowedLinearFeature(edgeid)) {
+      return true;
+    }
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+    return DynamicCost::Allowed(edge, tile, edgeid, disallow_mask) && !edge->bss_connection() &&
            (allow_closures || !tile->IsClosed(edge));
   }
   // Hidden in source file so we don't need it to be protected
@@ -360,6 +364,11 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              uint8_t& restriction_idx,
                              uint8_t& destonly_access_restr_mask,
                              bool* edge_destonly) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(edgeid)) {
+    return true;
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -389,6 +398,11 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     uint8_t& restriction_idx,
                                     uint8_t& destonly_access_restr_mask,
                                     bool* edge_destonly) const {
+  // the user asked for this edge to be usable no matter what
+  if (AllowedLinearFeature(opp_edgeid)) {
+    return true;
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||

@@ -591,6 +591,7 @@ int main(int argc, char* argv[]) {
 #ifdef ENABLE_GEOTIFF
   GDALRegister_GTiff();
 #endif
+  testing::InitGoogleTest(&argc, argv);
   // user wants to try it
   if (argc > 1) {
     loki_worker_t loki_worker(cfg);
@@ -605,6 +606,5 @@ int main(int argc, char* argv[]) {
   }
   // Silence logs (especially long request logging)
   logging::Configure({{"type", ""}});
-  testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

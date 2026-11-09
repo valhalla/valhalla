@@ -138,7 +138,7 @@ struct cost_edge_t {
 struct custom_cost_t {
   std::vector<cost_edge_t> ranges;
   double avg_factor{1.};
-  bool ignore_restrictions_;
+  uint32_t allow_types{baldr::kAllowNone};
 
   // once ranges are filled up, sort and compute average
   // returns the minimum factor
@@ -429,11 +429,13 @@ public:
    *
    * @param edge           the edge that should or shouldnt be allowed
    * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param edgeid         the id of the edge
    * @param disallow_mask  a mask that controls additional properties that should disallow the edge
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
                               const baldr::graph_tile_ptr&,
+                              const baldr::GraphId&,
                               uint16_t disallow_mask = kDisallowNone) const {
     auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
@@ -467,6 +469,25 @@ public:
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
+  }
+
+  /**
+   * Whether the user marked this edge as traversable via a linear cost
+   * feature with "allow" or "allow_types" covering everything.
+   */
+  inline bool AllowedLinearFeature(const baldr::GraphId& edgeid) const {
+    if (!has_allowed_linear_edges_)
+      return false;
+
+    auto it = linear_cost_edges_.find(edgeid);
+    return it != linear_cost_edges_.end() && it->second.allow_types == baldr::kAllowAll;
+  }
+
+  /**
+   * Whether this request has any "allow" linear cost features at all.
+   */
+  inline bool has_allowed_linear_edges() const {
+    return has_allowed_linear_edges_;
   }
 
   /**
@@ -771,6 +792,31 @@ public:
     return destonly_access_restr_mask;
   }
 
+  /**
+   * Checks the edge's access restrictions (height, weight, etc.) against the vehicle, for
+   * filtering location candidates. Time-dependent restrictions and those that exempt
+   * destinations are skipped.
+   *
+   * @param edge    The edge to check
+   * @param tile    The edge's tile
+   * @param edgeid  The edge's id
+   * @return true if the vehicle is within every such restriction on the edge
+   */
+  inline bool MeetsAccessRestrictions(const baldr::DirectedEdge* edge,
+                                      const baldr::graph_tile_ptr& tile,
+                                      const baldr::GraphId& edgeid) const {
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_))
+      return true;
+
+    for (const auto& restriction : tile->GetAccessRestrictions(edgeid.id(), access_mask_)) {
+      if (restriction.except_destination())
+        continue;
+      if (!ModeSpecificAllowed(restriction))
+        return false;
+    }
+    return true;
+  }
+
   /***
    * Evaluates mode-specific and time-dependent access restrictions, including a binary
    * search to get the tile's access restrictions.
@@ -795,54 +841,36 @@ public:
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
-    decltype(linear_cost_edges_)::const_iterator it;
-    if (!linear_cost_edges_.empty() &&
-        (it = linear_cost_edges_.find(edgeid)) != linear_cost_edges_.end() &&
-        it->second.ignore_restrictions_) {
-      return true;
-    }
-
     auto restrictions = tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
-    bool time_allowed = false;
+    bool time_allowed = false, time_in_range = false;
 
     uint8_t tmp_mask = 0;
     for (const auto& [i, restriction] : midgard::enumerate(restrictions)) {
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
-      if (!ignore_non_vehicular_restrictions_ &&
+      if (!ignore_non_vehicular_restrictions_ && !time_in_range &&
           (access_type == baldr::AccessType::kTimedAllowed ||
            access_type == baldr::AccessType::kTimedDenied ||
            access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
 
-        if (access_type == baldr::AccessType::kTimedAllowed)
-          time_allowed = true;
-
-        if (current_time == 0) {
-          // No time supplied so ignore time-based restrictions
-          // (but mark the edge  (`has_time_restrictions`)
-          continue;
-        } else {
-          // is in range?
+        // if we have a time
+        if (current_time != 0) {
+          time_allowed |= access_type == baldr::AccessType::kTimedAllowed;
           if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
-            // If edge really is restricted at this time, we can exit early.
-            // If not, we should keep looking
-
-            // We are in range at the time we are allowed at this edge
-            if (access_type == baldr::AccessType::kTimedAllowed) {
-              destonly_access_restr_mask = tmp_mask;
-              return true;
-            } else if (access_type == baldr::AccessType::kTimedDenied) {
+            if (access_type == baldr::AccessType::kTimedDenied)
               return false;
+            // an active conditional restriction makes the edge destination-only, with the same
+            // cost as a regular one
+            if (access_type == baldr::AccessType::kDestinationAllowed) {
+              if (edge_destonly)
+                *edge_destonly = true;
+              if (!allow_destination_only_ && !pred_destonly)
+                return false;
             }
-            // an active conditional restriction makes the edge destination-only, with the same cost
-            // as a regular one
-            if (edge_destonly)
-              *edge_destonly = true;
-            if (!allow_destination_only_ && !pred_destonly)
-              return false;
+            time_in_range = true;
           }
         }
       }
@@ -864,9 +892,8 @@ public:
     destonly_access_restr_mask = tmp_mask;
 
     // if we have time allowed restrictions then these restrictions are
-    // the only time we can route here.  Meaning all other time is restricted.
-    // We looped over all the time allowed restrictions and we were never in range.
-    return !time_allowed || (current_time == 0);
+    // the only time we can route here. Meaning all other time is restricted.
+    return !time_allowed || time_in_range;
   }
 
   /**
@@ -1429,6 +1456,7 @@ protected:
   // User specified edges to cost based on user provided factors
   std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
   double min_linear_cost_factor_;
+  bool has_allowed_linear_edges_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.

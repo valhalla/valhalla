@@ -5,6 +5,8 @@
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
+#include <vector>
+
 namespace valhalla {
 namespace loki {
 
@@ -18,13 +20,14 @@ namespace loki {
  * @param options             the request options
  * @param min_allowed_factor  the smallest factor the config admits
  * @param max_allowed_edges   the max number of edges the config allows
+ * @return indices of the lines that could not be edge walked
  */
-void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
-                           const sif::TravelMode& mode,
-                           baldr::GraphReader& reader,
-                           valhalla::Options& options,
-                           double min_allowed_factor,
-                           uint64_t max_allowed_edges);
+std::vector<size_t> add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
+                                          const sif::TravelMode& mode,
+                                          baldr::GraphReader& reader,
+                                          valhalla::Options& options,
+                                          double min_allowed_factor,
+                                          uint64_t max_allowed_edges);
 
 } // namespace loki
 } // namespace valhalla

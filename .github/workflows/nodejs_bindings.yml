@@ -55,7 +55,7 @@ jobs:
           - name: osx
             os: macos
             arch: arm64
-            runner: macos-14
+            runner: macos-15
             container: null
     env:
       # we have a few packages installed to the system as well as built from source
@@ -181,7 +181,7 @@ jobs:
           - name: osx
             os: macos
             arch: arm64
-            runner: macos-14
+            runner: macos-15
             container: null
     steps:
       - name: Install Node.js (macOS)

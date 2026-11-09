@@ -284,8 +284,19 @@ void loki_worker_t::resolve_linear_cost_factors(Api& api) {
     ++i;
   }
 
-  add_cost_factor_edges(none_mode_costing, none_mode, *reader, options, min_linear_cost_factor,
-                        max_linear_cost_edges);
+  const auto failed_lines = add_cost_factor_edges(none_mode_costing, none_mode, *reader, options,
+                                                  min_linear_cost_factor, max_linear_cost_edges);
+  // the costing used for candidate search predates the resolved edges
+  if (const auto& costing = mode_costing[static_cast<size_t>(mode)]) {
+    costing->SetCostFactorEdges(options.costings().at(options.costing_type()).options());
+  }
+  if (!failed_lines.empty()) {
+    std::string indices;
+    for (const auto idx : failed_lines) {
+      indices += (indices.empty() ? "" : ", ") + std::to_string(idx);
+    }
+    add_warning(api, 216, indices);
+  }
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -451,6 +462,7 @@ void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
+  reader->ClearRetryableFailures();
   bbox_intersection_.clear();
   search_.clear();
 }

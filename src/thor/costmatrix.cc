@@ -566,7 +566,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // Check the access mode and skip this edge if access is not allowed in the reverse
     // direction. This avoids the (somewhat expensive) retrieval of the opposing directed
     // edge when no access is allowed in the reverse direction.
-    if (!(meta.edge->reverseaccess() & access_mode_)) {
+    if (!(meta.edge->reverseaccess() & access_mode_) && !costing_->has_allowed_linear_edges()) {
       return false;
     }
 
@@ -1136,7 +1136,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile, edgeid)),
                              edge_destonly, directededge->forwardaccess() & kTruckAccess,
                              destonly_restriction_mask);
       auto newsortcost = GetAstarHeuristic<MatrixExpansionType::forward>(index,
@@ -1247,7 +1247,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile, edgeid)),
                              edge_destonly, directededge->forwardaccess() & kTruckAccess,
                              destonly_restriction_mask);
 

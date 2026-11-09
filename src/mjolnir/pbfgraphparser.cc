@@ -405,6 +405,9 @@ struct graph_parser {
         case Use::kSteps:
           way_.set_use(Use::kSteps);
           break;
+        case Use::kLadder:
+          way_.set_use(Use::kLadder);
+          break;
         case Use::kEscalator:
           way_.set_use(Use::kEscalator);
           break;
@@ -419,10 +422,12 @@ struct graph_parser {
           break;
         case Use::kParkingAisle:
           way_.set_destination_only(true);
+          way_.set_destination_only_hgv(true);
           way_.set_use(Use::kParkingAisle);
           break;
         case Use::kDriveway:
           way_.set_destination_only(true);
+          way_.set_destination_only_hgv(true);
           way_.set_use(Use::kDriveway);
           break;
         case Use::kAlley:
@@ -433,10 +438,14 @@ struct graph_parser {
           break;
         case Use::kDriveThru:
           way_.set_destination_only(true);
+          way_.set_destination_only_hgv(true);
           way_.set_use(Use::kDriveThru);
           break;
         case Use::kServiceRoad:
           way_.set_use(Use::kServiceRoad);
+          break;
+        case Use::kCycleStreet:
+          way_.set_use(Use::kCycleStreet);
           break;
         case Use::kTrack:
           way_.set_use(Use::kTrack);
@@ -1495,11 +1504,16 @@ struct graph_parser {
                  value.find("pavingstone") != std::string::npos ||
                  value.find("paving_stones") != std::string::npos ||
                  value.find("sett") != std::string::npos ||
-                 value.find("grass_paver") != std::string::npos) {
+                 value.find("grass_paver") != std::string::npos ||
+                 value.find("rubber") != std::string::npos ||
+                 value.find("acrylic") != std::string::npos ||
+                 value.find("plastic") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
-                 value.find("brick") != std::string::npos) {
+                 value.find("brick") != std::string::npos ||
+                 // exact match, otherwise pebblestone and stepping_stones would land here
+                 value == "stone") {
         way_.set_surface(Surface::kPavedRough);
 
       } else if (value.find("compacted") != std::string::npos ||
@@ -1512,7 +1526,8 @@ struct graph_parser {
                  value.find("earth") != std::string::npos ||
                  value.find("ground") != std::string::npos ||
                  value.find("mud") != std::string::npos || value.find("clay") != std::string::npos ||
-                 value.find("laterite") != std::string::npos) {
+                 value.find("laterite") != std::string::npos ||
+                 value.find("soil") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
       } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
@@ -1520,6 +1535,8 @@ struct graph_parser {
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
       } else if (value.find("grass") != std::string::npos ||
+                 value.find("artificial_turf") != std::string::npos ||
+                 value.find("rock") != std::string::npos ||
                  value.find("stepping_stones") != std::string::npos) {
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
@@ -3041,6 +3058,7 @@ struct graph_parser {
               case Use::kDriveThru:
               case Use::kLivingStreet:
               case Use::kServiceRoad:
+              case Use::kCycleStreet:
                 way_.set_surface(Surface::kPavedSmooth);
                 break;
               case Use::kCycleway:
@@ -5485,11 +5503,13 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
+  bool create = true;
   for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     parser.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr,
-                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
+                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, create));
+    create = false;
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
     osmium::io::Reader reader(file, osmium::osm_entity_bits::node);

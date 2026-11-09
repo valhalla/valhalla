@@ -700,8 +700,8 @@ std::string exits(const valhalla::TripSign& sign) {
 valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
   rapidjson::writer_wrapper_t writer;
   writer.start_object();
-  osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
-                                    incident.end_shape_index(), "", "");
+  tyr::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
+                                   incident.end_shape_index(), "", "");
   writer.end_object();
   return {writer.get_buffer()};
 }
