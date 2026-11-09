@@ -41,8 +41,7 @@ jobs:
           fetch-depth: 0 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "26"
           registry-url: "https://registry.npmjs.org"
-      - run: npm install -g npm@11
       - run: make release-ts-tag
  
