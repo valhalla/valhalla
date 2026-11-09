@@ -971,8 +971,8 @@ private:
         const DirectedEdge* opp_edge = nullptr;
         graph_tile_ptr opp_tile = candidate.tile;
         auto opp_edgeid = reader.GetOpposingEdgeId(candidate.edge_id, opp_edge, opp_tile);
-        if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) ||
-            search_filter(opp_edge, *costing, opp_tile, pp.location->search_filter()) ||
+        if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, opp_edgeid, kDisallowShortcut) ||
+            search_filter(opp_edge, opp_edgeid, *costing, opp_tile, pp.location->search_filter()) ||
             !is_reachable(get_reach(opp_edgeid, opp_edge)))
           continue;
 
