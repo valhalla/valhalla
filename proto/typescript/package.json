@@ -43,5 +43,8 @@
     "grpc-tools": "^1.13.1",
     "ts-proto": "^2.11.2",
     "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "grpc-tools@1.13.1": true
   }
 }
