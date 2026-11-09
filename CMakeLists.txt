@@ -27,6 +27,11 @@ if(WIN32)
   endif()
 endif()
 
+# MSVC reads BOM-less sources as the ANSI codepage, which mangles non-ASCII U"" literals
+if(MSVC)
+  add_compile_options(/utf-8)
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
