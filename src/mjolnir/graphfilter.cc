@@ -401,7 +401,7 @@ void FilterTiles(GraphReader& reader,
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
-                                    edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
+                                    edgeinfo.speed_limit(true), encoded_shape, edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
                                     edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
@@ -791,8 +791,8 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(w, nodeid, en, edgeinfo.wayid(), edgeinfo.mean_elevation(),
-                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                    edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
+                                    edgeinfo.bike_network(), edgeinfo.speed_limit(true),
+                                    encoded_shape, edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
                                     edgeinfo.GetLinguisticTaggedValues(), edgeinfo.GetTypes(), added,
                                     diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);

@@ -500,8 +500,9 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       uint32_t idx = static_cast<uint32_t>(chain_id ^ (chain_id >> 32));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, kNoElevationData,
-                                  edgeinfo.bike_network(), edgeinfo.speed_limit(), shape, {}, {}, {},
-                                  0, forward, false);
+                                  edgeinfo.bike_network(),
+                                  edgeinfo.speed_limit(directededge->forward()), shape, {}, {}, {}, 0,
+                                  forward, false);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -715,7 +716,7 @@ std::tuple<uint32_t, uint32_t, uint32_t> FormShortcuts(GraphReader& reader, cons
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
-                                    edgeinfo.bike_network(), edgeinfo.speed_limit(),
+                                    edgeinfo.bike_network(), edgeinfo.speed_limit(true),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
                                     edgeinfo.GetTypes(), added, diff_names);

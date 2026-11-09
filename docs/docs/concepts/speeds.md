@@ -8,7 +8,7 @@ Routing data contains two attributes to denote speed: `speed` and `speed_limit`.
 
 The most important for routing determination is `speed`, given in units of kilometers per hour. The `speed` value, along with the length of the roadway edge, determine the travel time along a road section.
 
-The `speed_limit` contains the posted speed limit, if available, and can be used by mobile navigation applications to display the speed limit and possibly alert the driver when it is exceeded.
+The `speed_limit` contains the posted speed limit, if available, and can be used by mobile navigation applications to display the speed limit and possibly alert the driver when it is exceeded. If `maxspeed:forward` and `maxspeed:backward` differ, both limits are stored and the `/route`, `/trace_attributes` and `/locate` responses report the limit for the direction of travel.
 
 The base `speed` is assigned during tile building in the following order:
 

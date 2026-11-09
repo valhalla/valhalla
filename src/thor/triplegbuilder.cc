@@ -408,7 +408,7 @@ void SetShapeAttributes(const AttributesController& controller,
 
     // Set the maxspeed if requested
     if (controller(kShapeAttributesSpeedLimit)) {
-      leg.mutable_shape_attributes()->add_speed_limit(edgeinfo.speed_limit());
+      leg.mutable_shape_attributes()->add_speed_limit(edgeinfo.speed_limit(edge->forward()));
     }
 
     // Set the incidents if we just cut or we are at the end
@@ -1575,7 +1575,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (controller(kEdgeSpeedLimit)) {
-    trip_edge->set_speed_limit(edgeinfo.speed_limit());
+    trip_edge->set_speed_limit(edgeinfo.speed_limit(directededge->forward()));
   }
 
   if (controller(kEdgeConditionalSpeedLimits)) {

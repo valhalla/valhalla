@@ -140,6 +140,11 @@ size_t EdgeInfo::TaggedValueSize(const char* ptr) {
       return 1 + sizeof(ConditionalSpeedLimit) + 1;
     }
 
+    case TaggedValue::kReverseSpeedLimit: {
+      // Tag byte + fixed 1-byte speed limit + null terminator
+      return 1 + sizeof(uint8_t) + 1;
+    }
+
     case TaggedValue::kLinguistic: {
       const char* current = ptr + 1; // Skip tag byte
       while (*current != '\0') {
@@ -487,6 +492,22 @@ std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
   return limits;
 }
 
+uint32_t EdgeInfo::speed_limit(const bool forward) const {
+  if (forward) {
+    return ei_.speed_limit_;
+  }
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kReverseSpeedLimit);
+  if (itr == tags.end()) {
+    return ei_.speed_limit_;
+  }
+  const auto& value = itr->second;
+  if (value.size() != 1) {
+    throw std::runtime_error("reverse speed limit must contain 1-byte value");
+  }
+  return static_cast<uint8_t>(value.front());
+}
+
 int8_t EdgeInfo::layer() const {
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kLayer);
@@ -551,7 +572,7 @@ std::vector<uint64_t> EdgeInfo::osm_node_ids() const {
   } catch (...) { throw std::runtime_error("failed to decode osm node ids"); };
 }
 
-void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
+void EdgeInfo::json(rapidjson::writer_wrapper_t& writer, const bool forward) const {
   writer("way_id", static_cast<uint64_t>(wayid()));
 
   writer.start_object("bike_network");
@@ -572,10 +593,10 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("mean_elevation", static_cast<int64_t>(elev));
   }
 
-  if (speed_limit() == kUnlimitedSpeedLimit) {
+  if (speed_limit(forward) == kUnlimitedSpeedLimit) {
     writer("speed_limit", "unlimited");
   } else {
-    writer("speed_limit", static_cast<uint64_t>(speed_limit()));
+    writer("speed_limit", static_cast<uint64_t>(speed_limit(forward)));
   }
 
   std::vector<std::pair<std::string, uint64_t>> conditional_speed_limits;
@@ -633,6 +654,8 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         conditional_speed_limits.push_back({l->td_.to_string(), l->speed_});
         break;
       }
+      case TaggedValue::kReverseSpeedLimit:
+        break;
       case TaggedValue::kTunnel:
         break;
       case TaggedValue::kBridge:
