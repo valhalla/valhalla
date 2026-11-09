@@ -631,6 +631,33 @@ inline uint16_t to_big_endian(uint16_t val) {
   return (val << 8) | (val >> 8);
 }
 
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @param len  Length of each element within the bit field.
+ * @return  Returns an updated value for the bit field.
+ */
+inline uint32_t
+OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
+  uint32_t shift = (pos * len);
+  uint32_t mask = ((static_cast<uint32_t>(1) << len) - 1) << shift;
+  return (dst & ~mask) | (src << shift);
+}
+
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @return  Returns an updated value for the bit field.
+ */
+inline uint32_t OverwriteBit(const uint32_t dst, const uint32_t src, const uint32_t pos) {
+  uint32_t mask = (static_cast<uint32_t>(1) << pos);
+  return (dst & ~mask) | (src << pos);
+}
+
 template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
   std::hash<T> hasher;
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
