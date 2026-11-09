@@ -936,9 +936,8 @@ private:
       pool_names.emplace_back(candidate.edge_info->GetNames(false));
     }
 
-    // we only keep the best match
-    const auto [best_idx, best_hint_score] =
-        street_name::score_candidates(pp.location->street(), pool_names);
+    const auto scores = street_name::score_candidates(pp.location->street(), pool_names);
+    const float best_hint_score = *std::max_element(scores.begin(), scores.end());
 
     // we keep the best score regardless of the threshold, so it's in the response
     auto* correlation = pp.location->mutable_correlation();
@@ -952,29 +951,35 @@ private:
              reach.inbound >= pp.location->minimum_inbound_reachability();
     };
 
-    // a hint yields the closest best match and its opposing edge. always snap along the edge
-    auto& candidate = pool[best_idx];
-    // it's possible that it isnt reachable but the opposing is, switch to that if so
-    if (!is_reachable(get_reach(candidate.edge_id, candidate.edge))) {
-      const DirectedEdge* opp_edge = nullptr;
-      graph_tile_ptr opp_tile = candidate.tile;
-      auto opp_edgeid = reader.GetOpposingEdgeId(candidate.edge_id, opp_edge, opp_tile);
-      if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) ||
-          search_filter(opp_edge, *costing, opp_tile, pp.location->search_filter()) ||
-          !is_reachable(get_reach(opp_edgeid, opp_edge)))
-        return false;
+    // the closest reachable of the best matches yields itself and its opposing edge, the other
+    // segments of the same street score the same
+    for (size_t i = 0; i < pool.size(); ++i) {
+      if (scores[i] != best_hint_score)
+        continue;
 
-      candidate.edge_id = opp_edgeid;
-      candidate.edge = opp_edge;
-      candidate.tile = opp_tile;
-    }
+      auto& candidate = pool[i];
+      // it's possible that it isnt reachable but the opposing is, switch to that if so
+      if (!is_reachable(get_reach(candidate.edge_id, candidate.edge))) {
+        const DirectedEdge* opp_edge = nullptr;
+        graph_tile_ptr opp_tile = candidate.tile;
+        auto opp_edgeid = reader.GetOpposingEdgeId(candidate.edge_id, opp_edge, opp_tile);
+        if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) ||
+            search_filter(opp_edge, *costing, opp_tile, pp.location->search_filter()) ||
+            !is_reachable(get_reach(opp_edgeid, opp_edge)))
+          continue;
 
-    // add to the correlated edges possibly
-    const auto edge_count_before = correlation->edges_size();
-    correlate_edge(*pp.location, candidate);
-    if (correlation->edges_size() > edge_count_before) {
-      correlation->set_street_matched(true);
-      return true;
+        candidate.edge_id = opp_edgeid;
+        candidate.edge = opp_edge;
+        candidate.tile = opp_tile;
+      }
+
+      // ignore node correlation (for now)
+      const auto edge_count_before = correlation->edges_size();
+      correlate_edge(*pp.location, candidate);
+      if (correlation->edges_size() > edge_count_before) {
+        correlation->set_street_matched(true);
+        return true;
+      }
     }
     return false;
   }

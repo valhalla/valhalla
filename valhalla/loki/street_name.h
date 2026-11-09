@@ -29,10 +29,10 @@ std::u32string normalize_name(std::string_view name);
  *
  * @param hint the request's street name hint
  * @param pool the collection of all candidates' names
- * @returns (candidate index, score) of the best candidate, the first in pool order among equal
- *          scores. A score of 0 means no candidate shares anything with the hint
+ * @returns the score of each candidate in pool order. A score of 0 means the candidate shares
+ *          nothing with the hint
  */
-std::pair<size_t, float> score_candidates(std::string_view hint, const std::vector<names_t>& pool);
+std::vector<float> score_candidates(std::string_view hint, const std::vector<names_t>& pool);
 
 } // namespace street_name
 } // namespace loki

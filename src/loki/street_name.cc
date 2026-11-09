@@ -158,11 +158,11 @@ std::u32string normalize_name(std::string_view name) {
   return normalized;
 }
 
-std::pair<size_t, float> score_candidates(std::string_view hint, const std::vector<names_t>& pool) {
-  std::pair<size_t, float> best{0, 0.f};
+std::vector<float> score_candidates(std::string_view hint, const std::vector<names_t>& pool) {
+  std::vector<float> scores(pool.size(), 0.f);
   const auto hint_grams = get_trigrams(normalize_name(hint));
   if (hint_grams.empty())
-    return best;
+    return scores;
 
   // dedupe the names of all candidate edges before building the weights
   ankerl::unordered_dense::map<std::string_view, uint32_t> document_by_name;
@@ -193,12 +193,11 @@ std::pair<size_t, float> score_candidates(std::string_view hint, const std::vect
   for (const auto& grams : pool_grams_unique)
     pool_grams_scores.push_back(score_candidate(hint_grams, hint_weights, grams));
 
-  // only keep the best score with distance as tiebreaker
-  for (const auto [cand_idx, grams_idx] : cands_to_grams) {
-    if (pool_grams_scores[grams_idx] > best.second)
-      best = {cand_idx, pool_grams_scores[grams_idx]};
-  }
-  return best;
+  // a candidate scores its best name
+  for (const auto [cand_idx, grams_idx] : cands_to_grams)
+    scores[cand_idx] = std::max(scores[cand_idx], pool_grams_scores[grams_idx]);
+
+  return scores;
 }
 
 } // namespace street_name

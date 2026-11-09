@@ -576,12 +576,19 @@ TEST_F(StreetHint, HintTakesClosestBestMatch) {
   EXPECT_EQ(get_locate_edge_ids(do_locate("Bergstr")), get_way_edge_ids("G", "H"));
 }
 
-TEST_F(StreetHint, HintUnreachableKeepsBaseline) {
-  // the island GH is the closest best match but can't reach 3 nodes, the baseline stays
+TEST_F(StreetHint, HintUnreachableTakesNextBestMatch) {
+  // the island GH is the closest best match but can't reach 3 nodes, AB is the same street
   auto reach = [](valhalla::Location& loc) { loc.set_minimum_reachability(3); };
   const auto api = do_locate("Bergstr", reach);
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("A", "B"));
+  EXPECT_TRUE(api.options().locations(0).correlation().street_matched());
+}
+
+TEST_F(StreetHint, HintAllUnreachableKeepsBaseline) {
+  // no best match can reach more nodes than the map has, the baseline stays
+  auto reach = [](valhalla::Location& loc) { loc.set_minimum_reachability(20); };
+  const auto api = do_locate("Bergstr", reach);
   EXPECT_EQ(get_locate_edge_ids(api), get_locate_edge_ids(do_locate("", reach)));
-  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
   EXPECT_FALSE(api.options().locations(0).correlation().street_matched());
 }
 
