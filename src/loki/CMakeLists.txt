@@ -27,7 +27,7 @@ set(system_includes
 
 valhalla_module(NAME loki
   SOURCES ${sources}
-  SOURCES_WITH_WARNINGS ${utf8proc_dir}/utf8proc.c
+  SOURCES_WITH_WARNINGS ${utf8proc_include_dir}/utf8proc.c
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
@@ -43,7 +43,7 @@ valhalla_module(NAME loki
       ${unordered_dense_include_dir}
       ${vtzero_include_dirs}
       ${flatbush_include_dir}
-      ${utf8proc_dir}
+      ${utf8proc_include_dir}
   DEPENDS
     valhalla::meili
     valhalla::skadi
