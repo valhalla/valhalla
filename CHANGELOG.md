@@ -33,6 +33,7 @@
    * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
    * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
    * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
+   * FIXED: Apply `walkway_factor` to more pedestrian specific uses [#6324](https://github.com/valhalla/valhalla/pull/6324)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
@@ -48,7 +49,6 @@
    * UPDATED: complete Slovenian (sl-SI) locale [#6339](https://github.com/valhalla/valhalla/pull/6339)
    * UPDATED: Replace `boost::format` with C++20 `std::format` [#6363](https://github.com/valhalla/valhalla/pull/6363)
    * CHANGED: resolve `linear_cost_factors` in loki instead of thor [#6371](https://github.com/valhalla/valhalla/pull/6371)
-   * FIXED: Apply `walkway_factor` to more pedestrian specific uses [#6324](https://github.com/valhalla/valhalla/pull/6324)
 
 ## Release Date: 2026-09-19 Valhalla 3.9.0
 * **Removed**
@@ -71,7 +71,6 @@
    * FIXED: a zero `linear_cost_factors` factor no longer discards the factors of every feature behind it [#6329](https://github.com/valhalla/valhalla/pull/6329)
    * FIXED: `<mode>:backward` should override `vehicle:backward` [#6332](https://github.com/valhalla/valhalla/pull/6332)
    * FIXED: trivial CostMatrix path where either source/target is node snapped [#6334](https://github.com/valhalla/valhalla/pull/6334)
-   * FIXED: Apply `walkway_factor` to more pedestrian specific uses [#6324](https://github.com/valhalla/valhalla/pull/6324)
 * **Enhancement**
    * CHANGED: move `GraphTile::GetTileId` to `GraphId::FromTilePath` as a static factory ctor [#6237](https://github.com/valhalla/valhalla/pull/6237)
    * CHANGED: use `filtered_edges` in CostMatrix's second pass [#6236](https://github.com/valhalla/valhalla/pull/6236)
