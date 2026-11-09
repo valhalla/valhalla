@@ -1000,7 +1000,7 @@ private:
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
       std::sort(pp.reachable.begin(), pp.reachable.end());
       // keep a look up around so we dont add duplicates with worse scores
-      correlated_edges.reserve(pp.reachable.size() + pp.hint_pool.size());
+      correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
       // first add the max 2 edges which have had the highest scored hint match
       const int hint_end = correlate_hint(pp) ? pp.location->correlation().edges_size() : 0;
