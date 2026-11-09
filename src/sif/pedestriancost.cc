@@ -672,6 +672,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   use_factor_[static_cast<uint8_t>(Use::kServiceRoad)] = service_factor_;
   use_factor_[static_cast<uint8_t>(Use::kPedestrianCrossing)] = walkway_factor_;
   use_factor_[static_cast<uint8_t>(Use::kPedestrian)] = walkway_factor_;
+  use_factor_[static_cast<uint8_t>(Use::kPath)] = walkway_factor_;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no
