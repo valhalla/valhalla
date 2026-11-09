@@ -922,6 +922,7 @@ private:
 
     // an edge spanning several bins was projected once per bin with the same point
     ankerl::unordered_dense::set<uint64_t> seen;
+    seen.reserve(pool.size());
     pool.erase(std::remove_if(pool.begin(), pool.end(),
                               [&seen](const candidate_t& c) {
                                 return !seen.insert(c.edge_id).second;
