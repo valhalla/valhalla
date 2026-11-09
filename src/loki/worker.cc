@@ -99,12 +99,12 @@ std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location
     location.mutable_search_filter()->set_level(baldr::kMaxLevel);
 
   // a 0 radius or threshold doesn't make sense, assume defaults and clamp threshold
-  if (!location.street_hint_radius()) {
-    location.set_street_hint_radius(default_street_hint_radius);
+  if (!location.street_radius()) {
+    location.set_street_radius(default_street_hint_radius);
   }
-  if (location.street_hint_threshold() <= 0.f)
-    location.set_street_hint_threshold(default_street_hint_threshold);
-  location.set_street_hint_threshold(std::clamp(location.street_hint_threshold(), 0.f, 1.f));
+  if (location.street_threshold() <= 0.f)
+    location.set_street_threshold(default_street_hint_threshold);
+  location.set_street_threshold(std::clamp(location.street_threshold(), 0.f, 1.f));
 
   return modified_search_cutoff;
 }
@@ -457,10 +457,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
     std::filesystem::create_directory(mvt_cache_dir_);
   mvt_cache_min_zoom_ = config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom");
-  default_street_hint_radius =
-      config.get<unsigned int>("loki.service_defaults.street_hint_radius", 200);
-  default_street_hint_threshold =
-      config.get<float>("loki.service_defaults.street_hint_threshold", 0.6);
+  default_street_hint_radius = config.get<unsigned int>("loki.service_defaults.street_radius", 200);
+  default_street_hint_threshold = config.get<float>("loki.service_defaults.street_threshold", 0.6);
 
   // signal that the worker started successfully
   started();

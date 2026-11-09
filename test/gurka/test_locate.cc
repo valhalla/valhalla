@@ -515,7 +515,7 @@ protected:
     loc->mutable_ll()->set_lng(layout.at("1").lng());
     // the whole map is below the default reachability
     loc->set_minimum_reachability(0);
-    loc->set_street_hint(hint);
+    loc->set_street(hint);
     if (mod)
       mod(*loc);
 
@@ -560,8 +560,7 @@ TEST_F(StreetHint, HintWithoutMatchKeepsBaseline) {
 }
 
 TEST_F(StreetHint, HintOutsideRadiusKeepsBaseline) {
-  const auto api =
-      do_locate("Bahnhofstr", [](valhalla::Location& loc) { loc.set_street_hint_radius(5); });
+  const auto api = do_locate("Bahnhofstr", [](valhalla::Location& loc) { loc.set_street_radius(5); });
   EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
 }
 
@@ -569,7 +568,7 @@ TEST_F(StreetHint, HintBelowThresholdKeepsBaseline) {
   // shares only `bahnhof` with Bahnhofstraße, which is half its weight
   EXPECT_EQ(get_locate_edge_ids(do_locate("Bahnhofplatz")), get_way_edge_ids("C", "D"));
   const auto api =
-      do_locate("Bahnhofplatz", [](valhalla::Location& loc) { loc.set_street_hint_threshold(0.4f); });
+      do_locate("Bahnhofplatz", [](valhalla::Location& loc) { loc.set_street_threshold(0.4f); });
   EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("E", "F"));
 }
 
@@ -583,7 +582,7 @@ TEST_F(StreetHint, HintUnreachableKeepsBaseline) {
   const auto api = do_locate("Bergstr", reach);
   EXPECT_EQ(get_locate_edge_ids(api), get_locate_edge_ids(do_locate("", reach)));
   EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
-  EXPECT_FALSE(api.options().locations(0).correlation().street_hint_matched());
+  EXPECT_FALSE(api.options().locations(0).correlation().street_matched());
 }
 
 TEST_F(StreetHint, RouteStartsOnHintedStreet) {
@@ -595,7 +594,7 @@ TEST_F(StreetHint, RouteStartsOnHintedStreet) {
   gurka::assert::raw::expect_path(result, {"Burgstraße", "Kirchweg"});
 
   auto hinted = reach;
-  hinted["/locations/0/street_hint"] = "Bahnhofstr";
+  hinted["/locations/0/street"] = "Bahnhofstr";
   result = gurka::do_action(Options::route, map, {"1", "B"}, "auto", hinted);
   gurka::assert::raw::expect_path(result, {"Bahnhofstraße", "Kirchweg", "Kirchweg"});
 }
@@ -607,23 +606,23 @@ TEST_F(StreetHint, ResponsesReportHint) {
   rapidjson::Document response;
   std::unordered_map<std::string, std::string> options{
       {"/locations/0/minimum_reachability", "0"}, {"/locations/1/minimum_reachability", "0"},
-      {"/locations/2/minimum_reachability", "0"}, {"/locations/0/street_hint", "Bahnhofstr"},
-      {"/locations/2/street_hint", "Hauptstr"},
+      {"/locations/2/minimum_reachability", "0"}, {"/locations/0/street", "Bahnhofstr"},
+      {"/locations/2/street", "Hauptstr"},
   };
 
   auto check = [](const rapidjson::Value& matched, const rapidjson::Value& unhinted,
                   const rapidjson::Value& unmatched) {
-    EXPECT_STREQ(matched["street_hint"].GetString(), "Bahnhofstr");
-    EXPECT_NEAR(matched["street_hint_score"].GetDouble(), 1., 0.001);
-    EXPECT_TRUE(matched["street_hint_matched"].GetBool());
+    EXPECT_STREQ(matched["street"].GetString(), "Bahnhofstr");
+    EXPECT_NEAR(matched["street_score"].GetDouble(), 1., 0.001);
+    EXPECT_TRUE(matched["street_matched"].GetBool());
 
-    EXPECT_FALSE(unhinted.HasMember("street_hint"));
-    EXPECT_FALSE(unhinted.HasMember("street_hint_score"));
-    EXPECT_FALSE(unhinted.HasMember("street_hint_matched"));
+    EXPECT_FALSE(unhinted.HasMember("street"));
+    EXPECT_FALSE(unhinted.HasMember("street_score"));
+    EXPECT_FALSE(unhinted.HasMember("street_matched"));
 
-    EXPECT_STREQ(unmatched["street_hint"].GetString(), "Hauptstr");
-    EXPECT_LT(unmatched["street_hint_score"].GetDouble(), 0.6);
-    EXPECT_FALSE(unmatched["street_hint_matched"].GetBool());
+    EXPECT_STREQ(unmatched["street"].GetString(), "Hauptstr");
+    EXPECT_LT(unmatched["street_score"].GetDouble(), 0.6);
+    EXPECT_FALSE(unmatched["street_matched"].GetBool());
   };
 
   // normal valhalla request

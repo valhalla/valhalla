@@ -214,7 +214,7 @@ struct projector_wrapper {
       : binner(make_binner(point_ll_from_latlng(location->ll()))), location(location),
         bin_center_approximator(bin_center), sq_radius(midgard::sqr(double(location->radius()))),
         sq_cutoff(midgard::sqr(double(location->search_cutoff()))),
-        hint_radius(location->street_hint().empty() ? 0. : location->street_hint_radius()),
+        hint_radius(location->street().empty() ? 0. : location->street_radius()),
         sq_hint_radius(midgard::sqr(hint_radius)), project(point_ll_from_latlng(location->ll())) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
@@ -915,7 +915,7 @@ private:
   // made it into the location's edges
   bool correlate_hint(projector_wrapper& pp) {
     auto& pool = pp.hint_pool;
-    if (pool.empty() || pp.location->street_hint().empty())
+    if (pool.empty() || pp.location->street().empty())
       return false;
 
     // closest first, so the closest of equally scored candidates wins
@@ -938,13 +938,13 @@ private:
 
     // we only keep the best match
     const auto [best_idx, best_hint_score] =
-        street_name::score_candidates(pp.location->street_hint(), pool_names);
+        street_name::score_candidates(pp.location->street(), pool_names);
 
     // we keep the best score regardless of the threshold, so it's in the response
     auto* correlation = pp.location->mutable_correlation();
-    correlation->set_street_hint_score(best_hint_score);
+    correlation->set_street_score(best_hint_score);
     // nothing in common is never a match
-    if (best_hint_score <= 0.f || best_hint_score < pp.location->street_hint_threshold())
+    if (best_hint_score <= 0.f || best_hint_score < pp.location->street_threshold())
       return false;
 
     auto is_reachable = [&pp](const directed_reach& reach) {
@@ -973,7 +973,7 @@ private:
     const auto edge_count_before = correlation->edges_size();
     correlate_edge(*pp.location, candidate);
     if (correlation->edges_size() > edge_count_before) {
-      correlation->set_street_hint_matched(true);
+      correlation->set_street_matched(true);
       return true;
     }
     return false;

@@ -292,7 +292,8 @@ void serialize(rapidjson::writer_wrapper_t& writer,
   writer("input_lat", location.ll().lat());
   writer("input_lon", location.ll().lng());
   writer.set_precision(tyr::kDefaultPrecision);
-  if (!location.street_hint().empty()) {
+  if (!location.street().empty()) {
+    writer("street", location.street());
     tyr::street_hint(location, writer);
   }
   serialize_edges(location, reader, writer, verbose);

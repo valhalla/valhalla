@@ -338,9 +338,9 @@ Here are some sample results with `verbose` set to `true`:
 
 | Key | Description |
 | :------------------ | :----------- |
-| `street_hint` | The location's `street_hint`, only present if it had one |
-| `street_hint_score` | The best score any edge within `street_hint_radius` reached against the `street_hint`, also when it's below `street_hint_threshold` |
-| `street_hint_matched` | Whether `edges` are the ones matching the `street_hint`, in which case `filtered_edges` holds what would have been correlated without it |
+| `street` | The location's `street`, only present if it had one |
+| `street_score` | The best score any edge within `street_radius` reached against the `street`, also when it's below `street_threshold` |
+| `street_matched` | Whether `edges` are the ones matching the `street`, in which case `filtered_edges` holds what would have been correlated without it |
 
 #### Edge
 ##### Verbose

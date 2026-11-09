@@ -282,11 +282,10 @@ void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer
 }
 
 void street_hint(const valhalla::Location& location, rapidjson::writer_wrapper_t& writer) {
-  writer("street_hint", location.street_hint());
   const auto before = writer.get_precision();
   writer.set_precision(kDefaultPrecision);
-  writer("street_hint_score", location.correlation().street_hint_score());
-  writer("street_hint_matched", location.correlation().street_hint_matched());
+  writer("street_score", location.correlation().street_score());
+  writer("street_matched", location.correlation().street_matched());
   writer.set_precision(before);
 }
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
@@ -424,11 +423,10 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
                                       .Distance(to_ll(location.correlation().edges(0).ll())),
                                   3});
 
-  if (!location.street_hint().empty()) {
-    waypoint->emplace("street_hint", location.street_hint());
-    waypoint->emplace("street_hint_score",
-                      json::fixed_t{location.correlation().street_hint_score(), 3});
-    waypoint->emplace("street_hint_matched", location.correlation().street_hint_matched());
+  if (!location.street().empty()) {
+    waypoint->emplace("street", location.street());
+    waypoint->emplace("street_score", json::fixed_t{location.correlation().street_score(), 3});
+    waypoint->emplace("street_matched", location.correlation().street_matched());
   }
 
   // If the location was used for a tracepoint we trigger extra serialization
@@ -484,7 +482,8 @@ void waypoint(const valhalla::Location& location,
   //       in the future we shall have store separately from score
   writer("distance", to_ll(location.ll()).Distance(to_ll(location.correlation().edges(0).ll())));
 
-  if (!location.street_hint().empty()) {
+  if (!location.street().empty()) {
+    writer("street", location.street());
     valhalla::tyr::street_hint(location, writer);
   }
 
