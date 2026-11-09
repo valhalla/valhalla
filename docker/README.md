@@ -71,6 +71,8 @@ Containers of this image have the following custom environment variables being p
 | `custom_attributes_name` | `custom_attributes` | The name of the custom attributes tar. |
 | `custom_attributes_defs` | `""` | JSON array of attribute definitions, e.g. `[{"name": "scenic", "type": "uint8", "scale": 0.01}]`. |
 | `custom_attributes_default_values` | `0.0` | Comma-separated default values, one per attribute, written to every edge. |
+| `custom_attributes_lua` | `""` | Name of a Lua script in `custom_files` which fills the custom attributes extract from OSM way tags after it was built. Runs against the PBF files in `custom_files`, which must be the ones the tiles were built from. Empty keeps the default values. |
+| `custom_attributes_tag_keys` | `""` | Comma-separated OSM tag keys passed to the Lua script, ways with none of them are skipped. Required with `custom_attributes_lua`. |
 | `update_existing_config` | `True` | `True` updates missing keys in existing `valhalla.json`.<br>Useful for updating stale config files to include newly introduced config parameters. |
 | `use_default_speeds_config` | `True` | `True` loads a JSON file used to enhance default speeds (or falls back to an existing `custom_files/default_speeds.json`) and sets the respective config entry. Read more [here](https://github.com/OpenStreetMapSpeeds/schema). |
 | `default_speeds_config_url` | [this url](https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json) | Remote location of the `default_speeds_config` JSON. |

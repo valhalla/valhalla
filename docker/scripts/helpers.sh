@@ -25,7 +25,13 @@ ELEVATION_PATH="${CUSTOM_FILES}/elevation_data"
 TRANSIT_DIR="${CUSTOM_FILES}/transit_tiles"
 TRAFFIC_TAR="${CUSTOM_FILES}/${traffic_name:-traffic}.tar"
 CUSTOM_ATTRIBUTES_TAR="${CUSTOM_FILES}/${custom_attributes_name:-custom_attributes}.tar"
+CUSTOM_ATTRIBUTES_LUA="${CUSTOM_FILES}/${custom_attributes_lua:-}"
 DEFAULT_SPEEDS_CONFIG="${CUSTOM_FILES}/default_speeds.json"
+
+# downloaded PBFs land in CUSTOM_FILES too, so this also finds those
+find_pbf_files() {
+  ls ${CUSTOM_FILES}/*.pbf 2>/dev/null || true
+}
 
 maybe_create_dir() {
   if ! test -d $1; then

@@ -55,6 +55,8 @@ ENV build_custom_attributes=False
 ENV custom_attributes_name="custom_attributes"
 ENV custom_attributes_defs=""
 ENV custom_attributes_default_values="0.0"
+ENV custom_attributes_lua=""
+ENV custom_attributes_tag_keys=""
 ENV default_speeds_config_url="https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json"
 
 # Smoke tests

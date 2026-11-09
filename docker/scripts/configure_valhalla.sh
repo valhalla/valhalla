@@ -48,7 +48,7 @@ fi
 new_hashes="False"
 files=""
 files_counter=0
-for file in $(ls $CUSTOM_FILES/*.pbf 2>/dev/null); do
+for file in $(find_pbf_files); do
   hash_echo=$(hash_exists ${file})
   if ! [[ $hash_echo =~ "True" ]] ; then
     echo "WARNING: Hash not found for: ${file}!"

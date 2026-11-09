@@ -50,6 +50,33 @@ do_build_custom_attributes() {
   valhalla_build_custom_attributes_extract -c "${CONFIG_FILE}" \
     --attribute-defs "${custom_attributes_defs}" \
     --default-values "${custom_attributes_default_values}" || exit 1
+
+  if [[ -z "${custom_attributes_lua}" ]]; then
+    return
+  fi
+  if ! [[ -f "${CUSTOM_ATTRIBUTES_LUA}" ]]; then
+    echo "WARNING: custom_attributes_lua is set, but ${CUSTOM_ATTRIBUTES_LUA} doesn't exist, keeping default values."
+    return
+  fi
+  if [[ -z "${custom_attributes_tag_keys}" ]]; then
+    echo "ERROR: custom_attributes_lua is set, but custom_attributes_tag_keys is empty."
+    exit 1
+  fi
+  local pbf_files
+  pbf_files=$(find_pbf_files | xargs)
+  if [[ -z "${pbf_files}" ]]; then
+    echo "WARNING: No PBF files found in ${CUSTOM_FILES}, keeping default custom attribute values."
+    return
+  fi
+  echo ""
+  echo "====================================="
+  echo "= Adding custom attributes from OSM ="
+  echo "====================================="
+  echo ""
+  valhalla_add_custom_attributes -c "${CONFIG_FILE}" \
+    --tag-keys "${custom_attributes_tag_keys}" \
+    --lua "${CUSTOM_ATTRIBUTES_LUA}" \
+    ${pbf_files} || exit 1
 }
 
 tile_tar_rebuilt="False"
