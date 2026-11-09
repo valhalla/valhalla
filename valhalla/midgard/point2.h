@@ -1,5 +1,7 @@
 #pragma once
 
+#include "midgard/constants.h"
+
 #include <valhalla/midgard/util_core.h>
 
 #include <cmath>
@@ -188,8 +190,15 @@ public:
    *
    * @return true if the system is spherical false if not
    */
-  static bool IsSpherical() {
+  constexpr bool IsSpherical() {
     return false;
+  }
+
+  PointXY<PrecisionT> PointAlongHeading(PrecisionT heading, PrecisionT distance) const {
+    const PrecisionT heading_rad = heading * kRadPerDegD;
+
+    return PointXY<PrecisionT>(first + std::sin(heading_rad) * distance,
+                               second + std::cos(heading_rad) * distance);
   }
 
   /**

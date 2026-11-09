@@ -1,5 +1,7 @@
 #pragma once
 
+#include "proto/common.pb.h"
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
@@ -638,7 +640,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(std::move(t)){};
+  explicit Finally(T t) : t(std::move(t)) {};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;

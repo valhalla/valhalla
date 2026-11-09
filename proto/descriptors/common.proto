@@ -183,6 +183,8 @@ message Location {
   string time_zone_offset = 91;
   string time_zone_name = 92;
   bool transit_available = 93;
+  bool round_trip_seed = 94;   // whether this is a location generated for a round trip
+  uint32 round_trip_route_length = 95; // desired round trip route length in meters
 }
 
 message TransitEgressInfo {

@@ -399,6 +399,8 @@ void parse_location(valhalla::Location* location,
       if (waiting_secs)
         add_warning(request, 203);
   }
+
+  location->set_round_trip_seed(false);
 }
 
 /**

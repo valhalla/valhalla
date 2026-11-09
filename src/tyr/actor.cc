@@ -88,6 +88,7 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
       return status("", interrupt, &api);
     case Options::tile:
       return tile("", interrupt, &api);
+    case Options::round_trip:
     default:
       throw valhalla_exception_t{106};
   }
@@ -379,6 +380,22 @@ actor_t::tile(const std::string& request_str, const std::function<void()>* inter
     if (auto_cleanup)
       cleanup();
   });
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // if the caller doesn't want a copy we'll use this dummy
+  Api dummy;
+  if (!api) {
+    api = &dummy;
+  }
+  // parse the request
+  ParseApi(request_str, Options::tile, *api);
+  auto bytes = pimpl->loki_worker.render_tile(*api);
+  return bytes;
+}
+
+std::string actor_t::round_trip(const std::string& request_str,
+                                const std::function<void()>* interrupt,
+                                Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy

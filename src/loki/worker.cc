@@ -382,6 +382,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                                ".max_matrix_location_pairs"));
     }
+    // optional so that existing configs keep working, costings without it don't do round trips
+    if (auto rt_dist =
+            config.get_optional<float>("service_limits." + kv.first + ".max_round_trip_distance")) {
+      max_roundtrip_distances.emplace(kv.first, *rt_dist);
+    }
   }
 
   // overwrite config value with hardcoded one since multi-location routes

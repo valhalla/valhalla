@@ -423,6 +423,7 @@ message Options {
     centroid = 11;
     status = 12;
     tile = 13;
+    round_trip = 14;
   }
 
   enum DateTimeType {
