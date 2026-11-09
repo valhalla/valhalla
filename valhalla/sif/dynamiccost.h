@@ -24,7 +24,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro
 
@@ -244,6 +246,41 @@ constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // De
 constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
+
+constexpr uint32_t kCurvatureSteps = 21;
+constexpr uint32_t kNeutralCurvatureStep = kCurvatureSteps / 2;
+constexpr uint32_t kCurvatureRuralDensity = 3;
+constexpr uint32_t kCurvatureUrbanDensity = 7;
+constexpr float kMaxStraightRoadFactor = 6.f;
+constexpr float kSuburbanCurvatureFactor = 0.1f;
+constexpr float kUrbanCurvatureFactor = 2.f;
+
+constexpr float curvature_strength(uint32_t step) {
+  if (step <= kNeutralCurvatureStep) {
+    return 0.f;
+  }
+  float t = static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+  return t * t;
+}
+
+constexpr std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
+populate_curvaturefactor() {
+  std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> curvaturefactor{};
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    float strength =
+        curvature_strength(s); // strength grows quadratically with use_curvature in range [0.5, 1.0]
+    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
+      float straightness = static_cast<float>(baldr::kMaxCurvatureFactor - c) /
+                           baldr::kMaxCurvatureFactor; // inverted curvature
+      curvaturefactor[s][c] =
+          1.f +
+          kMaxStraightRoadFactor * strength * straightness *
+              straightness; // instead of favoring curvy roads, we increasingly avoid straight roads
+    }
+  }
+  return curvaturefactor;
+}
+constexpr auto kCurvatureFactor = populate_curvaturefactor();
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -1327,6 +1364,20 @@ protected:
   }
 
   /**
+   * Returns the weighted sum of the edge's custom attributes to add to the edge factor, or 0 if
+   * the request weights none of them or the tile has no custom attributes.
+   */
+  float CustomAttributesFactor(const baldr::graph_tile_ptr& tile,
+                               const baldr::GraphId& edgeid) const {
+    if (custom_attribute_weights_.empty()) {
+      return 0.f;
+    }
+    const auto* custom_attributes = tile->custom_attributes_tile();
+    return custom_attributes ? custom_attributes->weighted_sum(edgeid.id(), custom_attribute_weights_)
+                             : 0.f;
+  }
+
+  /**
    * Calculate `track` costs based on tracks preference.
    * @param use_tracks value of tracks preference in range [0; 1]
    */
@@ -1343,6 +1394,13 @@ protected:
    * @param use_lit value of lit preference in range [0; 1]
    */
   virtual void set_use_lit(float use_lit);
+
+  /**
+   * Set the curvature step index from the costing preference value.
+   * @param use_curvature curvature preference in range [0, 1]: <= 0.5 = no effect,
+   *                      1 = prefer curvy.
+   */
+  virtual void set_use_curvature(float use_curvature);
 
   // Algorithm pass
   uint32_t pass_;
@@ -1379,6 +1437,9 @@ protected:
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
   float speed_penalty_factor_; // Avoid faster edges than top speed factor.
+  uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
+  float suburban_curvature_factor_;
+  float urban_curvature_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1458,6 +1519,17 @@ protected:
   double min_linear_cost_factor_;
   bool has_allowed_linear_edges_{false};
 
+  // Custom attribute definitions. Order is the tiles' column order.
+  std::vector<baldr::CustomAttributeDef> custom_attribute_defs_;
+  // Columns with a non-zero request weight, the weight multiplied by the column's scale
+  std::vector<baldr::WeightedCustomAttribute> custom_attribute_weights_;
+
+public:
+  const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs() const {
+    return custom_attribute_defs_;
+  }
+
+protected:
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1534,6 +1606,9 @@ protected:
 
     // Calculate lit factor from costing options.
     set_use_lit(costing_options.use_lit());
+
+    // Calculate curvature factor from costing options.
+    set_use_curvature(costing_options.use_curvature());
 
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
@@ -1664,6 +1739,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
+
+  ranged_default_t<float> use_curvature_;
 
   ranged_default_t<float> closure_factor_;
   ranged_default_t<float> speed_penalty_factor_;

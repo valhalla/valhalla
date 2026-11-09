@@ -96,6 +96,7 @@ constexpr float kDefaultUseRailFerry = 0.4f;     // Default preference of using 
 constexpr float kDefaultUseTracks = 0.5f;        // Default preference of using tracks 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
 constexpr float kDefaultUseLit = 0.f;            // Default preference of using lit ways 0-1
+constexpr float kDefaultUseCurvature = 0.5f;     // Default preference of using curvy streets 0-1
 
 // How much to avoid generic service roads.
 constexpr float kDefaultServiceFactor = 1.0f;
@@ -117,6 +118,8 @@ constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPe
 
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
+
+constexpr ranged_default_t<float> kCustomAttributeWeightRange{-1.0f, 0.0f, 1.0f};
 
 // Default dimension
 constexpr float kDefaultHeight = 1.6f; // Meters (62.9921 inches)
@@ -174,9 +177,10 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      closure_factor_{kClosureFactorRange}, speed_penalty_factor_{kSpeedPenaltyFactorRange},
-      exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
-      exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
+      use_curvature_{0.f, kDefaultUseCurvature, 1.f}, closure_factor_{kClosureFactorRange},
+      speed_penalty_factor_{kSpeedPenaltyFactorRange}, exclude_unpaved_(false),
+      exclude_bridges_(false), exclude_tunnels_(false), exclude_tolls_(false),
+      exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
       include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
       length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f},
@@ -225,6 +229,18 @@ DynamicCost::DynamicCost(const Costing& costing,
   }
 
   SetCostFactorEdges(costing.options());
+
+  const auto& weights = costing.options().use_custom_attributes();
+  for (const auto& def : costing.custom_attribute_defs()) {
+    custom_attribute_defs_.push_back(
+        {def.name(), static_cast<baldr::CustomAttributeType>(def.type()), def.scale(), def.offset()});
+    const auto it = weights.find(def.name());
+    if (it != weights.end() && it->second != 0.0f) {
+      custom_attribute_weights_.push_back({def.offset(),
+                                           static_cast<baldr::CustomAttributeType>(def.type()),
+                                           it->second * def.scale()});
+    }
+  }
 }
 
 DynamicCost::~DynamicCost() {
@@ -456,6 +472,14 @@ void DynamicCost::set_use_lit(float use_lit) {
       use_lit < 0.5f ? kMinLitFactor + 2.f * use_lit : ((kMinLitFactor - 5.f) + 12.f * use_lit);
 }
 
+void DynamicCost::set_use_curvature(float use_curvature) {
+  curvature_step_ =
+      static_cast<uint32_t>(std::round(use_curvature * static_cast<float>(kCurvatureSteps - 1)));
+  float strength = curvature_strength(curvature_step_);
+  suburban_curvature_factor_ = 1.f + kSuburbanCurvatureFactor * strength;
+  urban_curvature_factor_ = kUrbanCurvatureFactor * kCurvatureFactor[curvature_step_][0];
+}
+
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* c,
                           const BaseCostingOptionsConfig& cfg,
@@ -605,6 +629,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // use_lit
   JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit, warnings);
 
+  // use_curvature
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_curvature_, json, "/use_curvature", use_curvature, warnings);
+
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor, warnings);
 
@@ -624,6 +651,29 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.width_, json, "/width", width, warnings);
   JSON_PBF_RANGED_DEFAULT(co, cfg.length_, json, "/length", length, warnings);
   JSON_PBF_RANGED_DEFAULT(co, cfg.weight_, json, "/weight", weight, warnings);
+
+  // use_custom_attributes: {"attr_name": weight, ...}, json entries override pbf ones
+  auto* weights = co->mutable_use_custom_attributes();
+  if (const auto attrs = rapidjson::get_child_optional(json, "/use_custom_attributes")) {
+    if (attrs->IsObject()) {
+      for (auto it = attrs->MemberBegin(); it != attrs->MemberEnd(); ++it) {
+        if (it->name.IsString() && it->value.IsNumber()) {
+          (*weights)[it->name.GetString()] = it->value.GetFloat();
+        }
+      }
+    }
+  }
+
+  for (auto& entry : *weights) {
+    bool clamped = false;
+    entry.second = kCustomAttributeWeightRange(entry.second, clamped);
+    if (clamped) {
+      auto* warning = warnings.Add();
+      warning->set_description("'/use_custom_attributes/" + entry.first + "' has been clamped to " +
+                               std::to_string(kCustomAttributeWeightRange.def));
+      warning->set_code(500);
+    }
+  }
 }
 
 void ParseCosting(const rapidjson::Document& doc,
