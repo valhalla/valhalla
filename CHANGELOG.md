@@ -1,9 +1,5 @@
 ## UNRELEASED
 * **Removed**
-* **Enhancement**
-   * UPDATED: timezone database to 2026f [#6454](https://github.com/valhalla/valhalla/pull/6454)
-   * CHANGED: replace `memset` with C++20 default member initializers for bitfields in `DirectedEdge`, `NodeInfo`, and `GraphTileHeader`; drop empty default constructors where possible [#6128](https://github.com/valhalla/valhalla/issues/6128)
-   * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
 * **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
@@ -19,6 +15,10 @@
    * FIXED: matrix, isochrone and trace requests report errors like 446 instead of "No suitable edges near location" (171), as route already does [#6416](https://github.com/valhalla/valhalla/pull/6416)
    * FIXED: Fix assertion when decrementing end iterator of empty vector [#6388](https://github.com/valhalla/valhalla/pull/6388)
    * FIXED: Vietnamese arrival phrases use "bên trái/bên phải" for the destination side [#6447](https://github.com/valhalla/valhalla/pull/6447)
+   * FIXED: Apply configured CostMatrix hierarchy limits to `/optimized_route` [#6441](https://github.com/valhalla/valhalla/issues/6441)
+   * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
+   * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
+   * FIXED: duplicate definition of `OverwriteBits` [#6478](https://github.com/valhalla/valhalla/pull/6478)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
@@ -27,7 +27,13 @@
    * UPDATED: timezone database to 2026e [#6415](https://github.com/valhalla/valhalla/pull/6415)
    * ADDED: `kCycleStreet` use [#6407](https://github.com/valhalla/valhalla/pull/6407)
    * CHANGED: a `tile_url` connection times out after 5 s instead of curl's default of 300 s, so a tile server that doesn't answer fails fast [#6424](https://github.com/valhalla/valhalla/pull/6424)
-   * BREAKING: warning instead of error on failed linear cost factor edge walk [#6443](https://github.com/valhalla/valhalla/pull/6443)
+   * CHANGED: replace `memset` with C++20 default member initializers for bitfields in `DirectedEdge`, `NodeInfo`, and `GraphTileHeader`; drop empty default constructors where possible [#6128](https://github.com/valhalla/valhalla/issues/6128)
+   * BREAKING: warning instead of error on failed linear cost factor edge walk [#6443](https://github.com/valhalla/valhalla/pull/6443) 
+   * UPDATED: timezone database to 2026f [#6454](https://github.com/valhalla/valhalla/pull/6454)
+   * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
+   * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
+   * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
+   * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1

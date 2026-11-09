@@ -464,11 +464,13 @@ public:
    *
    * @param edge           the edge that should or shouldnt be allowed
    * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param edgeid         the id of the edge
    * @param disallow_mask  a mask that controls additional properties that should disallow the edge
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
                               const baldr::graph_tile_ptr&,
+                              const baldr::GraphId&,
                               uint16_t disallow_mask = kDisallowNone) const {
     auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
@@ -823,6 +825,31 @@ public:
       }
     }
     return destonly_access_restr_mask;
+  }
+
+  /**
+   * Checks the edge's access restrictions (height, weight, etc.) against the vehicle, for
+   * filtering location candidates. Time-dependent restrictions and those that exempt
+   * destinations are skipped.
+   *
+   * @param edge    The edge to check
+   * @param tile    The edge's tile
+   * @param edgeid  The edge's id
+   * @return true if the vehicle is within every such restriction on the edge
+   */
+  inline bool MeetsAccessRestrictions(const baldr::DirectedEdge* edge,
+                                      const baldr::graph_tile_ptr& tile,
+                                      const baldr::GraphId& edgeid) const {
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_))
+      return true;
+
+    for (const auto& restriction : tile->GetAccessRestrictions(edgeid.id(), access_mask_)) {
+      if (restriction.except_destination())
+        continue;
+      if (!ModeSpecificAllowed(restriction))
+        return false;
+    }
+    return true;
   }
 
   /***
