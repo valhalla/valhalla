@@ -944,7 +944,7 @@ private:
     auto* correlation = pp.location->mutable_correlation();
     correlation->set_street_score(best_hint_score);
     // nothing in common is never a match
-    if (best_hint_score <= 0.f || best_hint_score < pp.location->street_threshold())
+    if (best_hint_score == 0.f || best_hint_score < pp.location->street_threshold())
       return false;
 
     auto is_reachable = [&pp](const directed_reach& reach) {
