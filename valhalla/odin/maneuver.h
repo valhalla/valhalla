@@ -378,9 +378,6 @@ public:
   const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
   std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
 
-  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
-  void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
-
   bool has_long_street_name() const;
   void set_long_street_name(bool has_long_street_name);
 
@@ -533,8 +530,6 @@ protected:
   PedestrianType pedestrian_type_;
   BicycleType bicycle_type_;
   TransitType transit_type_;
-
-  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 
   std::unique_ptr<baldr::VerbalTextFormatter> verbal_formatter_;
 

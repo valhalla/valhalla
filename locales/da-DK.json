@@ -87,6 +87,12 @@
         "0": "<PREVIOUS_STREET_NAMES> bliver til <STREET_NAMES>."
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Rent a bike from bike share station.",
+        "1": "Return a bike at the bike share station."
+      }
+    },
     "continue": {
       "phrases": {
         "0": "Fortsæt.",
