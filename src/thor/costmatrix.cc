@@ -1136,7 +1136,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile, edgeid)),
                              edge_destonly, directededge->forwardaccess() & kTruckAccess,
                              destonly_restriction_mask);
       auto newsortcost = GetAstarHeuristic<MatrixExpansionType::forward>(index,
@@ -1247,7 +1247,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile, edgeid)),
                              edge_destonly, directededge->forwardaccess() & kTruckAccess,
                              destonly_restriction_mask);
 

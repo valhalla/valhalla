@@ -195,6 +195,7 @@ nav:
               - Polyline decoder: bindings/python/api/decode_polyline.md
               - Exceptions: bindings/python/api/exceptions.md
       - Node.js: bindings/nodejs.md
+      - Rust: bindings/rust.md
   - How it works:
       - concepts/index.md
       - "Why tiles?": concepts/why-tiles.md
