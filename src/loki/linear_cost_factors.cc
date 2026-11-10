@@ -98,7 +98,7 @@ std::vector<size_t> add_cost_factor_edges(const sif::mode_costing_t& mode_costin
           edge_count++;
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
-          e->set_factor(line.cost_factor());
+          e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
           e->set_allow_types(line.allow_types());
           for (const auto& edge : line.locations(0).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {

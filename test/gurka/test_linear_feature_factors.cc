@@ -650,6 +650,37 @@ TEST_F(LinearFeatureTest, partial_edges_near_nodes) {
                          end);
 }
 
+TEST_F(LinearFeatureTest, SingleEdgeMinimumFactor) {
+  auto config = map.config;
+  config.put("service_limits.min_linear_cost_factor", 0.5);
+  loki::loki_worker_t loki_worker(config);
+
+  constexpr std::string_view json_request = R"(
+  {{
+    "locations": [
+      {{"lon": {:.6f}, "lat": {:.6f}}},
+      {{"lon": {:.6f}, "lat": {:.6f}}}
+    ],
+    "linear_cost_factors": [{{"shape": "{}", "factor": {}}}],
+    "costing": "auto"
+  }}
+  )";
+
+  for (double factor : {0.1, 0.5, 2.0}) {
+    auto json_str = std::format(json_request, map.nodes.at("U").lng(), map.nodes.at("U").lat(),
+                                map.nodes.at("X").lng(), map.nodes.at("X").lat(),
+                                encode_shape({"V", "W"}, map.nodes), factor);
+    Api request;
+    ParseApi(json_str, Options::route, request);
+    loki_worker.route(request);
+    loki_worker.cleanup();
+
+    const auto& edges = request.options().costings().at(Costing::auto_).options().cost_factor_edges();
+    ASSERT_EQ(edges.size(), 1);
+    EXPECT_DOUBLE_EQ(edges.at(0).factor(), std::max(factor, 0.5));
+  }
+}
+
 TEST_F(LinearFeatureTest, empty_shape) {
   loki::loki_worker_t loki_worker(map.config);
   thor::thor_worker_t thor_worker(map.config);
