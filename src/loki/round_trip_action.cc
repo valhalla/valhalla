@@ -191,12 +191,12 @@ void loki_worker_t::round_trip(Api& request) {
   // picks whichever seeds match the requested distance
   constexpr double kMinRoadNetworkFactor = 1.2;
   constexpr double kMaxRoadNetworkFactor = 2.0;
-  const auto radius_lo = estimate_radius(round_trip_options.distance(),
-                                         round_trip_options.heading_tolerance(), num_groups,
-                                         kMaxRoadNetworkFactor);
-  const auto radius_hi = estimate_radius(round_trip_options.distance(),
-                                         round_trip_options.heading_tolerance(), num_groups,
-                                         kMinRoadNetworkFactor);
+  const auto radius_lo =
+      estimate_radius(round_trip_options.distance(), round_trip_options.heading_tolerance(),
+                      num_groups, kMaxRoadNetworkFactor);
+  const auto radius_hi =
+      estimate_radius(round_trip_options.distance(), round_trip_options.heading_tolerance(),
+                      num_groups, kMinRoadNetworkFactor);
 
   auto seeded_points = seed_points(options.locations(0), round_trip_options.heading(),
                                    round_trip_options.heading_tolerance(), radius_lo, radius_hi,

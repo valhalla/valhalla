@@ -203,7 +203,7 @@ config = {
             "centroid",
             "status",
             "tile",
-            "round_trip"
+            "round_trip",
         ],
         "use_connectivity": True,
         "service_defaults": {
