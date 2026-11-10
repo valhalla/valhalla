@@ -16,7 +16,7 @@
    * FIXED: Fix assertion when decrementing end iterator of empty vector [#6388](https://github.com/valhalla/valhalla/pull/6388)
    * FIXED: Vietnamese arrival phrases use "bên trái/bên phải" for the destination side [#6447](https://github.com/valhalla/valhalla/pull/6447)
    * FIXED: Apply configured CostMatrix hierarchy limits to `/optimized_route` [#6441](https://github.com/valhalla/valhalla/issues/6441)
-   * FIXED: `ignore_oneways` is respected by reverse A* (`arrive_by`), isochrones, bidirectional A* and CostMatrix [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
+   * FIXED: `ignore_oneways` is respected by reverse A* (`arrive_by`), isochrones, bidirectional A* and CostMatrix [#6484](https://github.com/valhalla/valhalla/pull/6484)
    * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
    * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
    * FIXED: duplicate definition of `OverwriteBits` [#6478](https://github.com/valhalla/valhalla/pull/6478)
