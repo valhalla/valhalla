@@ -80,7 +80,7 @@ download_file() {
     echo "==============================================================="
     echo " Downloading  ${1}"
     echo "==============================================================="
-    curl --location -o "${2}" ${1}
+    aria2c --max-connection-per-server=5 --allow-overwrite=true --dir=/ --out="${2}" "${1}"
   else
     echo "ERROR: Couldn't download from ${1}.
     "

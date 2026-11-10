@@ -34,6 +34,7 @@
    * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
    * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
    * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
+   * CHANGED: Use concurrency in PBF downloads [#6482](https://github.com/valhalla/valhalla/issues/6482)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
