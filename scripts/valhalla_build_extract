@@ -73,9 +73,10 @@ class TileResolver:
 
         # pre-populate the available paths
         if self._is_tar:
-            self.normalized_tile_paths = sorted(
-                [Path(m.name) for m in self._tar_obj.getmembers() if m.name.endswith(".gph")]
-            )
+            self._tar_members = {
+                Path(m.name): m for m in self._tar_obj.getmembers() if m.name.endswith(".gph")
+            }
+            self.normalized_tile_paths = sorted(self._tar_members)
         else:
             self.normalized_tile_paths = sorted(
                 p.relative_to(self.path) for p in self.path.rglob("*.gph")
@@ -97,11 +98,10 @@ class TileResolver:
             # Normalize path to use forward slashes, fixes issues when running on Windows
             normalized_path = str(t).replace("\\", "/")
             if self._is_tar:
-                tar_member = self._tar_obj.getmember(normalized_path)
-                tar.addfile(tar_member, self._tar_obj.extractfile(tar_member.name))
+                tar_member = self._tar_members[t]
+                tar.addfile(tar_member, self._tar_obj.extractfile(tar_member))
             else:
                 tar.add(str(self.path.joinpath(normalized_path)), arcname=normalized_path)
-                tar_member = tar.getmember(normalized_path)
 
 
 description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
