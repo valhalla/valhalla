@@ -20,6 +20,7 @@
    * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
    * FIXED: duplicate definition of `OverwriteBits` [#6478](https://github.com/valhalla/valhalla/pull/6478)
 * **Enhancement**
+   * CHANGED: avoid one heap allocation per optimizer annealing attempt
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
    * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)

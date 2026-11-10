@@ -2,6 +2,7 @@
 #include "midgard/logging.h"
 
 #include <algorithm>
+#include <array>
 
 namespace {
 constexpr size_t kInterruptIterationsInterval = 10000;
@@ -125,7 +126,7 @@ void Optimizer::CreateRandomTour() {
 // Select a potential alteration of the tour.
 TourAlteration Optimizer::GetTourAlteration() {
   // Select three unique locations between 1 and count-2
-  std::vector<uint32_t> loc(3);
+  std::array<uint32_t, 3> loc;
   while (true) {
     loc[0] = get_random_location();
     loc[1] = get_random_location();
