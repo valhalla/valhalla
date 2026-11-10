@@ -246,7 +246,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
-  const uint64_t current_epoch = time_info.valid ? time_info.unix_epoch : 0;
+  const uint64_t current_epoch = time_info.valid ? time_info.unix_time : 0;
   uint8_t restriction_idx = kInvalidRestriction;
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
@@ -1062,7 +1062,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     bool edge_destonly = false;
     auto destonly_restriction_mask =
         costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                time_info.valid ? time_info.unix_epoch : 0,
+                                                time_info.valid ? time_info.unix_time : 0,
                                                 time_info.timezone_index, &edge_destonly);
 
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
@@ -1172,7 +1172,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     bool edge_destonly = false;
     auto destonly_restriction_mask =
         costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                time_info.valid ? time_info.unix_epoch : 0,
+                                                time_info.valid ? time_info.unix_time : 0,
                                                 time_info.timezone_index, &edge_destonly);
 
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,

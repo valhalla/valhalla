@@ -109,19 +109,19 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     bool edge_destonly = false;
     if (FORWARD) {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.unix_epoch,
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.unix_time,
                              nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
                              &edge_destonly) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,
-                               offset_time.unix_epoch, nodeinfo->timezone())) {
+                               offset_time.unix_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
-                                    offset_time.unix_epoch, nodeinfo->timezone(), restriction_idx,
+                                    offset_time.unix_time, nodeinfo->timezone(), restriction_idx,
                                     destonly_restriction_mask, &edge_destonly) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, false, nullptr,
-                                offset_time.unix_epoch, nodeinfo->timezone()))) {
+                                offset_time.unix_time, nodeinfo->timezone()))) {
         continue;
       }
     }
@@ -379,7 +379,7 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     bool edge_destonly = false;
     auto destonly_restriction_mask =
         costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                time_info.valid ? time_info.unix_epoch : 0,
+                                                time_info.valid ? time_info.unix_time : 0,
                                                 time_info.timezone_index, &edge_destonly);
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin

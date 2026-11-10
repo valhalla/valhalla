@@ -167,7 +167,7 @@ struct TimeInfo {
       return *this;
 
     // offset the local time and second of week by the amount traveled to this label
-    uint64_t lt = unix_epoch + static_cast<uint64_t>(seconds_offset);
+    uint64_t lt = unix_time + static_cast<uint64_t>(seconds_offset);
     int32_t sw = static_cast<int32_t>(second_of_week + seconds_offset);
 
     // if the timezone changed we need to account for that offset as well
@@ -213,7 +213,7 @@ struct TimeInfo {
       return *this;
 
     // offset the local time and second of week by the amount traveled to this label
-    uint64_t lt = unix_epoch - static_cast<uint64_t>(seconds_offset); // dont route near the epoch
+    uint64_t lt = unix_time - static_cast<uint64_t>(seconds_offset); // dont route near the epoch
     int32_t sw = static_cast<int32_t>(second_of_week) - static_cast<int32_t>(seconds_offset);
 
     // if the timezone changed we need to account for that offset as well
@@ -250,7 +250,7 @@ struct TimeInfo {
 
   // returns localtime as a string
   std::string date_time() const {
-    return DateTime::seconds_to_date(unix_epoch, dt::get_tz_db().from_index(timezone_index), false);
+    return DateTime::seconds_to_date(unix_time, dt::get_tz_db().from_index(timezone_index), false);
   }
 
   uint32_t day_seconds() const {
@@ -259,7 +259,7 @@ struct TimeInfo {
 
   // for unit tests
   bool operator==(const TimeInfo& ti) const {
-    return valid == ti.valid && timezone_index == ti.timezone_index && unix_epoch == ti.unix_epoch &&
+    return valid == ti.valid && timezone_index == ti.timezone_index && unix_time == ti.unix_time &&
            second_of_week == ti.second_of_week && seconds_from_now == ti.seconds_from_now &&
            negative_seconds_from_now == ti.negative_seconds_from_now;
   }
@@ -267,7 +267,7 @@ struct TimeInfo {
   // for unit tests
   friend std::ostream& operator<<(std::ostream& os, const TimeInfo& ti) {
     return os << "{valid: " << ti.valid << ", timezone_index: " << ti.timezone_index
-              << ", current_epoch: " << ti.unix_epoch << ", second_of_week: " << ti.second_of_week
+              << ", current_epoch: " << ti.unix_time << ", second_of_week: " << ti.second_of_week
               << ", seconds_from_now: " << ti.seconds_from_now
               << ", negative_seconds_from_now: " << ti.negative_seconds_from_now
               << ", tz_cache: " << ti.tz_cache << "}";
