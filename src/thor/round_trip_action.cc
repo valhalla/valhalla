@@ -1,0 +1,85 @@
+#include "thor/costmatrix.h"
+#include "thor/optimizer.h"
+#include "thor/worker.h"
+
+using namespace valhalla;
+using namespace valhalla::midgard;
+using namespace valhalla::baldr;
+using namespace valhalla::sif;
+using namespace valhalla::thor;
+
+namespace valhalla {
+namespace thor {
+
+void thor_worker_t::round_trip_route(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
+  auto& options = *request.mutable_options();
+  adjust_locations(request);
+  auto costing = parse_costing(request);
+  controller = AttributesController(options);
+
+  // Save the original hierarchy limits for the final route calculation.
+  const auto original_hierarchy_limits = mode_costing[int(mode)]->GetHierarchyLimits();
+
+  check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
+                         options.costings().find(options.costing_type())->second.options(),
+                         hierarchy_limits_config_costmatrix, allow_hierarchy_limits_modifications,
+                         mode_costing[int(mode)]->UseHierarchyLimits());
+
+  std::vector<std::unordered_set<GraphId>> path_edge_ids;
+  std::vector<std::vector<GraphId>> paths;
+  costmatrix_.set_interrupt(interrupt);
+  // Use CostMatrix to find costs from each location to every other location
+  costmatrix_.set_has_time(check_matrix_time(request, Matrix::CostMatrix));
+  costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
+                             max_matrix_distance.find(costing)->second, &paths);
+
+  path_edge_ids.resize(paths.size());
+  for (size_t i = 0; i < paths.size(); ++i) {
+    auto& path = paths[i];
+    auto& path_set = path_edge_ids[i];
+    path_set.insert(path.begin(), path.end());
+  }
+
+  // // Return an error if any locations are totally unreachable
+  // const auto& correlated =
+  //     (options.sources_size() > options.targets_size() ? options.sources() : options.targets());
+  //
+  // // Set time costs to send to Optimizer.
+  // std::vector<float> time_costs;
+  // bool reachable = true;
+  // const auto tds = request.matrix().times();
+  // for (size_t i = 0; i < static_cast<size_t>(tds.size()); ++i) {
+  //   // If any location is completely unreachable then we cant have a connected path
+  //   if (i % correlated.size() == 0) {
+  //     if (!reachable) {
+  //       throw valhalla_exception_t{441, " at index " + std::to_string(i / correlated.size())};
+  //     };
+  //     reachable = false;
+  //   }
+  //   reachable = reachable || tds.Get(i) != kMaxCost;
+  //   // Keep the times for the reordering
+  //   time_costs.emplace_back(static_cast<float>(tds.Get(i)));
+  // }
+  //
+  // Optimizer optimizer;
+  // optimizer.set_interrupt(interrupt);
+  // // returns the optimal order of the path_locations
+  // auto optimal_order = optimizer.Solve(correlated.size(), time_costs);
+  // // put the optimal order into the locations array
+  // options.mutable_locations()->Clear();
+  // for (size_t i = 0; i < optimal_order.size(); i++) {
+  //   options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
+  // }
+  //
+  // // Restore the original limits before calculating the final route.
+  // mode_costing[int(mode)]->SetHierarchyLimits(original_hierarchy_limits);
+  //
+  // // run the route
+  // path_depart_at(request, costing);
+}
+
+} // namespace thor
+} // namespace valhalla

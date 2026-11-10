@@ -1347,6 +1347,23 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
                            options.has_roundabout_exits_case() ? options.roundabout_exits() : true);
   options.set_roundabout_exits(roundabout_exits);
 
+  // round trip options
+  if (action == Options::round_trip) {
+    options.mutable_round_trip_options()->set_distance(
+        rapidjson::get<double>(doc, "/round_trip_options/distance", 0.0));
+
+    auto heading = rapidjson::get_optional<double>(doc, "/round_trip_options/heading");
+    if (heading) {
+      options.mutable_round_trip_options()->set_heading(*heading);
+    }
+
+    auto heading_tolerance =
+        rapidjson::get_optional<double>(doc, "/round_trip_options/heading_tolerance");
+    if (heading_tolerance) {
+      options.mutable_round_trip_options()->set_heading_tolerance(*heading_tolerance);
+    }
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

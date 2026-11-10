@@ -60,6 +60,7 @@ public:
   std::string expansion(Api& request);
   void centroid(Api& request);
   void status(Api& request) const;
+  void round_trip_route(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
