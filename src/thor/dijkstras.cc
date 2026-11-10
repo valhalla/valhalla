@@ -129,8 +129,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // (based on the costing method) or if a complex restriction exists for
     // this path.
     if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        (!costing_->MayAccess(directededge, FORWARD, access_mode_) &&
-         !costing_->has_allowed_linear_edges())) {
+        !costing_->MayAccess(directededge, FORWARD, access_mode_)) {
       continue;
     }
 
