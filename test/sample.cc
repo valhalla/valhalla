@@ -12,6 +12,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <list>
 
 using namespace valhalla;
@@ -29,6 +30,20 @@ TEST(Sample, no_data) {
 
   EXPECT_EQ(s.get(std::make_pair(200.0, 200.0)), skadi::get_no_data_value())
       << "Asked for point outside of valid range";
+}
+
+TEST(Sample, InvalidCoordinates) {
+  skadi::sample s("test/data/this_is_not_a_directory");
+  const auto infinity = std::numeric_limits<double>::infinity();
+  const auto nan = std::numeric_limits<double>::quiet_NaN();
+  const std::vector<std::pair<double, double>> coordinates = {{-180.0, 90.0},   {180.0, 0.0},
+                                                              {-180.01, 0.0},   {0.0, -90.01},
+                                                              {0.0, 90.01},     {infinity, 0.0},
+                                                              {0.0, -infinity}, {nan, 0.0},
+                                                              {0.0, nan}};
+  const auto heights = s.get_all(coordinates);
+  for (const auto height : heights)
+    EXPECT_EQ(height, skadi::get_no_data_value());
 }
 
 TEST(Sample, create_tile) {
@@ -118,6 +133,56 @@ TEST(Sample, get) {
 TEST(Sample, getgz) {
   _get("test/data/samplegz");
 };
+
+TEST(Sample, CompressedTileSize) {
+  const std::string directory = "test/data/sample_corrupt";
+  std::filesystem::create_directories(directory);
+  auto check = [&directory](const std::vector<char>& bytes, const std::string& extension) {
+    const auto path = directory + "/N00E000.hgt" + extension;
+    {
+      std::ofstream file(path, std::ios::binary | std::ios::trunc);
+      file.write(bytes.data(), bytes.size());
+      EXPECT_TRUE(file.good());
+    }
+    {
+      skadi::sample s(directory);
+      EXPECT_EQ(s.get(std::make_pair(0.5, 0.5)), skadi::get_no_data_value());
+      EXPECT_EQ(s.get(std::make_pair(0.0, 0.0)), skadi::get_no_data_value());
+    }
+    std::filesystem::remove(path);
+  };
+
+  for (const auto size : {size_t{2}, size_t{3601 * 3601 * 2 - 2}, size_t{3601 * 3601 * 2 + 2}}) {
+    SCOPED_TRACE(size);
+    std::vector<char> tile(size, 0);
+    std::vector<char> compressed(compressBound(tile.size()) + 32);
+    auto src_func = [&tile](z_stream& stream) {
+      stream.next_in = reinterpret_cast<Bytef*>(tile.data());
+      stream.avail_in = tile.size();
+      return Z_FINISH;
+    };
+    auto dst_func = [&compressed](z_stream& stream) {
+      if (stream.total_out == 0) {
+        stream.next_out = reinterpret_cast<Bytef*>(compressed.data());
+        stream.avail_out = compressed.size();
+      } else {
+        compressed.resize(stream.total_out);
+      }
+    };
+    ASSERT_TRUE(baldr::deflate(src_func, dst_func));
+    check(compressed, ".gz");
+
+#ifdef ENABLE_LZ4
+    compressed.resize(LZ4F_compressFrameBound(tile.size(), nullptr));
+    const auto bytes =
+        LZ4F_compressFrame(compressed.data(), compressed.size(), tile.data(), tile.size(), nullptr);
+    ASSERT_FALSE(LZ4F_isError(bytes));
+    compressed.resize(bytes);
+    check(compressed, ".lz4");
+#endif
+  }
+  std::filesystem::remove(directory);
+}
 
 #ifdef ENABLE_LZ4
 TEST(Sample, getlz4) {

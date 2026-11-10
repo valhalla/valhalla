@@ -109,21 +109,18 @@ public:
     this->unpacked = unpacked;
 
     if (format == format_t::GZIP) {
-      // for setting where to read compressed data from
-      auto src_func = [this](z_stream& s) -> void {
-        s.next_in = static_cast<Byte*>(static_cast<void*>(data.get()));
-        s.avail_in = static_cast<unsigned int>(data.size());
-      };
+      z_stream stream{};
+      stream.next_in = reinterpret_cast<Bytef*>(data.get());
+      stream.avail_in = static_cast<uInt>(data.size());
+      stream.next_out = reinterpret_cast<Bytef*>(const_cast<char*>(unpacked));
+      stream.avail_out = HGT_BYTES;
+      const auto initialized = inflateInit2(&stream, MAX_WBITS + 32) == Z_OK;
+      const auto valid = initialized && ::inflate(&stream, Z_FINISH) == Z_STREAM_END &&
+                         stream.total_out == HGT_BYTES;
+      if (initialized)
+        inflateEnd(&stream);
 
-      // for setting where to write the uncompressed data to
-      auto dst_func = [this](z_stream& s) -> int {
-        s.next_out = (Byte*)(this->unpacked);
-        s.avail_out = HGT_BYTES;
-        return Z_FINISH; // we know the output will hold all the input
-      };
-
-      // we have to unzip it
-      if (!baldr::inflate(src_func, dst_func)) {
+      if (!valid) {
         LOG_WARN("Corrupt gzip elevation data");
         format = format_t::UNKNOWN;
         return false;
@@ -131,26 +128,33 @@ public:
     } else if (format == format_t::LZ4) {
 #ifdef ENABLE_LZ4
       LZ4F_decompressionContext_t decode;
-      LZ4F_decompressOptions_t options;
-      LZ4F_createDecompressionContext(&decode, LZ4F_VERSION);
-
-      // Take these two values locally, since LZ4F_decompress expects pointers...
-      size_t src_size = data.size();
-      size_t dest_size = HGT_BYTES;
-      size_t result;
+      if (LZ4F_isError(LZ4F_createDecompressionContext(&decode, LZ4F_VERSION))) {
+        LOG_WARN("Cannot initialize lz4 elevation decompression");
+        format = format_t::UNKNOWN;
+        return false;
+      }
+      LZ4F_decompressOptions_t options{};
+      size_t src_offset = 0;
+      size_t dest_offset = 0;
+      size_t result = 1;
 
       do {
-        result = LZ4F_decompress(decode, const_cast<char*>(this->unpacked), &dest_size, data.get(),
-                                 &src_size, &options);
-        if (LZ4F_isError(result)) {
-          LZ4F_freeDecompressionContext(decode);
-          LOG_WARN("Corrupt lz4 elevation data");
-          format = format_t::UNKNOWN;
-          return false;
-        }
+        size_t src_size = data.size() - src_offset;
+        size_t dest_size = HGT_BYTES - dest_offset;
+        result = LZ4F_decompress(decode, const_cast<char*>(unpacked) + dest_offset, &dest_size,
+                                 data.get() + src_offset, &src_size, &options);
+        src_offset += src_size;
+        dest_offset += dest_size;
+        if (LZ4F_isError(result) || (src_size == 0 && dest_size == 0))
+          break;
       } while (result != 0);
 
       LZ4F_freeDecompressionContext(decode);
+      if (result != 0 || dest_offset != HGT_BYTES) {
+        LOG_WARN("Corrupt lz4 elevation data");
+        format = format_t::UNKNOWN;
+        return false;
+      }
 #else
       LOG_WARN("LZ4 elevation data found but LZ4 support is not compiled in");
       format = format_t::UNKNOWN;
@@ -373,7 +377,7 @@ tile_data cache_t::source(uint16_t index) {
   }
 
   std::promise<tile_data> promise;
-  it = pending_tiles.emplace(index, promise.get_future()).first;
+  pending_tiles.emplace(index, promise.get_future());
 
   if (reusable.size() >= UNPACKED_TILES_COUNT) {
     for (auto i : reusable) {
@@ -397,7 +401,7 @@ tile_data cache_t::source(uint16_t index) {
 
   mutex.lock();
   promise.set_value(rv);
-  pending_tiles.erase(it);
+  pending_tiles.erase(index);
   mutex.unlock();
   return rv;
 }
@@ -452,9 +456,9 @@ sample::~sample() {
 
 template <class coord_t> double sample::get(const coord_t& coord, tile_data& tile) {
   // check the cache and load
-  auto lon = std::floor(coord.first);
-  auto lat = std::floor(coord.second);
-  auto index = static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
+  auto index = get_tile_index(coord);
+  if (index == TILE_COUNT)
+    return get_no_data_value();
 
   // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
@@ -472,6 +476,8 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
   // NOTE: data is arranged from upper left to bottom right, so y is flipped
 
   // fractional pixel
+  auto lon = (index % 360) - 180;
+  auto lat = (index / 360) - 90;
   double u = (coord.first - lon) * (HGT_DIM - 1);
   double v = (1.0 - (coord.second - lat)) * (HGT_DIM - 1);
 
@@ -544,6 +550,9 @@ bool sample::fetch(uint16_t index) {
 }
 
 template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
+  if (!(coord.first >= -180 && coord.first < 180 && coord.second >= -90 && coord.second < 90))
+    return TILE_COUNT;
+
   auto lon = std::floor(coord.first);
   auto lat = std::floor(coord.second);
   return static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
