@@ -491,6 +491,23 @@ public:
   }
 
   /**
+   * Quick check used by the graph searches to skip an edge before it is costed. Forward searches
+   * cost the edge itself, reverse searches cost its opposing edge, whose forward access is the
+   * reverse access of this edge. With ignore_oneways the other direction counts as well, as in
+   * IsAccessible.
+   * @param  edge         Directed edge as expanded by the search.
+   * @param  forward      Whether the search expands in forward direction.
+   * @param  access_mode  Access mode of the search, see access_mode().
+   * @return Returns false if the mode has no access in either direction that may be used.
+   */
+  inline bool
+  MayAccess(const baldr::DirectedEdge* edge, const bool forward, const uint32_t access_mode) const {
+    const uint32_t access = forward ? edge->forwardaccess() : edge->reverseaccess();
+    const uint32_t other_access = forward ? edge->reverseaccess() : edge->forwardaccess();
+    return (access & access_mode) || (ignore_oneways_ && (other_access & access_mode));
+  }
+
+  /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
    * the time (seconds) to traverse the edge.
