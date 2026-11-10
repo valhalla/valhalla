@@ -23,7 +23,7 @@ struct TimeInfo {
   uint64_t timezone_index : 9;
 
   // unix time of this timeinfo, will progress in forward/reverse
-  uint64_t unix_epoch : 54;
+  uint64_t unix_time : 54;
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
