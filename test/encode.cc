@@ -667,6 +667,45 @@ TEST(Encode, Int7_SmallerTypes) {
   test_int7_roundtrip<int16_t>({INT16_MIN, -1, 0, 1, INT16_MAX}, "int16_t");
 }
 
+TEST(Encode, RejectMalformedPolyline) {
+  for (const auto& encoded : {std::string(7, '_') + "??", std::string(6, '_') + "C?",
+                              std::string(">??"), std::string("\x7f??"), std::string("?")}) {
+    EXPECT_THROW(decode<container_t>(encoded), std::runtime_error);
+  }
+}
+
+TEST(Encode, RejectMalformedShape7) {
+  for (const auto& encoded : {std::string(5, '\x80') + std::string(2, '\0'),
+                              std::string(4, '\x80') + '\x10' + '\0', std::string(1, '\0')}) {
+    EXPECT_THROW(decode7<container_t>(encoded), std::runtime_error);
+  }
+}
+
+TEST(Encode, DecodeMaximumVarint) {
+  const container_t expected{{0, INT32_MIN}};
+  EXPECT_EQ(decode<container_t>(std::string(6, '~') + "B?", 1.0), expected);
+  EXPECT_EQ(decode7<container_t>(std::string(4, '\xff') + '\x0f' + '\0', 1.0), expected);
+}
+
+template <typename T> void test_invalid_int7() {
+  constexpr size_t bits = sizeof(T) * 8;
+  const auto oversized = std::string((bits + 6) / 7, '\x80') + '\0';
+  EXPECT_THROW(decode7int<std::vector<T>>(oversized), std::runtime_error);
+
+  const auto overflowing = std::string(bits / 7, '\x80') + char(1 << (bits % 7));
+  EXPECT_THROW(decode7int<std::vector<T>>(overflowing), std::runtime_error);
+  EXPECT_THROW(decode7int<std::vector<T>>(std::string(1, '\x80')), std::runtime_error);
+}
+
+TEST(Encode, RejectMalformedInt7) {
+  test_invalid_int7<uint16_t>();
+  test_invalid_int7<int16_t>();
+  test_invalid_int7<uint32_t>();
+  test_invalid_int7<int32_t>();
+  test_invalid_int7<uint64_t>();
+  test_invalid_int7<int64_t>();
+}
+
 TEST(ZigZag, EncodeDecode32) {
   ASSERT_EQ(zigzag_encode(int32_t(0)), 0);
   ASSERT_EQ(zigzag_encode(int32_t(-1)), 1);

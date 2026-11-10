@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -64,11 +65,14 @@ private:
   uint32_t read_varint() noexcept(false) {
     uint32_t byte, shift = 0, result = 0;
     do {
-      if (empty()) {
+      if (empty() || shift >= std::numeric_limits<uint32_t>::digits) {
         throw std::runtime_error("Bad encoded polyline");
       }
       // take the least significant 7 bits shifted into place
-      byte = static_cast<uint32_t>(*begin++);
+      byte = static_cast<unsigned char>(*begin++);
+      if ((byte & 0x7f) > (std::numeric_limits<uint32_t>::max() >> shift)) {
+        throw std::runtime_error("Bad encoded polyline");
+      }
       result |= (byte & 0x7f) << shift;
       shift += 7;
       // if the most significant bit is set there is more to this number
@@ -98,13 +102,17 @@ private:
   using uvalue_t = typename std::make_unsigned<value_type>::type;
 
   uvalue_t read_varint() noexcept(false) {
-    uvalue_t byte, shift = 0, result = 0;
+    uvalue_t byte, result = 0;
+    uint32_t shift = 0;
     do {
-      if (empty()) {
+      if (empty() || shift >= std::numeric_limits<uvalue_t>::digits) {
         throw std::runtime_error("Bad varint offset encoding");
       }
       // take the least significant 7 bits shifted into place
       byte = static_cast<uvalue_t>(static_cast<unsigned char>(*begin++));
+      if ((byte & 0x7f) > (std::numeric_limits<uvalue_t>::max() >> shift)) {
+        throw std::runtime_error("Bad varint offset encoding");
+      }
       result |= (byte & 0x7f) << shift;
       shift += 7;
       // if the most significant bit is set there is more to this number
@@ -140,11 +148,18 @@ private:
     // grab each 5 bits and mask it in where it belongs using the shift
     uint32_t byte, shift = 0, result = 0;
     do {
-      if (empty()) {
+      if (empty() || shift >= std::numeric_limits<uint32_t>::digits) {
         throw std::runtime_error("Bad encoded polyline");
       }
       // take the least significant 5 bits shifted into place
-      byte = uint32_t(*begin++) - 63;
+      byte = static_cast<unsigned char>(*begin++);
+      if (byte < 63 || byte > 126) {
+        throw std::runtime_error("Bad encoded polyline");
+      }
+      byte -= 63;
+      if ((byte & 0x1f) > (std::numeric_limits<uint32_t>::max() >> shift)) {
+        throw std::runtime_error("Bad encoded polyline");
+      }
       result |= (byte & 0x1f) << shift;
       shift += 5;
       // if the most significant bit is set there is more to this number
