@@ -233,7 +233,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   auto reverse_time_info = baldr::TimeInfo::invalid();
   if (check_invariant_reverse_time(request.options()) &&
       std::all_of(time_infos.begin(), time_infos.end(), [&time_infos](const baldr::TimeInfo& ti) {
-        return ti.valid && ti.current_epoch == time_infos.front().current_epoch;
+        return ti.valid && ti.unix_epoch == time_infos.front().unix_epoch;
       })) {
     reverse_time_info = time_infos.front();
   }
@@ -584,20 +584,20 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.current_epoch,
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.unix_epoch,
                            time_info.timezone_index, restriction_idx, destonly_restriction_mask,
                            &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,
-                             &edgestatus_[FORWARD][index], time_info.current_epoch,
+                             &edgestatus_[FORWARD][index], time_info.unix_epoch,
                              time_info.timezone_index)) {
       return false;
     }
   } else {
-    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.current_epoch,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.unix_epoch,
                                   time_info.timezone_index, restriction_idx,
                                   destonly_restriction_mask, &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, false,
-                             &edgestatus_[FORWARD][index], time_info.current_epoch,
+                             &edgestatus_[FORWARD][index], time_info.unix_epoch,
                              time_info.timezone_index)) {
       return false;
     }
@@ -1127,7 +1127,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
                                                   time_infos[index].valid
-                                                      ? time_infos[index].current_epoch
+                                                      ? time_infos[index].unix_epoch
                                                       : 0,
                                                   time_infos[index].timezone_index, &edge_destonly);
 
@@ -1239,7 +1239,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       bool edge_destonly = false;
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                  time_info.valid ? time_info.current_epoch : 0,
+                                                  time_info.valid ? time_info.unix_epoch : 0,
                                                   time_info.timezone_index, &edge_destonly);
 
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, edgecost, mode_,

@@ -97,7 +97,7 @@ void recost_forward(baldr::GraphReader& reader,
     uint8_t destonly_restriction_mask = 0;
     bool edge_destonly = false;
     // if its not time dependent set to 0 for Allowed method below
-    const uint64_t current_epoch = offset_time.valid ? offset_time.current_epoch : 0;
+    const uint64_t current_epoch = offset_time.valid ? offset_time.unix_epoch : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
     // evaluate time restrictions
     const auto next_id = edge_cb();
