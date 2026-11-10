@@ -139,6 +139,11 @@ private:
       return {col, row};
     }
 
+    if (origin.x() >= maxx_ && origin.y() >= maxy_ && dest.x() < maxx_ && dest.y() < maxy_ &&
+        (maxx_ - origin.x()) * tangent + origin.y() == maxy_) {
+      return {ncols_ - 1, nrows_ - 1};
+    }
+
     // If it falls outside the grid, then we find the first
     // intersecting square along the segment
 
@@ -151,7 +156,7 @@ private:
     }
     // Right side of the grid
     else if (origin.x() >= maxx_) {
-      const auto right_row = IntersectsRow(origin, tangent, ncols_ - 1);
+      const auto right_row = IntersectsRow(origin, tangent, ncols_);
       if (dest.x() < maxx_ && IsValidSquare(ncols_ - 1, right_row)) {
         return {ncols_ - 1, right_row};
       }
@@ -166,7 +171,7 @@ private:
     }
     // Top side of the grid
     else if (origin.y() >= maxy_) {
-      const auto top_col = IntersectsColumn(origin, cotangent, nrows_ - 1);
+      const auto top_col = IntersectsColumn(origin, cotangent, nrows_);
       if (dest.y() < maxy_ && IsValidSquare(top_col, nrows_ - 1)) {
         return {top_col, nrows_ - 1};
       }

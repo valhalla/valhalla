@@ -140,6 +140,26 @@ TEST(GridTraversal, TestGridTraversal) {
                        "Real world example of segment intersecting grid");
 }
 
+TEST(GridTraversal, EnterFromRightAndTop) {
+  meili::GridTraversal<midgard::Point2> grid(0, 0, 0.25, 0.25, 4, 4);
+  const std::vector<std::pair<midgard::Point2, midgard::Point2>> segments = {
+      {{1.25, 0.875}, {0.875, 0.125}}, {{0.875, 1.25}, {0.125, 0.875}},
+      {{1.25, 0.875}, {0.875, 0.75}},  {{0.875, 1.25}, {0.75, 0.875}},
+      {{1.25, 1.25}, {0.875, 0.875}},
+  };
+  const std::vector<std::vector<std::pair<int, int>>> expected = {{{3, 1}, {3, 0}},
+                                                                  {{1, 3}, {0, 3}},
+                                                                  {{3, 3}},
+                                                                  {{3, 3}},
+                                                                  {{3, 3}}};
+
+  for (size_t i = 0; i < segments.size(); ++i) {
+    EXPECT_EQ(grid.Traverse(segments[i].first, segments[i].second), expected[i]);
+    const auto reverse = grid.Traverse(segments[i].second, segments[i].first);
+    EXPECT_EQ(reverse, (std::vector<std::pair<int, int>>(expected[i].rbegin(), expected[i].rend())));
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
