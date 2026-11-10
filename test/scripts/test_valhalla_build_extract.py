@@ -4,6 +4,7 @@ import json
 from math import ceil, floor
 import tarfile
 import unittest
+import unittest.mock
 from pathlib import Path
 import struct
 import os
@@ -320,6 +321,24 @@ class TestGeofabrikRegion(unittest.TestCase):
         tile_resolver.matched_paths = list()
         valhalla_build_extract._intersect_tiles_with_polygons(tile_resolver, polygons)
         self.assertListEqual(tile_resolver.matched_paths, list())
+
+    @unittest.skipUnless(_has_shapely(), "shapely not installed")
+    def test_tiles_with_multiple_regions(self):
+        """Passing several regions matches tiles intersecting the union of their boundaries."""
+        tile_dir = Path("/foo/")
+        tile_resolver = TileResolver(tile_dir)
+
+        ch_only = tile_base_to_path(9, 46, 1, tile_dir)   # 9-10, 46-47 — Switzerland only
+        fr_only = tile_base_to_path(-4, 42, 0, tile_dir)  # -4-0, 42-46 — France only
+        neither = tile_base_to_path(12, 50, 0, tile_dir)  # 12-16, 50-54 — neither
+        tile_resolver.normalized_tile_paths = [ch_only, fr_only, neither]
+
+        with unittest.mock.patch.object(
+            valhalla_build_extract, "fetch_geofabrik_index", return_value=self.MOCK_INDEX
+        ):
+            valhalla_build_extract.get_tiles_with_regions(tile_resolver, ["switzerland", "france"])
+
+        self.assertCountEqual(tile_resolver.matched_paths, [ch_only, fr_only])
 
     @unittest.skipUnless(_has_shapely(), "shapely not installed")
     def test_polygon_geometry_type(self):

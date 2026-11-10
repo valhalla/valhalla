@@ -46,7 +46,7 @@ namespace {
 void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_layers, Api& request) {
   static const std::unordered_set<std::string_view> kSupportedLayers =
       {valhalla::kEdgeLayerName, valhalla::kNodeLayerName, valhalla::kShortcutLayerName,
-       valhalla::kAccessRestrictionLayerName};
+       valhalla::kAccessRestrictionLayerName, valhalla::kIncidentLayerName};
 
   if (exclude_layers.has_value() && exclude_layers->IsArray()) {
     for (const auto& lyr : exclude_layers->GetArray()) {
@@ -343,8 +343,15 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_ferry
     location->mutable_search_filter()->set_exclude_ferry(
         rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
+    // search_filter.exclude_restricted
+    location->mutable_search_filter()->set_exclude_restricted(
+        rapidjson::get<bool>(*search_filter, "/exclude_restricted", false));
     location->mutable_search_filter()->set_level(
         rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
+    // search_filter.exclude_steps
+    auto exclude_steps = rapidjson::get_optional<bool>(*search_filter, "/exclude_steps");
+    if (exclude_steps)
+      location->mutable_search_filter()->set_exclude_steps(*exclude_steps);
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -375,6 +382,9 @@ void parse_location(valhalla::Location* location,
   }
   if (!location->search_filter().has_level_case())
     location->mutable_search_filter()->set_level(baldr::kMaxLevel);
+  if (!location->search_filter().has_exclude_steps_case())
+    location->mutable_search_filter()->set_exclude_steps(request.options().costing_type() ==
+                                                         Costing::bicycle);
 
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {
@@ -591,6 +601,25 @@ void parse_xyz(const rapidjson::Document& doc, valhalla::Options& options) {
   }
 }
 
+uint32_t AllowTypes_Parse(const rapidjson::Value::ConstObject& obj) {
+  static const std::unordered_map<std::string, uint32_t> types{
+      {"all", baldr::kAllowAll},
+  };
+
+  uint32_t mask = baldr::kAllowNone;
+  if (obj.HasMember("allow_types") && obj["allow_types"].IsArray()) {
+    for (const auto& allow_type : obj["allow_types"].GetArray()) {
+      if (allow_type.IsString()) {
+        auto i = types.find(allow_type.GetString());
+        if (i != types.cend()) {
+          mask |= i->second;
+        }
+      }
+    }
+  }
+  return mask;
+}
+
 void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
   auto json_obj = json_feat.GetObject();
   for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
@@ -598,7 +627,9 @@ void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatu
     shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
     shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
   }
-  line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
+  auto props = json_obj["properties"].GetObject();
+  line_feat->set_cost_factor(props.HasMember("factor") ? props["factor"].GetFloat() : 1.);
+  line_feat->set_allow_types(AllowTypes_Parse(props));
 }
 
 void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
@@ -613,7 +644,8 @@ void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* 
     shape_pt->mutable_ll()->set_lat(ll.lat());
   }
 
-  line_feat->set_cost_factor(json_obj["factor"].GetFloat());
+  line_feat->set_cost_factor(json_obj.HasMember("factor") ? json_obj["factor"].GetFloat() : 1.);
+  line_feat->set_allow_types(AllowTypes_Parse(json_obj));
 }
 
 /**
@@ -715,18 +747,15 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_id(*id);
   }
 
+  // we deprecated jsonp, CORS should be used instead
   auto jsonp = rapidjson::get_optional<std::string>(doc, "/jsonp");
   if (jsonp) {
-    options.set_jsonp(*jsonp);
+    add_warning(api, 104);
   }
 
   if (!is_format_supported(options.action(), options.format())) {
     options.set_format(Options::json);
     add_warning(api, 211);
-  }
-  if (options.format() == Options::pbf) {
-    // jsonp wont work because javascript doesnt support byte arrays
-    options.clear_jsonp();
   }
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
@@ -1181,6 +1210,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           } else { // or an encoded polyline and a cost factor
             parse_line(linear_feat, l);
           }
+
+          if (l->shape_size() == 0) {
+            throw valhalla_exception_t{173, "feature coordinates are empty"};
+          }
         }
       } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
@@ -1330,8 +1363,7 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
 
   // overwrite with osrm error response
   if (request.options().format() == Options::osrm) {
-    body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "")
-         << exception.osrm_error << (request.options().has_jsonp_case() ? ")" : "");
+    body << exception.osrm_error;
   } // valhalla json error response
   else if (request.options().format() != Options::pbf) {
     // build up the json map
@@ -1340,8 +1372,7 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
     json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "") << *json_error
-         << (request.options().has_jsonp_case() ? ")" : "");
+    body << *json_error;
   }
 
   // keep track of what the error was
@@ -1511,6 +1542,15 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
   return add_warning;
 }
 
+void apply_trace_location_defaults(valhalla::Location& loc) {
+  loc.set_node_snap_tolerance(0.f);
+  loc.set_radius(10);
+  // Reachability test is not needed for edge walking because either
+  // - edge_walk relies on the shape that was produced by route
+  // - map_snap performs a Viterbi search that organically biases towards reachable edges
+  loc.set_minimum_reachability(0);
+}
+
 #ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
@@ -1592,9 +1632,7 @@ worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                    Api& request) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message,
-                           serialize_error(exception, request),
-                           headers_t{CORS, request.options().has_jsonp_case() ? worker::JS_MIME
-                                                                              : worker::JSON_MIME});
+                           serialize_error(exception, request), headers_t{CORS, worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1614,25 +1652,17 @@ to_response(const std::string& data,
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 
-  // jsonp needs wrapped in a javascript function call
   worker_t::result_t result{false, std::list<std::string>(), ""};
-  if (request.options().has_jsonp_case()) {
-    headers.insert(worker::JS_MIME); // reset content type to javascript
-    std::ostringstream stream;
-    stream << request.options().jsonp() << '(';
-    stream << data;
-    stream << ')';
-
-    http_response_t response(200, "OK", stream.str(), headers);
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-  } // everything else is bytes already
-  else {
-    http_response_t response(200, "OK", data, headers);
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-  }
+  http_response_t response(200, "OK", data, headers);
+  response.from_info(request_info);
+  result.messages.emplace_back(response.to_string());
   return result;
+}
+
+// if we shared zmq context across threads we can use inproc:// (shared mem) endpoints
+zmq::context_t& zmq_context() {
+  static zmq::context_t ctx;
+  return ctx;
 }
 
 #endif

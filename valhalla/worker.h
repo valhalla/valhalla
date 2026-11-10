@@ -64,6 +64,11 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             const bool allow_modifications,
                             const bool use_hierarchy_limits);
 
+/**
+ * Apply defaults to start and end locations of a shape for edge walking.
+ */
+void apply_trace_location_defaults(valhalla::Location& loc);
+
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
@@ -99,6 +104,9 @@ to_response(const std::string& data,
             prime_server::http_request_info_t& request_info,
             const Api& options,
             const std::vector<std::pair<std::string, std::string>>& additional_headers = {});
+
+// a shared zqm context so inproc:// endpoints work across threads within a single process
+zmq::context_t& zmq_context();
 #endif
 
 struct statsd_client_t;

@@ -59,6 +59,14 @@ public:
     return stop_type_;
   }
 
+  float distance(const Measurement& other) const {
+    return lnglat_.Distance(other.lnglat_);
+  }
+
+  float distance_squared(const Measurement& other) const {
+    return lnglat_.DistanceSquared(other.lnglat_);
+  }
+
 private:
   midgard::PointLL lnglat_;
 

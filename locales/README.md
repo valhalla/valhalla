@@ -1,0 +1,1 @@
+../docs/docs/contributing/locales.md

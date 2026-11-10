@@ -11,7 +11,7 @@ What issue is this PR targeting? If there is no issue that addresses the problem
  - [ ] Update the docs with any new request parameters or changes to behavior described
  - [ ] Update the [changelog](CHANGELOG.md)
  - [ ] If you made changes to the lua files, update the [taginfo](taginfo.json) too
- - [ ] If you made changes to a translation file, [update transifex](docs/docs/locales.md) too
+ - [ ] If you changed English narrative phrases, run `po_tools.py update` — see [locales](docs/docs/contributing/locales.md)
 
 ## Requirements / Relations
 

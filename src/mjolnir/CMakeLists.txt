@@ -27,6 +27,7 @@ set(sources
   add_predicted_speeds.cc
   admin.cc
   adminbuilder.cc
+  areabuilder.cc
   bssbuilder.cc
   complexrestrictionbuilder.cc
   convert_transit.cc
@@ -90,6 +91,11 @@ if(EXPAT_FOUND)
   list(APPEND mjolnir_depends PkgConfig::EXPAT)
 endif()
 
+# support lz4 PBF internal compression instead of zlib if available
+if(lz4_target)
+  list(APPEND mjolnir_depends ${lz4_target})
+endif()
+
 valhalla_module(NAME mjolnir
   SOURCES ${sources}
   HEADERS ${headers}
@@ -113,4 +119,8 @@ valhalla_module(NAME mjolnir
 
 if(EXPAT_FOUND)
   target_compile_definitions(valhalla-mjolnir PRIVATE HAVE_EXPAT)
+endif()
+
+if(lz4_target)
+  target_compile_definitions(valhalla-mjolnir PRIVATE OSMIUM_WITH_LZ4)
 endif()

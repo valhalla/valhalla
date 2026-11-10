@@ -2,6 +2,7 @@
 #define VALHALLA_THOR_OPTIMIZER_H_
 
 #include <cstdint>
+#include <functional>
 #include <random>
 #include <vector>
 
@@ -20,7 +21,7 @@ constexpr float kCoolingRate = 0.93f;
 //            location in the range.
 // kReverse - Alters the tour by reversing the locations in the tour between
 //            a start and end location.
-enum AlterationType { kRotate, kReverse };
+enum AlterationType : uint8_t { kRotate, kReverse };
 
 // Simple structure with 3 values describing a possible tour alteration
 struct TourAlteration {
@@ -37,6 +38,9 @@ struct TourAlteration {
  */
 class Optimizer {
 public:
+  Optimizer() : ntry_(0), count_(0), attempts_(0), successes_(0), best_cost_(0), interrupt_(nullptr) {
+  }
+
   /**
    * Optimize the tour through a set of locations given the cost matrix
    * among all locations. The first location (origin) and last location
@@ -57,6 +61,8 @@ public:
     random_generator_.seed(seed);
   }
 
+  void set_interrupt(const std::function<void()>*);
+
 protected:
   // Random number generation: 0 <= r < 1
   std::mt19937_64 random_generator_;
@@ -69,6 +75,7 @@ protected:
   float best_cost_;                 // Current best cost
   std::vector<uint32_t> tour_;      // Current tour (order of locations)
   std::vector<uint32_t> best_tour_; // Best tour so far
+  const std::function<void()>* interrupt_;
 
   /*
    * Perform the annealing process.

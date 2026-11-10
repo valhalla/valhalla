@@ -150,8 +150,19 @@ protected:
         LOG_ERROR("Incident watcher failed to add incident tile to cache");
       }
     }
+
+// libc++ doesn't have `std::atomic<std::shared_ptr>`
+// https://github.com/llvm/llvm-project/issues/99980
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     // atomically store the tile shared_ptr, could be actually nullptr when there are no incidents
     std::atomic_store_explicit(&found->second, tile, std::memory_order_release);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
     LOG_DEBUG("Incident watcher " + std::string(tile ? "loaded " : "unloaded ") +
               std::to_string(tile_id));
     return true;
@@ -267,8 +278,7 @@ protected:
           if (last_scan <= timestamp) {
             // concoct a file name from the tile_id
             auto file_location = inc_log_path;
-            file_location.replace_filename(
-                valhalla::baldr::GraphTile::FileSuffix(tile_id, ".pbf", true));
+            file_location.replace_filename(valhalla::baldr::GraphTile::FileSuffix(tile_id, ".pbf"));
             // update the tile
             update_count += update_tile(state, tile_id, read_tile(file_location.string()));
           }
@@ -281,14 +291,14 @@ protected:
             // if this looks like a tile
             valhalla::baldr::GraphId tile_id;
             if (i->is_regular_file() &&
-                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).is_valid()) {
+                (tile_id = valhalla::baldr::GraphId::FromTilePath(i->path())).is_valid()) {
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
               try {
                 time_t m_time = valhalla::filesystem_utils::last_write_time_t(i->path());
                 if (last_scan <= m_time) {
                   // update the tile
-                  update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+                  update_count += update_tile(state, tile_id, read_tile(i->path().generic_string()));
                 }
               } // if we couldnt get the last modified time we skip
               catch (...) {}
@@ -357,7 +367,18 @@ public:
     if (found == singleton.state->cache.cend()) {
       return {};
     }
+
+// libc++ doesn't have `std::atomic<std::shared_ptr>`
+// https://github.com/llvm/llvm-project/issues/99980
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     auto tile = std::atomic_load_explicit(&found->second, std::memory_order_acquire);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
     return tile;
   }
 };

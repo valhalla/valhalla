@@ -72,6 +72,7 @@ void try_path(GraphReader& reader,
   Api request;
   ParseApi(test_request, Options::route, request);
   loki_worker.route(request);
+  loki_worker.cleanup();
   adjust_scores(*request.mutable_options());
 
   // For now this just tests auto costing - could extend to other

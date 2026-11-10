@@ -41,7 +41,7 @@ TEST(Utrecth, TestBike) {
   conf.put<unsigned long>("mjolnir.id_table_size", 1000);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   auto way_127361688 = GetWay(127361688, ways);
   EXPECT_TRUE(way_127361688.auto_forward());
@@ -180,7 +180,7 @@ TEST(Utrecht, TestBus) {
   conf.put<unsigned long>("mjolnir.id_table_size", 1000);
 
   sequence<OSMWay> ways(ways_file, false);
-  ways.sort(way_predicate);
+  ways.sort(way_predicate, 2);
 
   auto way_33648196 = GetWay(33648196, ways);
   EXPECT_TRUE(way_33648196.auto_forward());

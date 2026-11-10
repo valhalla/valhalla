@@ -6,8 +6,8 @@ import pickle
 import unittest
 from pathlib import Path
 
-from valhalla.utils import (
-    GraphId,
+from valhalla.baldr import GraphId, GraphTileHeader
+from valhalla.baldr.utils import (
     GraphUtils,
     get_tile_base_lon_lat,
     get_tile_id_from_lon_lat,
@@ -190,6 +190,70 @@ class TestBindings(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             graph.get_edge_shape(invalid_edge_id)
 
+    def test_get_graph_tile_header(self):
+        """Test GraphUtils.get_graph_tile_header with real Utrecht tiles."""
+        graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
+
+        # missing tile -> RuntimeError
+        with self.assertRaises(RuntimeError) as exc:
+            graph.get_graph_tile_header(GraphId(999999, 2, 0))
+        self.assertIn("Tile not found", str(exc.exception))
+
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        header = graph.get_graph_tile_header(tile_gid)
+        self.assertIsInstance(header, GraphTileHeader)
+
+        # the header identifies the same tile (id portion is 0 for the tile base)
+        self.assertEqual(header.graphid.tileid(), tile_gid.tileid())
+        self.assertEqual(header.graphid.level(), self.level)
+
+        # a populated Utrecht tile
+        self.assertGreater(header.nodecount, 0)
+        self.assertGreater(header.directededgecount, 0)
+        self.assertGreater(header.end_offset, 0, "tile size in bytes")
+
+        # non-empty version string
+        self.assertIsInstance(header.version, str)
+        self.assertTrue(header.version)
+
+        # base_ll is the tile's SW corner: matches get_tile_base_lon_lat (within float precision)
+        base_lon, base_lat = header.base_ll
+        ref_lon, ref_lat = get_tile_base_lon_lat(tile_gid)
+        self.assertAlmostEqual(base_lon, ref_lon, places=4)
+        self.assertAlmostEqual(base_lat, ref_lat, places=4)
+        self.assertTrue(4.0 < base_lon < 6.0)
+        self.assertTrue(51.0 < base_lat < 53.0)
+
+        # bounded bitfields and bool flags
+        self.assertIn(header.density, range(16))
+        self.assertIsInstance(header.has_elevation, bool)
+
+        # read-only: properties cannot be set
+        with self.assertRaises(AttributeError):
+            header.nodecount = 0
+
+        self.assertIn("GraphTileHeader", repr(header))
+
+    def test_tile_header_tile_checksum(self):
+        """tile_checksum is the 48-bit per-tile data hash (low bits of checksum_)."""
+        graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        header = graph.get_graph_tile_header(tile_gid)
+
+        self.assertIsInstance(header.tile_checksum, int)
+        self.assertGreater(header.tile_checksum, 0)
+        self.assertLess(header.tile_checksum, 1 << 48)
+
+    def test_tile_header_build_id(self):
+        """build_id is the 16-bit tileset id packed into the high bits of checksum_."""
+        graph = GraphUtils(json.dumps({"mjolnir": {"tile_dir": str(self.tiles_path)}}))
+        tile_gid = get_tile_id_from_lon_lat(self.level, (self.utrecht_lon, self.utrecht_lat))
+        header = graph.get_graph_tile_header(tile_gid)
+
+        self.assertIsInstance(header.build_id, int)
+        self.assertGreater(header.build_id, 0)
+        self.assertLess(header.build_id, 1 << 16)
+
     def test_graphutils_dict_config(self):
         """Test GraphUtils initialization with dict config."""
         config_dict = {"mjolnir": {"tile_dir": str(self.tiles_path)}}
@@ -272,8 +336,7 @@ class TestBindings(unittest.TestCase):
         self.assertIn("mjolnir.tile_extract and mjolnir.tile_dir are missing", str(exc.exception))
 
     def test_get_tile_ids_from_ring_rectangle(self):
-        """Rectangle ring should match bbox results.
-        """
+        """Rectangle ring should match bbox results."""
         ring = [(0.5, 0.5), (2.5, 0.5), (2.5, 2.5), (0.5, 2.5)]
         ring_result = get_tile_ids_from_ring(ring, [1])
         bbox_result = get_tile_ids_from_bbox(0.5, 0.5, 2.5, 2.5, [1])
@@ -285,8 +348,7 @@ class TestBindings(unittest.TestCase):
         )
 
     def test_get_tile_ids_from_ring_triangle(self):
-        """Triangle should return fewer tiles than its bounding box.
-        """
+        """Triangle should return fewer tiles than its bounding box."""
         ring = [(2, 3), (14, 3), (8, 9)]
         ring_result = get_tile_ids_from_ring(ring, [0])
         bbox_result = get_tile_ids_from_bbox(2, 3, 14, 9, [0])
@@ -323,8 +385,8 @@ class TestBindings(unittest.TestCase):
 
         self.assertEqual(
             {r.value for r in cw_result},
-            {r.value for r in ccw_result}, 
-        ) 
+            {r.value for r in ccw_result},
+        )
 
     def test_get_tile_ids_from_ring_auto_close(self):
         """Open ring (last != first) should be auto-closed."""
@@ -362,8 +424,18 @@ class TestBindings(unittest.TestCase):
         #    |                                          |
         #  (0,0)--------------------------------------(14,0)
         ring = [
-            (0, 0), (14, 0), (14, 10), (11, 10), (11, 3), (10, 3),
-            (10, 10), (7, 10), (7, 3), (3, 3), (3, 10), (0, 10),
+            (0, 0),
+            (14, 0),
+            (14, 10),
+            (11, 10),
+            (11, 3),
+            (10, 3),
+            (10, 10),
+            (7, 10),
+            (7, 3),
+            (3, 3),
+            (3, 10),
+            (0, 10),
         ]
         ring_result = get_tile_ids_from_ring(ring, [1])
         bbox_result = get_tile_ids_from_bbox(0, 0, 14, 10, [1])
@@ -385,7 +457,11 @@ class TestBindings(unittest.TestCase):
             if 3 < lon and lon + 1 < 7 and 3 < lat and lat + 1 < 10:
                 notch_tiles.add(gid.value)
         # left notch interior: lon in {4,5}, lat in {4..8} = 10
-        self.assertEqual(len(notch_tiles), 10, f"Left notch should contain exactly 10 interior tiles, not {len(notch_tiles)}")
+        self.assertEqual(
+            len(notch_tiles),
+            10,
+            f"Left notch should contain exactly 10 interior tiles, not {len(notch_tiles)}",
+        )
         self.assertFalse(ring_set & notch_tiles, "Tiles in the left notch must not be in the W-shape")
 
     def test_get_tile_ids_from_ring_errors(self):

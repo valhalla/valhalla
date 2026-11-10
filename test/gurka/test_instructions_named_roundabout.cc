@@ -1,7 +1,8 @@
 #include "gurka.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
+
+#include <format>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -188,12 +189,10 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutToward) {
 TEST_F(InstructionsNamedRoundabout, RoundaboutExitSuppressed) {
   auto from = "A";
   auto to = "I";
-  const std::string& request =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","roundabout_exits":false})") %
-       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
-          .str();
+  const std::string& request = std::format(
+      R"({{"locations":[{{"lat":{:.6f},"lon":{:.6f}}},{{"lat":{:.6f},"lon":{:.6f}}}],"costing":"auto","roundabout_exits":false}})",
+      map.nodes.at(from).lat(), map.nodes.at(from).lng(), map.nodes.at(to).lat(),
+      map.nodes.at(to).lng());
   auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
