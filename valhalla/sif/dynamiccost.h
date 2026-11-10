@@ -501,8 +501,8 @@ public:
   inline bool
   MayAccess(const baldr::DirectedEdge* edge, const bool forward, const uint32_t access_mode) const {
     const uint32_t access = forward ? edge->forwardaccess() : edge->reverseaccess();
-    const uint32_t other_access = forward ? edge->reverseaccess() : edge->forwardaccess();
-    return (access & access_mode) || (ignore_oneways_ && (other_access & access_mode)) ||
+    const uint32_t rev_access = forward ? edge->reverseaccess() : edge->forwardaccess();
+    return (access & access_mode) || (ignore_oneways_ && (rev_access & access_mode)) ||
            has_allowed_linear_edges_;
   }
 
