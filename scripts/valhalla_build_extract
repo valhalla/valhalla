@@ -294,10 +294,10 @@ def _polygons_from_geojson_geometry(geometry: dict):
     Polygon, _ = _require_shapely()
     polygons = []
     if geometry["type"] == "Polygon":
-        polygons.append(Polygon(geometry["coordinates"][0]))
+        polygons.append(Polygon(geometry["coordinates"][0], geometry["coordinates"][1:]))
     elif geometry["type"] == "MultiPolygon":
         for single_polygon in geometry["coordinates"]:
-            polygons.append(Polygon(single_polygon[0]))
+            polygons.append(Polygon(single_polygon[0], single_polygon[1:]))
     return polygons
 
 

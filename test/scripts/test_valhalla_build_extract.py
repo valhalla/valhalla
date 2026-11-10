@@ -348,6 +348,25 @@ class TestGeofabrikRegion(unittest.TestCase):
         )
         self.assertEqual(len(polygons), 1)
 
+    @unittest.skipUnless(_has_shapely(), "shapely not installed")
+    def test_polygon_holes_exclude_tiles(self):
+        outer = [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]]
+        hole = [[1, 1], [3, 1], [3, 3], [1, 3], [1, 1]]
+        tile_dir = Path("/foo/")
+        inside = tile_base_to_path(0.25, 0.25, 2, tile_dir)
+        excluded = tile_base_to_path(1.25, 1.25, 2, tile_dir)
+        boundary = tile_base_to_path(0.75, 1.25, 2, tile_dir)
+        for geometry in (
+            {"type": "Polygon", "coordinates": [outer, hole]},
+            {"type": "MultiPolygon", "coordinates": [[outer, hole]]},
+        ):
+            with self.subTest(type=geometry["type"]):
+                resolver = TileResolver(tile_dir)
+                resolver.normalized_tile_paths = [inside, excluded, boundary]
+                polygons = valhalla_build_extract._polygons_from_geojson_geometry(geometry)
+                valhalla_build_extract._intersect_tiles_with_polygons(resolver, polygons)
+                self.assertEqual(resolver.matched_paths, [inside, boundary])
+
 
 if __name__ == '__main__':
     unittest.main()

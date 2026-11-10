@@ -2,12 +2,33 @@ import json
 import sys
 from pathlib import Path
 import unittest
+from tempfile import TemporaryDirectory
 
 import valhalla_build_elevation
 from valhalla_build_elevation import Tile
 
 # this test suite depends on the utrecht tiles data
 TILE_DIR = Path('test/data/utrecht_tiles')
+
+
+class TestElevationPolygonHoles(unittest.TestCase):
+    def test_polygon_holes_exclude_tiles(self):
+        outer = [[0, 0], [5, 0], [5, 5], [0, 5], [0, 0]]
+        hole = [[1, 1], [4, 1], [4, 4], [1, 4], [1, 1]]
+        for geometry in (
+            {"type": "Polygon", "coordinates": [outer, hole]},
+            {"type": "MultiPolygon", "coordinates": [[outer, hole]]},
+        ):
+            with self.subTest(type=geometry["type"]), TemporaryDirectory() as tmp:
+                geojson = {"type": "FeatureCollection", "features": [{"geometry": geometry}]}
+                geojson_path = Path(tmp) / "region.geojson"
+                geojson_path.write_text(json.dumps(geojson))
+
+                tiles = valhalla_build_elevation.get_tiles_with_geojson(Path(tmp))
+
+                self.assertNotIn(Tile("N02E002.hgt", "N02"), tiles)
+                self.assertIn(Tile("N00E000.hgt", "N00"), tiles)
+                self.assertIn(Tile("N02E000.hgt", "N02"), tiles)
 
 
 class TestBuildElevation(unittest.TestCase):

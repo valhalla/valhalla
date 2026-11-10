@@ -178,19 +178,20 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
         )
         sys.exit(1)
 
-    def get_outer_rings(input_dir: Path) -> Iterable[Polygon]:
+    def get_polygons(input_dir: Path) -> Iterable[Polygon]:
         for file in input_dir.glob("*.geojson"):
             with open(file) as f:
                 geojson = json.load(f)
             for feature in geojson["features"]:
                 if feature["geometry"]["type"] == "Polygon":
-                    yield Polygon(feature["geometry"]["coordinates"][0])
+                    coordinates = feature["geometry"]["coordinates"]
+                    yield Polygon(coordinates[0], coordinates[1:])
                 if feature["geometry"]["type"] == "MultiPolygon":
                     for single_polygon in feature["geometry"]["coordinates"]:
-                        yield Polygon(single_polygon[0])
+                        yield Polygon(single_polygon[0], single_polygon[1:])
 
     tile_infos = set()
-    for poly in get_outer_rings(input_dir):
+    for poly in get_polygons(input_dir):
         for rect in grid_from_bounds(poly.bounds):
             if poly.intersects(box(*rect)):
                 tile_x, tile_y, *_ = rect
