@@ -2116,6 +2116,7 @@ std::string serialize(valhalla::Api& api) {
       json->emplace("tracepoints", osrm::waypoints(options.shape(), true));
       break;
     case valhalla::Options::route:
+    case valhalla::Options::round_trip:
       json->emplace("waypoints", osrm::waypoints(api.trip()));
       break;
     case valhalla::Options::optimized_route:
@@ -2166,6 +2167,21 @@ std::string serialize(valhalla::Api& api) {
     // Add voice instructions if the user requested them
     if (options.voice_instructions()) {
       route->emplace("voiceLocale", options.language());
+    }
+
+    // the seeds a round trip passes through, as osrm style [lon, lat] locations
+    if (options.verbose() && api.trip().routes(i).round_trip_seeds_size() > 0) {
+      auto seeds = json::array({});
+      for (const auto& seed : api.trip().routes(i).round_trip_seeds()) {
+        auto loc = json::array({});
+        loc->emplace_back(json::fixed_t{seed.ll().lng(), 6});
+        loc->emplace_back(json::fixed_t{seed.ll().lat(), 6});
+        auto s = json::map({});
+        s->emplace("location", loc);
+        s->emplace("group", static_cast<uint64_t>(seed.round_trip_group_index()));
+        seeds->emplace_back(std::move(s));
+      }
+      route->emplace("round_trip_seeds", std::move(seeds));
     }
 
     routes->emplace_back(std::move(route));

@@ -413,6 +413,8 @@ message TripRoute {
   // quality based on GPS accuracy and route consistency.
   float raw_score = 4;
   bool is_best = 5;
+  // round trip only: the seed locations this route passes through, in driving order
+  repeated Location round_trip_seeds = 6;
 }
 
 message Trip {

@@ -571,6 +571,10 @@ message Options {
     }
 
     double distance = 3;  // desired round trip distance in meters
+
+    oneof has_overlap_factor {
+      double overlap_factor = 4;  // how strongly to avoid driving the same road twice, 0 = don't care
+    }
   }
 
   RoundTripOptions round_trip_options = 67;

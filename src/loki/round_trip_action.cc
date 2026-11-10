@@ -32,13 +32,14 @@ std::uint64_t round_trip_seed(const PointLL& ll) {
 std::vector<std::vector<PointLL>> seed_points(const Location& start,
                                               double heading,
                                               double heading_tolerance,
-                                              double radius_meters,
-                                              double radius_tolerance_meters,
+                                              double radius_lo,
+                                              double radius_hi,
                                               size_t num_groups,
                                               size_t points_per_group) {
 
   assert(num_groups > 0);
   assert(points_per_group > 0);
+  assert(0. <= radius_lo && radius_lo <= radius_hi);
 
   PointLL startll{start.ll().lng(), start.ll().lat()};
   midgard::AzimuthalEquidistant aed(startll);
@@ -46,10 +47,6 @@ std::vector<std::vector<PointLL>> seed_points(const Location& start,
 
   auto heading_lo = heading - heading_tolerance;
   auto heading_hi = heading + heading_tolerance;
-
-  radius_tolerance_meters = std::clamp(radius_tolerance_meters, 0.0, radius_meters);
-  auto radius_lo = radius_meters - radius_tolerance_meters;
-  auto radius_hi = radius_meters + radius_tolerance_meters;
 
   std::mt19937_64 engine{round_trip_seed(startll)};
   std::uniform_real_distribution radius_distribution(midgard::sqr(radius_lo),
@@ -110,6 +107,16 @@ void parse_round_trip_options(Api& request, double max_distance) {
     add_warning(request, 305,
                 std::format("[{:.1f},{:.1f}]", kMinHeadingTolerance, kMaxHeadingTolerance));
   }
+
+  constexpr double kDefaultOverlapFactor = 1.;
+  constexpr double kMaxOverlapFactor = 10.;
+
+  if (!options->has_overlap_factor()) {
+    options->set_overlap_factor(kDefaultOverlapFactor);
+  } else if (options->overlap_factor() < 0. || options->overlap_factor() > kMaxOverlapFactor) {
+    options->set_overlap_factor(std::clamp(options->overlap_factor(), 0., kMaxOverlapFactor));
+    add_warning(request, 306, std::format("[{:.1f},{:.1f}]", 0., kMaxOverlapFactor));
+  }
 }
 
 /**
@@ -128,6 +135,21 @@ double estimate_radius(double distance,
   return distance /
          (road_network_factor *
           (2 + 2 * (num_groups - 1) * std::sin((heading_tolerance / num_groups) * kRadPerDegD)));
+}
+
+// short round trips run through dense networks where a handful of seeds rarely gives good
+// candidates, so below kLongRoundTrip each group gets more seeds
+size_t points_per_group(double distance) {
+  constexpr double kShortRoundTrip = 2000.;
+  constexpr double kLongRoundTrip = 10000.;
+  constexpr size_t kShortPoints = 10;
+  constexpr size_t kLongPoints = 3;
+
+  // 1 at or below kShortRoundTrip, 0 at or above kLongRoundTrip, linear in between
+  const double t =
+      std::clamp((kLongRoundTrip - distance) / (kLongRoundTrip - kShortRoundTrip), 0., 1.);
+  return kLongPoints +
+         static_cast<size_t>(std::lround(t * static_cast<double>(kShortPoints - kLongPoints)));
 }
 } // namespace
 
@@ -164,16 +186,21 @@ void loki_worker_t::round_trip(Api& request) {
                       : round_trip_options.heading_tolerance() < 45 ? 2
                                                                     : 3;
 
-  constexpr size_t kLocationsPerGroup = 3;
-  constexpr double kRoadNetworkFactor = 1.4;
-  auto radius = estimate_radius(round_trip_options.distance(), round_trip_options.heading_tolerance(),
-                                num_groups, kRoadNetworkFactor);
-
-  auto radius_tolerance = radius * 0.15; // TODO: better estimate
+  // the ring covers the range of plausible road network factors rather than a tolerance around a
+  // single one: dense grids detour little, sparse rural networks a lot. The candidate ranking then
+  // picks whichever seeds match the requested distance
+  constexpr double kMinRoadNetworkFactor = 1.2;
+  constexpr double kMaxRoadNetworkFactor = 2.0;
+  const auto radius_lo = estimate_radius(round_trip_options.distance(),
+                                         round_trip_options.heading_tolerance(), num_groups,
+                                         kMaxRoadNetworkFactor);
+  const auto radius_hi = estimate_radius(round_trip_options.distance(),
+                                         round_trip_options.heading_tolerance(), num_groups,
+                                         kMinRoadNetworkFactor);
 
   auto seeded_points = seed_points(options.locations(0), round_trip_options.heading(),
-                                   round_trip_options.heading_tolerance(), radius, radius_tolerance,
-                                   num_groups, kLocationsPerGroup);
+                                   round_trip_options.heading_tolerance(), radius_lo, radius_hi,
+                                   num_groups, points_per_group(round_trip_options.distance()));
 
   auto* locations = options.mutable_locations();
   for (size_t i = 0; i < seeded_points.size(); ++i) {
@@ -184,6 +211,18 @@ void loki_worker_t::round_trip(Api& request) {
       l->mutable_ll()->set_lat(pt.lat());
       l->set_round_trip_group_index(i + 1);
     }
+  }
+  // snapping to a node would correlate every edge around it, we want exactly one directed edge per
+  // seed. parse_location clamps the reachability to service_limits.max_reachability
+  constexpr uint32_t kSeedMinReachability = 100;
+  // a seed snapping to a road far outside the ring makes its legs too long, better to drop it
+  constexpr double kMinSeedSearchCutoff = 200.;
+  const auto seed_search_cutoff =
+      static_cast<uint32_t>(std::max(kMinSeedSearchCutoff, (radius_hi - radius_lo) / 2.));
+  for (auto it = locations->begin() + 1; it != locations->end(); ++it) {
+    it->set_node_snap_tolerance(0);
+    it->set_minimum_reachability(kSeedMinReachability);
+    it->set_search_cutoff(seed_search_cutoff);
   }
   parse_locations(request.mutable_options()->mutable_locations(), request, valhalla_exception_t{112});
 
@@ -207,19 +246,46 @@ void loki_worker_t::round_trip(Api& request) {
         locations->at(0).mutable_correlation()->mutable_filtered_edges());
   }
 
-  // drop uncorrelated seed points
+  // a seed is passed through on a single directed edge, so neither direction may lead into a dead
+  // end: we'd either continue into it after the seed or have had to drive into it to get there
+  graph_tile_ptr tile;
+  const auto leads_nowhere = [&](const GraphId& id) {
+    const auto* de = reader->directededge(id, tile);
+    return !de || de->deadend() || de->not_thru();
+  };
+
+  // keep the most reachable usable edge per seed, drop seeds without one. A single directed edge
+  // means a leg arriving at a seed and the next one leaving it travel the same edge in the same
+  // direction, so the matrix can't produce u-turns at seeds. The start keeps all its edges, its
+  // departure and arrival are separate matrix entries
   for (auto it = locations->begin() + 1; it != locations->end();) {
-    auto& l = *it;
-    if (l.correlation().edges_size() == 0 && l.correlation().filtered_edges_size() == 0) {
-      it = locations->erase(it);
-    } else {
-      // if we have nothing but filtered edges, promote them
-      if (l.correlation().edges_size() == 0) {
-        l.mutable_correlation()->mutable_edges()->Swap(
-            l.mutable_correlation()->mutable_filtered_edges());
-      }
-      ++it;
+    auto* correlation = it->mutable_correlation();
+    // if we have nothing but filtered edges, promote them
+    if (correlation->edges_size() == 0) {
+      correlation->mutable_edges()->Swap(correlation->mutable_filtered_edges());
     }
+
+    const PathEdge* best = nullptr;
+    for (const auto& edge : correlation->edges()) {
+      const GraphId id(edge.graph_id());
+      if (leads_nowhere(id) || leads_nowhere(reader->GetOpposingEdgeId(id, tile))) {
+        continue;
+      }
+      // we arrive on the edge and leave on it, so both directions of reach matter
+      if (!best || std::min(edge.inbound_reach(), edge.outbound_reach()) >
+                       std::min(best->inbound_reach(), best->outbound_reach())) {
+        best = &edge;
+      }
+    }
+
+    if (!best) {
+      it = locations->erase(it);
+      continue;
+    }
+    const PathEdge kept = *best;
+    correlation->mutable_edges()->Clear();
+    *correlation->mutable_edges()->Add() = kept;
+    ++it;
   }
 
   // do all the seeded locations share at least one colored region with the start location

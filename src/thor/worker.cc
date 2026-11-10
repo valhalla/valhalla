@@ -180,6 +180,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(serialize_to_pbf(request));
         break;
       }
+      case Options::round_trip: {
+        round_trip(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
+        break;
+      }
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }

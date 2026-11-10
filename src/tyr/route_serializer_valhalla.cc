@@ -702,6 +702,21 @@ std::string serialize(Api& api) {
     // summary time/distance and other stats
     summary(api, i, writer);
 
+    // the seeds a round trip passes through, mostly useful for tuning the seeding
+    if (api.options().verbose() && i < api.trip().routes_size() &&
+        api.trip().routes(i).round_trip_seeds_size() > 0) {
+      writer.set_precision(tyr::kCoordinatePrecision);
+      writer.start_array("round_trip_seeds");
+      for (const auto& seed : api.trip().routes(i).round_trip_seeds()) {
+        writer.start_object();
+        writer("lat", seed.ll().lat());
+        writer("lon", seed.ll().lng());
+        writer("group", static_cast<uint64_t>(seed.round_trip_group_index()));
+        writer.end_object();
+      }
+      writer.end_array();
+    }
+
     // get serialized warnings
     if (api.info().warnings_size() >= 1) {
       valhalla::tyr::serializeWarnings(api, writer);

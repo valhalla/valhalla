@@ -142,9 +142,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                    static_cast<uint32_t>(1))),
       dijkstra_distance_(
           config.get<uint32_t>("costmatrix.dijkstra_distance", kDefaultDijkstraDistance)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -1352,7 +1352,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   }
 
   // maybe hand back the path edges to the caller
-  midgard::make_finally([&path, &path_edges]() {
+  auto move_path_out = midgard::make_finally([&path, &path_edges]() {
     if (path) {
       *path = std::move(path_edges);
     }

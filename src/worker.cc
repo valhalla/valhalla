@@ -67,15 +67,17 @@ bool is_format_supported(Options::Action action, Options::Format format) {
       // json
       0xFFFF, // all actions support json
       // gpx
-      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route),
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::round_trip),
       // osrm
       (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
           (1 << Options::trace_attributes) | (1 << Options::locate) | (1 << Options::status) |
-          (1 << Options::sources_to_targets) | (1 << Options::expansion),
+          (1 << Options::sources_to_targets) | (1 << Options::expansion) | (1 << Options::round_trip),
       // pbf
       (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
           (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
-          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
+          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion) |
+          (1 << Options::round_trip),
   // geotiff
 #ifdef ENABLE_GEOTIFF
       (1 << Options::isochrone),
@@ -399,8 +401,6 @@ void parse_location(valhalla::Location* location,
       if (waiting_secs)
         add_warning(request, 203);
   }
-
-  location->set_round_trip_seed(false);
 }
 
 /**
@@ -1361,6 +1361,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
         rapidjson::get_optional<double>(doc, "/round_trip_options/heading_tolerance");
     if (heading_tolerance) {
       options.mutable_round_trip_options()->set_heading_tolerance(*heading_tolerance);
+    }
+
+    auto overlap_factor = rapidjson::get_optional<double>(doc, "/round_trip_options/overlap_factor");
+    if (overlap_factor) {
+      options.mutable_round_trip_options()->set_overlap_factor(*overlap_factor);
     }
   }
 

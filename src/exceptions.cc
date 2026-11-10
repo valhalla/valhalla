@@ -163,6 +163,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
   {304, R"(round trip distance exceeds maximum allowed value, clamping to )"},
   {305, R"(round trip heading tolerance outside valid range )"},
+  {306, R"(round trip overlap factor outside valid range )"},
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
   {401, R"(Routing failed on first pass, retrying with relaxed restrictions)"},

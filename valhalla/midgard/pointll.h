@@ -260,7 +260,7 @@ public:
    *
    * @return true if the system is spherical false if not
    */
-  constexpr bool IsSpherical() {
+  static constexpr bool IsSpherical() {
     return true;
   }
 

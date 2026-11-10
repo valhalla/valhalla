@@ -596,6 +596,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::round_trip:
         round_trip(request);
         result.messages.emplace_back(request.SerializeAsString());
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         throw valhalla_exception_t{107};
