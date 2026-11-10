@@ -4,8 +4,10 @@ import json
 import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from valhalla.config import get_config, parse_and_validate_config
+from valhalla.valhalla_build_config import Optional
 
 
 class TestParseAndValidateConfig(unittest.TestCase):
@@ -216,6 +218,22 @@ class TestGetConfig(unittest.TestCase):
             get_config(tile_extract="", tile_dir="", verbose=True)["logging"]["type"], "std_out"
         )
         self.assertEqual(get_config(tile_extract="", tile_dir="", verbose=False)["logging"]["type"], "")
+
+    def test_get_config_calls_are_independent(self):
+        first = get_config(tile_extract="", tile_dir="", verbose=True)
+        first["loki"]["actions"].clear()
+        second = get_config(tile_extract="", tile_dir="", verbose=False)
+
+        self.assertEqual(first["logging"]["type"], "std_out")
+        self.assertTrue(second["loki"]["actions"])
+
+    def test_get_config_preserves_defaults(self):
+        optional = Optional(str)
+        defaults = {"mjolnir": {}, "logging": {}, "optional": optional}
+        with patch("valhalla.config.default_config", defaults):
+            get_config(tile_extract="", tile_dir="")
+
+        self.assertEqual(defaults, {"mjolnir": {}, "logging": {}, "optional": optional})
 
 
 if __name__ == "__main__":

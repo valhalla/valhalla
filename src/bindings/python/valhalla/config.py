@@ -1,5 +1,6 @@
 import json
 import tempfile
+from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Tuple, Union
 from typing import Optional as TypingOptional
@@ -42,7 +43,7 @@ def get_config(
     :param verbose: Whether you want to see Valhalla's logs on stdout (mjolnir.logging). Default False.
     """
 
-    config = _sanitize_config(default_config.copy())
+    config = _sanitize_config(deepcopy(default_config))
 
     config["mjolnir"]["tile_dir"] = (
         ""
