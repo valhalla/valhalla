@@ -50,7 +50,7 @@ TEST(TimeTracking, make) {
     loc->set_date_time("2020-04-01T12:34");
     ti = baldr::TimeInfo::make(*loc, reader, cache, 7777);
     // zero out the part we dont care to test
-    ti.local_time = 0;
+    ti.current_epoch = 0;
     ti.second_of_week = 0;
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;
@@ -102,7 +102,7 @@ TEST(TimeTracking, make) {
     // zero out the part we dont care to test
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;
-    ASSERT_EQ(ti, (baldr::TimeInfo{1, 110, 1585667787, 213387, 0, false, nullptr}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{1, 110, 1585667760, 213360, 0, false, nullptr}));
     ASSERT_EQ(loc->date_time(), "2020-03-31T11:16");
   }
 }
