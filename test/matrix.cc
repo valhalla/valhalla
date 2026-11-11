@@ -9,8 +9,16 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
+#include <memory>
 #include <string>
 #include <vector>
+
+#ifdef __GLIBC__
+#include <unistd.h>
+
+#include <cstring>
+#include <fstream>
+#endif
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -700,6 +708,61 @@ TEST(StandAlone, MatrixNoReservations) {
 }
 
 /**************************************************************************************************/
+
+TEST(Matrix, clear_reserved_memory_keeps_results) {
+  auto clearing_cfg = cfg;
+  clearing_cfg.put("thor.clear_reserved_memory", true);
+
+  tyr::actor_t baseline(cfg, true);
+  tyr::actor_t clearing(clearing_cfg, true);
+
+  const auto expected = baseline.matrix(test_matrix_default);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_EQ(clearing.matrix(test_matrix_default), expected);
+  }
+}
+
+#ifdef __GLIBC__
+namespace {
+size_t resident_bytes() {
+  std::ifstream statm("/proc/self/statm");
+  size_t size = 0, resident = 0;
+  statm >> size >> resident;
+  return resident * sysconf(_SC_PAGESIZE);
+}
+
+// Frees large blocks that are interleaved with small live ones, so glibc cannot give them back
+// by itself.
+size_t resident_after_matrix(bool clear_reserved_memory) {
+  auto conf = cfg;
+  conf.put("thor.clear_reserved_memory", clear_reserved_memory);
+  tyr::actor_t actor(conf, true);
+  actor.matrix(test_matrix_default);
+
+  constexpr size_t kBlock = 64 * 1024, kCount = 1024;
+  std::vector<std::unique_ptr<char[]>> blocks, pins;
+  for (size_t i = 0; i < kCount; ++i) {
+    blocks.emplace_back(new char[kBlock]);
+    std::memset(blocks.back().get(), 1, kBlock);
+    pins.emplace_back(new char[64]);
+  }
+  blocks.clear();
+
+  const size_t before = resident_bytes();
+  actor.matrix(test_matrix_default);
+  const size_t after = resident_bytes();
+  return before > after ? before - after : 0;
+}
+} // namespace
+
+TEST(Matrix, clear_reserved_memory_returns_heap_to_os) {
+  EXPECT_GT(resident_after_matrix(true), 32 * 1024 * 1024);
+}
+
+TEST(Matrix, default_keeps_freed_heap) {
+  EXPECT_LT(resident_after_matrix(false), 16 * 1024 * 1024);
+}
+#endif
 
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs

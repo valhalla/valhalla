@@ -6,6 +6,7 @@
    * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
    * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
 * **Bug Fix**
+   * FIXED: return freed heap to the OS after each request on glibc when `thor.clear_reserved_memory` is set, so matrix requests no longer leave per-thread arenas at their peak size [#5172](https://github.com/valhalla/valhalla/issues/5172)
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
