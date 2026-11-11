@@ -166,11 +166,11 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const baldr::graph_tile_ptr& tile,
                           uint8_t& restriction_idx,
                           uint8_t& destonly_access_restr_mask) {
-  bool valid_pred =
-      (!pred_edgelabel.edgeid().is_valid() && costing->Allowed(edge, tile, sif::kDisallowShortcut)) ||
-      edgeid == pred_edgelabel.edgeid();
-  bool restricted = !costing->Allowed(edge, false, pred_edgelabel, tile, edgeid, 0, 0,
-                                      restriction_idx, destonly_access_restr_mask);
+  bool valid_pred = (!pred_edgelabel.edgeid().is_valid() &&
+                     costing->Allowed(edge, tile, edgeid, sif::kDisallowShortcut)) ||
+                    edgeid == pred_edgelabel.edgeid();
+  bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx,
+                                      destonly_access_restr_mask);
   return valid_pred || !restricted;
 }
 

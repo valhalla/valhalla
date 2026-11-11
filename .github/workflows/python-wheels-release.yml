@@ -189,7 +189,7 @@ jobs:
   build_osx:
     # this is the arm64 image for macos-13
     # we want the lowest available version to build the Python bindings
-    runs-on: macos-14
+    runs-on: macos-15
     name: osx
     needs: [publish_pypi]
     # osx build+test lives in osx.yml now; this job only builds+publishes the wheel on release
@@ -409,7 +409,7 @@ jobs:
   verify_wheels_osx:
     name: verify-osx
     needs: [build_osx]
-    runs-on: macos-14
+    runs-on: macos-15
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
       - uses: actions/checkout@v6
@@ -474,7 +474,7 @@ jobs:
           merge-multiple: true
 
       - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.3
         with:
           verbose: true
           # uncomment when testing!

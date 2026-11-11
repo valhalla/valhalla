@@ -185,6 +185,7 @@ public:
    * @param  range_size HTTP range offsete in case of a tar URL
    * @param  id_txt_path the file path to the tile_dir's id.txt
    * @param  id_checksum the (optional) expected checksum of the tileset
+   * @param  http_code set to the response's HTTP code, 0 if none
    * @return the graph tile or nullptr
    */
 
@@ -195,7 +196,8 @@ public:
                                      uint64_t range_offset = 0,
                                      uint64_t range_size = 0,
                                      const std::filesystem::path& id_txt_path = "",
-                                     std::optional<uint64_t> id_checksum = std::nullopt);
+                                     std::optional<uint64_t> id_checksum = std::nullopt,
+                                     long* http_code = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl

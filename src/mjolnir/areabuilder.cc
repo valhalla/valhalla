@@ -306,10 +306,10 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
   SCOPED_TIMER();
 
   // way_id > relation_id, to know which relation each area way belongs to
-  std::unordered_map<uint64_t, uint64_t> way_to_relation;
+  std::unordered_multimap<uint64_t, uint64_t> way_to_relation;
   way_to_relation.reserve(osmdata.area_relations.size());
   for (const auto& entry : osmdata.area_relations) {
-    way_to_relation[entry.second.way_id] = entry.first;
+    way_to_relation.emplace(entry.second.way_id, entry.first);
   }
 
   midgard::sequence<OSMWay> ways(ways_file, false);
@@ -356,27 +356,37 @@ void AreaBuilder::BuildAreas(const boost::property_tree::ptree& /*pt*/,
         first_way_node_index + way.node_count() - way_node.way_shape_node_index - 1;
 
     if (way.area()) {
-      auto it = way_to_relation.find(way.way_id());
-      uint64_t area_key = (it != way_to_relation.end()) ? it->second : way.way_id();
-      // TODO: this takes the name from the member way, which is right for areas that
-      // are a single closed way but wrong for relations: there the name lives on the
-      // relation itself, not on its members, so relation-based areas either inherit a
-      // member's name or end up unnamed. Carrying the relation name through
-      // area_relations would fix it.
-      if (way.name_index() != 0) {
-        area_name_indices[area_key] = way.name_index();
-      }
-      area_way_indices[area_key].push_back(way_node.way_index);
-      std::vector<midgard::PointLL> shape;
-      for (auto node_idx = first_way_node_index; node_idx <= last_way_node_index; node_idx++) {
-        const auto& node = (*way_nodes[node_idx]).node;
-        shape.push_back(node.latlng());
-        if (node.intersection()) {
-          area_shared_nodes[area_key].push_back({node.osmid_, node.latlng()});
-          area_perimeter_nodes.insert(node.osmid_);
+
+      auto build_shape = [&](uint64_t area_key) {
+        // TODO: this takes the name from the member way, which is right for areas that
+        // are a single closed way but wrong for relations: there the name lives on the
+        // relation itself, not on its members, so relation-based areas either inherit a
+        // member's name or end up unnamed. Carrying the relation name through
+        // area_relations would fix it.
+        if (way.name_index() != 0) {
+          area_name_indices[area_key] = way.name_index();
         }
+        area_way_indices[area_key].push_back(way_node.way_index);
+        std::vector<midgard::PointLL> shape;
+        for (auto node_idx = first_way_node_index; node_idx <= last_way_node_index; node_idx++) {
+          const auto& node = (*way_nodes[node_idx]).node;
+          shape.push_back(node.latlng());
+          if (node.intersection()) {
+            area_shared_nodes[area_key].push_back({node.osmid_, node.latlng()});
+            area_perimeter_nodes.insert(node.osmid_);
+          }
+        }
+        area_ways[area_key].push_back(std::move(shape));
+      };
+
+      auto range = way_to_relation.equal_range(way.way_id());
+
+      if (range.first == range.second) {
+        build_shape(way.way_id());
       }
-      area_ways[area_key].push_back(std::move(shape));
+      for (auto relation_it = range.first; relation_it != range.second; ++relation_it) {
+        build_shape(relation_it->second);
+      }
     }
     current_way_node_index = last_way_node_index + 1;
   }

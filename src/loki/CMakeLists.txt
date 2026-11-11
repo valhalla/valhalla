@@ -8,6 +8,7 @@ set(sources
   status_action.cc
   transit_available_action.cc
   polygon_search.cc
+  linear_cost_factors.cc
   isochrone_action.cc
   height_action.cc
   locate_action.cc

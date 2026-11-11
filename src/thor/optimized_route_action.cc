@@ -18,9 +18,15 @@ void thor_worker_t::optimized_route(Api& request) {
   auto& options = *request.mutable_options();
   adjust_locations(request);
   auto costing = parse_costing(request);
-  resolve_cost_factor_edges(request, mode_costing, mode, *reader, min_linear_cost_factor,
-                            max_linear_cost_edges);
   controller = AttributesController(options);
+
+  // Save the original hierarchy limits for the final route calculation.
+  const auto original_hierarchy_limits = mode_costing[int(mode)]->GetHierarchyLimits();
+
+  check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
+                         options.costings().find(options.costing_type())->second.options(),
+                         hierarchy_limits_config_costmatrix, allow_hierarchy_limits_modifications,
+                         mode_costing[int(mode)]->UseHierarchyLimits());
 
   costmatrix_.set_interrupt(interrupt);
   // Use CostMatrix to find costs from each location to every other location
@@ -58,6 +64,9 @@ void thor_worker_t::optimized_route(Api& request) {
   for (size_t i = 0; i < optimal_order.size(); i++) {
     options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
   }
+
+  // Restore the original limits before calculating the final route.
+  mode_costing[int(mode)]->SetHierarchyLimits(original_hierarchy_limits);
 
   // run the route
   path_depart_at(request, costing);

@@ -187,10 +187,10 @@ DynamicCost::DynamicCost(const Costing& costing,
                          const TravelMode mode,
                          uint32_t access_mask,
                          bool penalize_uturns)
-    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
-      allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
-      closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
-      flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
+    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
+      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor),
+      speed_penalty_factor_(kDefaultSpeedPenaltyFactor), flow_mask_(kDefaultFlowMask),
+      shortest_(costing.options().shortest()),
       distance_factor_(costing.options().use_distance() * kInvMedianSpeed),
       inv_distance_factor_(1.f - costing.options().use_distance()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
@@ -255,7 +255,8 @@ Cost DynamicCost::TransitionCost(const DirectedEdge*,
                                  const NodeInfo*,
                                  const EdgeLabel&,
                                  const graph_tile_ptr&,
-                                 const std::function<baldr::LimitedGraphReader()>&) const {
+                                 const std::function<baldr::LimitedGraphReader()>&,
+                                 const bool) const {
   return {0.0f, 0.0f};
 }
 
@@ -267,11 +268,12 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
+                                        const EdgeLabel&,
                                         const graph_tile_ptr&,
-                                        const baldr::GraphId&,
                                         const std::function<baldr::LimitedGraphReader()>&,
                                         const bool,
-                                        const InternalTurn) const {
+                                        const InternalTurn,
+                                        const bool) const {
   return {0.0f, 0.0f};
 }
 
@@ -299,11 +301,6 @@ void DynamicCost::SetAllowTransitConnections(const bool allow) {
 // Sets the flag indicating whether destination only edges are allowed.
 void DynamicCost::set_allow_destination_only(const bool allow) {
   allow_destination_only_ = allow;
-}
-
-// Sets the flag indicating whether edges with valid restriction conditional=destination are allowed.
-void DynamicCost::set_allow_conditional_destination(const bool allow) {
-  allow_conditional_destination_ = allow;
 }
 
 // Returns the maximum transfer distance between stops that you are willing
@@ -390,6 +387,7 @@ void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
   // callable after construction, so start from scratch rather than folding into what's there
   linear_cost_edges_.clear();
   min_linear_cost_factor_ = 1.;
+  has_allowed_linear_edges_ = false;
 
   // Add avoid edges to internal set
   for (auto& edge : options.exclude_edges()) {
@@ -405,7 +403,9 @@ void DynamicCost::SetCostFactorEdges(const Costing_Options& options) {
     }
     auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
     cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
-    cost_edge.ignore_restrictions_ = e.ignore_access_restrictions();
+    // one allowing range is enough, it exempts the whole edge
+    cost_edge.allow_types |= e.allow_types();
+    has_allowed_linear_edges_ |= e.allow_types() == kAllowAll;
   }
 
   // once all cost factors are filled, sort by range, precompute overall average

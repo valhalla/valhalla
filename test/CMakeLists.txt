@@ -182,7 +182,8 @@ endfunction()
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
-  COMMAND bash -c "${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp 2> ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log || (cat ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log >&2 && exit 1)"
+  COMMAND ${CMAKE_COMMAND} -E env SPATIALITE=${SPATIALITE_EXECUTABLE} SPATIALITE_TOOL=${SPATIALITE_TOOL_EXECUTABLE}
+    bash -c "${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones >${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp 2> ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log || (cat ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.log >&2 && exit 1)"
   COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   COMMENT "Building tz.sqlite..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -543,6 +544,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   # Call Python with exports in a single bash command (simpler than wrapper script)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND bash -cx "\
+      set -o pipefail; \
       ${PYTHON_TEST_EXPORTS} \
       ${TEST_PYTHON_EXECUTABLE} -m unittest discover \
         -s ${VALHALLA_SOURCE_DIR}/test/bindings/python \
