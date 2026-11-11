@@ -16,10 +16,10 @@
 
 Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
 
-Important guarantees within a major version:
+Important (un)guarantees within a major version:
 
 - **stable graph schema**: new releases will be able to read old graphs and old releases will be able to read new graphs
-- **stable request/response schema**: new releases will only _add_ new request & response elements in the JSON/PBF interfaces, never remove any
+- **stable request/response schema**: new releases will only _add_ functionality with new request & response fields in the JSON/PBF interfaces, field deprecation will be documented and functionality left intact
 - **unstable C++ API**: the interface to the C++ library is considered unstable
 
 ## Build Status
