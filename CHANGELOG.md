@@ -19,6 +19,7 @@
    * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
    * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
    * FIXED: duplicate definition of `OverwriteBits` [#6478](https://github.com/valhalla/valhalla/pull/6478)
+   * FIXED: ETA were off by 27 secs _per leg_ due to faulty clock usage [#6486](https://github.com/valhalla/valhalla/pull/6486)
    * FIXED: respect time-dependent `private` roads [#6498](https://github.com/valhalla/valhalla/pull/6498)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
