@@ -2639,9 +2639,9 @@ struct graph_parser {
         AccessType type = AccessType::kTimedDenied;
         if (tmp == "no") {
           type = AccessType::kTimedDenied;
-        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated") {
+        } else if (tmp == "yes" || tmp == "delivery" || tmp == "designated") {
           type = AccessType::kTimedAllowed;
-        } else if (tmp == "destination") {
+        } else if (tmp == "destination" || tmp == "private") {
           type = AccessType::kDestinationAllowed;
         }
 
