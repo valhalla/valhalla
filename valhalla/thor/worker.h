@@ -128,6 +128,7 @@ protected:
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   bool costmatrix_allow_second_pass;
+  bool clear_reserved_memory_;
   std::shared_ptr<baldr::GraphReader> reader;
   meili::MapMatcherFactory matcher_factory;
   baldr::AttributesController controller;

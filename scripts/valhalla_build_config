@@ -555,7 +555,7 @@ help_text = {
         "max_reserved_labels_count_bidir_astar": "Maximum capacity allowed to keep reserved for bidirectional A*.",
         "max_reserved_labels_count_dijkstras": "Maximum capacity allowed to keep reserved for unidirectional Dijkstras.",
         "max_reserved_labels_count_bidir_dijkstras": "Maximum capacity allowed to keep reserved for bidirectional Dijkstras.",
-        "clear_reserved_memory": "If True clean reserved memory in path algorithms",
+        "clear_reserved_memory": "If True clean reserved memory in path algorithms and, with glibc, return freed heap memory to the OS after each request",
         "extended_search": "If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge",
         "costmatrix": {
             "check_reverse_connection": "Whether to check for expansion connections on the reverse tree, which has an adverse effect on performance",

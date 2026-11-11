@@ -9,6 +9,10 @@
 #include <string>
 #include <unordered_map>
 
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
+
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -100,6 +104,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   }
 
   costmatrix_allow_second_pass = config.get<bool>("thor.costmatrix.allow_second_pass", false);
+  clear_reserved_memory_ = config.get<bool>("thor.clear_reserved_memory", false);
 
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
@@ -365,6 +370,12 @@ void thor_worker_t::cleanup() {
     reader->Trim();
   }
   reader->ClearRetryableFailures();
+#ifdef __GLIBC__
+  // glibc keeps freed memory in per-thread arenas; hand it back to the OS
+  if (clear_reserved_memory_) {
+    malloc_trim(0);
+  }
+#endif
 }
 
 void thor_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
