@@ -56,7 +56,12 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GEOTIFF "Whether to include libgeotiff; currently only used for raster serialization of isotile grid" ON)
 option(ENABLE_LZ4 "Enable LZ4 decompression support for elevation tiles and OSM PBF files" ON)
+option(ENABLE_OS_TZDB "Use the OS timezone database (zoneinfo) at runtime instead of the vendored tzdata" OFF)
 option(INSTALL_TEST_LIB "Install Valhalla's own test lib" OFF)
+
+if(ENABLE_OS_TZDB AND WIN32)
+  message(FATAL_ERROR "ENABLE_OS_TZDB is not supported on Windows")
+endif()
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")

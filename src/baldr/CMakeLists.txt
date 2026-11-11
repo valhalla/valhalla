@@ -83,7 +83,6 @@ set(sources
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
-    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
@@ -91,22 +90,28 @@ set(sources
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
 
-list(APPEND sources
-    #basic timezone stuff
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_australasia.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
+if(ENABLE_OS_TZDB)
+  # we don't vendor our own tzdata
+  list(APPEND sources_with_warnings
+      ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp)
+else()
+  list(APPEND sources
+      tz_alt.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_australasia.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
-list(APPEND sources_with_warnings
-    tz_alt.cpp)
+  list(APPEND sources_with_warnings
+      tz_alt.cpp)
+endif()
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
