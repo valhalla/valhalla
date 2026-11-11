@@ -110,7 +110,7 @@ void parse_round_trip_options(Api& request, double max_distance) {
   }
 
   constexpr double kDefaultOverlapFactor = 1.;
-  constexpr double kMaxOverlapFactor = 10.;
+  constexpr double kMaxOverlapFactor = 100.;
 
   if (!options->has_overlap_factor()) {
     options->set_overlap_factor(kDefaultOverlapFactor);
@@ -150,7 +150,7 @@ size_t points_per_group(double distance) {
   constexpr double kShortRoundTrip = 4000.;
   constexpr double kLongRoundTrip = 15000.;
   constexpr size_t kShortPoints = 40;
-  constexpr size_t kLongPoints = 12;
+  constexpr size_t kLongPoints = 16;
 
   // 1 at or below kShortRoundTrip, 0 at or above kLongRoundTrip, linear in between
   const double t =
@@ -241,7 +241,8 @@ void loki_worker_t::round_trip(Api& request) {
     return mask;
   }();
   // motor vehicle round trips should run along proper roads, and a seed on a motorway can't be passed
-  // through without a long detour to the next exit
+  // through without a long detour to the next exit. Unclassified roads are allowed but only used
+  // after all other seeds, see below
   const bool is_motor_vehicle = mode == sif::TravelMode::kDrive;
   for (auto it = seeds.begin(); it != seeds.end(); ++it) {
     auto* filter = it->mutable_search_filter();
@@ -249,7 +250,7 @@ void loki_worker_t::round_trip(Api& request) {
     filter->set_exclude_dead_ends(true);
     filter->set_exclude_not_thru(true);
     if (is_motor_vehicle) {
-      filter->set_min_road_class(valhalla::RoadClass::kTertiary);
+      filter->set_min_road_class(valhalla::RoadClass::kUnclassified);
       filter->set_max_road_class(valhalla::RoadClass::kTrunk);
     }
     it->set_node_snap_tolerance(0);
@@ -297,7 +298,8 @@ void loki_worker_t::round_trip(Api& request) {
     }
     // the search filter only looks at the edge itself, but a seed edge is also arrived on, so its
     // opposing edge mustn't lead into a dead end or a region without exit either. Links aren't all
-    // marked with a ramp or turn channel use, so drop them by their link flag as well
+    // marked with a ramp or turn channel use, so drop them by their link flag as well. Internal
+    // intersection edges and roundabouts are junctions rather than roads to pass through
     auto* candidate_edges = correlation->mutable_edges();
     for (int i = candidate_edges->size() - 1; i >= 0; --i) {
       const GraphId id(candidate_edges->Get(i).graph_id());
@@ -305,7 +307,8 @@ void loki_worker_t::round_trip(Api& request) {
       const auto* edge = reader->directededge(id, tile);
       graph_tile_ptr opp_tile;
       const auto* opp = reader->GetOpposingEdge(id, opp_tile);
-      if (!edge || edge->link() || !opp || opp->deadend() || opp->not_thru()) {
+      if (!edge || edge->link() || edge->internal() || edge->roundabout() || !opp || opp->deadend() ||
+          opp->not_thru()) {
         candidate_edges->DeleteSubrange(i, 1);
       }
     }
@@ -396,6 +399,18 @@ void loki_worker_t::round_trip(Api& request) {
       LOG_DEBUG("All round trip seed points from group {} were removed", i);
       throw valhalla_exception_t{171};
     }
+  }
+  // thor takes the seeds of each group in order, so seeds on unclassified roads go last and are only
+  // used if the others don't make a good enough round trip
+  if (is_motor_vehicle) {
+    std::stable_partition(locations->pointer_begin() + 1, locations->pointer_end(),
+                          [&](const Location* l) {
+                            graph_tile_ptr tile;
+                            const auto* edge =
+                                reader->directededge(GraphId(l->correlation().edges(0).graph_id()),
+                                                     tile);
+                            return edge && edge->classification() != baldr::RoadClass::kUnclassified;
+                          });
   }
   // thor finds the start and the seeds in locations and sets up its matrices from there
 }

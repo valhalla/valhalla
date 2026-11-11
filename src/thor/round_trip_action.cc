@@ -35,7 +35,7 @@ constexpr double kAcceptableDistanceDeviation = 0.1;
 constexpr double kAcceptableOverlap = 0.2;
 
 // seeds per group in the first round, each further round doubles it
-constexpr size_t kInitialSeedsPerGroup = 3;
+constexpr size_t kInitialSeedsPerGroup = 4;
 
 // a single leg candidate round trips are made up of
 struct LegInfo {
