@@ -721,20 +721,19 @@ TEST(StandAlone, ConditionalPrivateIsDestinationOnly) {
 
   // 2020-04-02 is a Thursday
   for (const auto& dt : kDateTimeTypes) {
-    auto inactive = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
-                                     {{"/date_time/type", dt},
-                                      {"/date_time/value", "2020-04-02T12:00"}});
+    auto inactive =
+        gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                         {{"/date_time/type", dt}, {"/date_time/value", "2020-04-02T12:00"}});
     gurka::assert::raw::expect_path(inactive, {"AB", "BXC", "CD"}, "date_time type " + dt);
 
-    auto through = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
-                                    {{"/date_time/type", dt},
-                                     {"/date_time/value", "2020-04-02T07:40"}});
-    gurka::assert::raw::expect_path(through, {"AB", "BE", "EF", "FC", "CD"},
-                                    "date_time type " + dt);
+    auto through =
+        gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                         {{"/date_time/type", dt}, {"/date_time/value", "2020-04-02T07:40"}});
+    gurka::assert::raw::expect_path(through, {"AB", "BE", "EF", "FC", "CD"}, "date_time type " + dt);
 
-    auto destination = gurka::do_action(valhalla::Options::route, map, {"A", "X"}, "auto",
-                                        {{"/date_time/type", dt},
-                                         {"/date_time/value", "2020-04-02T07:40"}});
+    auto destination =
+        gurka::do_action(valhalla::Options::route, map, {"A", "X"}, "auto",
+                         {{"/date_time/type", dt}, {"/date_time/value", "2020-04-02T07:40"}});
     gurka::assert::raw::expect_path(destination, {"AB", "BXC"}, "date_time type " + dt);
   }
 }
