@@ -474,9 +474,13 @@ namespace DateTime {
 tz_db_t::tz_db_t() {
   const auto& db = date::get_tzdb();
 
-  // update timezones & run the tests will fail here if new timezones were added
-  if (const std::string& msg = check_tz_map(db); msg.size()) {
-    throw std::runtime_error("Update timezone map at " + std::string(__FILE__) + ": " + msg);
+  // update timezones & run the tests will fail here if new timezones were added.
+  // the OS zoneinfo lists links as zones which we don't keep around, so only check vendored tzdata
+  // fine bcs the only reason we check the tz map is to discover _new_ timezones we don't cover yet
+  if constexpr (!USE_OS_TZDB) {
+    if (const std::string& msg = check_tz_map(db); msg.size()) {
+      throw std::runtime_error("Update timezone map at " + std::string(__FILE__) + ": " + msg);
+    }
   }
 
   zones.reserve(tz_name_to_id.size());
