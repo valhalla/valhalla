@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <sstream>
-#include <unordered_set>
 
 namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
@@ -424,12 +423,8 @@ const std::unordered_map<std::string, size_t> tz_name_to_id = {
 // tzdb updates. this function pretty-prints missing tzs for convenience
 const std::string check_tz_map(const date::tzdb& db) {
   std::vector<std::string> new_zones_msg;
-  std::unordered_set<std::string> new_zones_names;
-
   for (const auto& tz : db.zones) {
-    // only add entirely new zones if we didn't see them as link target yet
-    if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end() &&
-        new_zones_names.find(tz.name()) == new_zones_names.end()) {
+    if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end()) {
       new_zones_msg.emplace_back(tz.name());
     }
   }
