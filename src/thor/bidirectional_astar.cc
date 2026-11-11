@@ -246,24 +246,24 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
-  const uint64_t current_epoch = time_info.valid ? time_info.unix_time : 0;
+  const uint64_t current_unix_time = time_info.valid ? time_info.unix_time : 0;
   uint8_t restriction_idx = kInvalidRestriction;
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, current_epoch,
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, current_unix_time,
                            time_info.timezone_index, restriction_idx, destonly_restriction_mask,
                            &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                             &edgestatus_forward_, current_epoch, time_info.timezone_index)) {
+                             &edgestatus_forward_, current_unix_time, time_info.timezone_index)) {
       return false;
     }
   } else {
-    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, current_epoch,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, current_unix_time,
                                   time_info.timezone_index, restriction_idx,
                                   destonly_restriction_mask, &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                             &edgestatus_reverse_, current_epoch, time_info.timezone_index)) {
+                             &edgestatus_reverse_, current_unix_time, time_info.timezone_index)) {
       return false;
     }
   }

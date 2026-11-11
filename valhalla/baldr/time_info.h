@@ -138,10 +138,10 @@ struct TimeInfo {
       return {false, 0, 0, kInvalidSecondsOfWeek, 0, false, nullptr};
     }
     const auto then_date = date::make_zoned(tz, parsed_date, date::choose::latest);
-    uint64_t current_epoch = then_date.get_sys_time().time_since_epoch().count();
+    uint64_t then_unix_time = then_date.get_sys_time().time_since_epoch().count();
 
     // What second of the week is this (for historical traffic lookup)
-    auto second_of_week = dt::second_of_week(current_epoch, tz);
+    auto second_of_week = dt::second_of_week(then_unix_time, tz);
 
     // When is this route with respect to now this will let us appropriately use current flow traffic
     int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
@@ -149,7 +149,7 @@ struct TimeInfo {
     // Make a valid object
     return {true,
             static_cast<uint64_t>(timezone_index),
-            current_epoch,
+            then_unix_time,
             second_of_week,
             static_cast<uint64_t>(std::abs(seconds_from_now)),
             seconds_from_now < 0,
@@ -267,7 +267,7 @@ struct TimeInfo {
   // for unit tests
   friend std::ostream& operator<<(std::ostream& os, const TimeInfo& ti) {
     return os << "{valid: " << ti.valid << ", timezone_index: " << ti.timezone_index
-              << ", current_epoch: " << ti.unix_time << ", second_of_week: " << ti.second_of_week
+              << ", unix_time: " << ti.unix_time << ", second_of_week: " << ti.second_of_week
               << ", seconds_from_now: " << ti.seconds_from_now
               << ", negative_seconds_from_now: " << ti.negative_seconds_from_now
               << ", tz_cache: " << ti.tz_cache << "}";
