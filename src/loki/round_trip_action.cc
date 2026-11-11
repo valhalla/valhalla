@@ -1,6 +1,7 @@
 
 #include "loki/search.h"
 #include "loki/worker.h"
+#include "midgard/util.h"
 
 #include <algorithm>
 #include <cassert>
@@ -191,9 +192,7 @@ void loki_worker_t::round_trip(Api& request) {
   auto& round_trip_options = options.round_trip_options();
 
   // choose the number of seed groups based on how wide the round trip should be
-  size_t num_groups = round_trip_options.heading_tolerance() < 20    ? 2
-                      : round_trip_options.heading_tolerance() <= 45 ? 3
-                                                                     : 4;
+  size_t num_groups = round_trip_options.heading_tolerance() < 20 ? 2 : 3;
 
   constexpr double kMinRoadNetworkFactor = 1.2;
   constexpr double kMaxRoadNetworkFactor = 2.0;
@@ -258,6 +257,7 @@ void loki_worker_t::round_trip(Api& request) {
         0); // reach is expensive, so we don't calculate it for the seeded locations and instead rely
             // on the scoring of permutations in thor to filter out unfound matrix pairs
     it->set_search_cutoff(seed_search_cutoff);
+    it->set_radius(80);
   }
   auto* locations = options.mutable_locations();
   parse_locations(locations, request, valhalla_exception_t{112});
@@ -295,7 +295,21 @@ void loki_worker_t::round_trip(Api& request) {
     if (correlation->edges_size() == 0) {
       correlation->mutable_edges()->Swap(correlation->mutable_filtered_edges());
     }
-    // drop seeds that didn't correlate at all
+    // the search filter only looks at the edge itself, but a seed edge is also arrived on, so its
+    // opposing edge mustn't lead into a dead end or a region without exit either. Links aren't all
+    // marked with a ramp or turn channel use, so drop them by their link flag as well
+    auto* candidate_edges = correlation->mutable_edges();
+    for (int i = candidate_edges->size() - 1; i >= 0; --i) {
+      const GraphId id(candidate_edges->Get(i).graph_id());
+      graph_tile_ptr tile;
+      const auto* edge = reader->directededge(id, tile);
+      graph_tile_ptr opp_tile;
+      const auto* opp = reader->GetOpposingEdge(id, opp_tile);
+      if (!edge || edge->link() || !opp || opp->deadend() || opp->not_thru()) {
+        candidate_edges->DeleteSubrange(i, 1);
+      }
+    }
+    // drop seeds without usable edges
     if (correlation->edges_size() == 0) {
       it = locations->erase(it);
       continue;
@@ -316,6 +330,24 @@ void loki_worker_t::round_trip(Api& request) {
         });
     edges->SwapElements(0, static_cast<int>(best - edges->begin()));
     edges->DeleteSubrange(1, edges->size() - 1);
+
+    // with a search radius most kept edges are farther ones, where the seed projects onto either end
+    // of the edge and acts like a node snap. Pass every seed through the middle of its edge instead,
+    // and since the seed is only a rough position anyway, don't let thor charge for the distance to
+    // it
+    auto& seed_edge = *edges->Mutable(0);
+    graph_tile_ptr tile;
+    const auto* edge = reader->directededge(GraphId(seed_edge.graph_id()), tile);
+    // edgeinfo() returns by value and shape() refers into it, so keep the EdgeInfo alive
+    const auto edge_info = tile->edgeinfo(edge);
+    const auto& shape = edge_info.shape();
+    const auto middle = trim_polyline(shape.begin(), shape.end(), 0.5, 0.5);
+    if (!middle.empty()) {
+      seed_edge.set_percent_along(0.5);
+      seed_edge.mutable_ll()->set_lng(middle.front().lng());
+      seed_edge.mutable_ll()->set_lat(middle.front().lat());
+    }
+    seed_edge.set_distance(0);
     ++it;
   }
 

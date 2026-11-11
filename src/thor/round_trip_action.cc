@@ -27,7 +27,7 @@ constexpr double kCostPerDistanceWeight = 0.25;
 
 // candidates retracing more than this fraction of their length are only used if nothing else is
 // left
-constexpr double kMaxOverlap = 0.5;
+constexpr double kMaxOverlap = 0.3;
 
 // the best candidate is taken once it is this close to the requested distance and overlaps this
 // little
@@ -231,6 +231,9 @@ std::vector<PointLL> stitch_shape(const candidate& candidate, const connections&
     }
     shape.insert(shape.end(), begin, leg.end());
   }
+  // a seed projected onto a vertex leaves that vertex twice in its legs, once from the edge before
+  // and once from the empty part of the seed edge, and the edge walk can't handle repeated points
+  shape.erase(std::unique(shape.begin(), shape.end()), shape.end());
   return shape;
 }
 
@@ -279,6 +282,9 @@ void thor_worker_t::round_trip(Api& request) {
   connections connections(all_locations.size());
   const auto compute_leg = [&](const std::vector<uint32_t>& sources,
                                const std::vector<uint32_t>& targets) {
+    if (sources.empty() || targets.empty()) {
+      return;
+    }
     options.mutable_sources()->Clear();
     options.mutable_targets()->Clear();
     for (auto i : sources) {
@@ -310,6 +316,8 @@ void thor_worker_t::round_trip(Api& request) {
   // start with a few seeds per group and double them until a candidate meets the request or all
   // seeds are used
   std::vector<candidate> candidates;
+  // the seeds per group whose connections are already computed
+  std::vector<std::vector<uint32_t>> groups(all_groups.size());
   bool extended_iteration = false;
   for (size_t seeds_per_group = kInitialSeedsPerGroup;; seeds_per_group *= 2) {
 
@@ -317,21 +325,37 @@ void thor_worker_t::round_trip(Api& request) {
       LOG_DEBUG("Extended candidate search with seed locations per group = {}", seeds_per_group);
     }
     extended_iteration = true;
-    std::vector<std::vector<uint32_t>> groups(all_groups.size());
+    std::vector<std::vector<uint32_t>> added(all_groups.size());
     bool all_seeds_used = true;
     for (size_t g = 0; g < all_groups.size(); ++g) {
       const auto count = std::min(seeds_per_group, all_groups[g].size());
       all_seeds_used = all_seeds_used && count == all_groups[g].size();
-      groups[g].assign(all_groups[g].begin(), all_groups[g].begin() + count);
+      added[g].assign(all_groups[g].begin() + groups[g].size(), all_groups[g].begin() + count);
     }
 
-    // start -> first group -> ... -> last group -> start
+    // the stops of a round trip in driving order: start -> first group -> ... -> last group -> start
+    const auto stops = [](const std::vector<uint32_t>& start,
+                          const std::vector<std::vector<uint32_t>>& seeds) {
+      std::vector<std::vector<uint32_t>> result{start};
+      result.insert(result.end(), seeds.begin(), seeds.end());
+      result.push_back(start);
+      return result;
+    };
+    // the start is new in the first round only
     const std::vector<uint32_t> start{0};
-    compute_leg(start, groups.front());
-    for (size_t g = 0; g + 1 < groups.size(); ++g) {
-      compute_leg(groups[g], groups[g + 1]);
+    const bool first_round = groups.front().empty();
+    const auto old_stops = stops(first_round ? std::vector<uint32_t>{} : start, groups);
+    const auto new_stops = stops(first_round ? start : std::vector<uint32_t>{}, added);
+    for (size_t g = 0; g < groups.size(); ++g) {
+      groups[g].insert(groups[g].end(), added[g].begin(), added[g].end());
     }
-    compute_leg(groups.back(), start);
+    const auto all_stops = stops(start, groups);
+
+    // only the connections touching an added seed are missing: new -> everything and old -> new
+    for (size_t leg = 0; leg + 1 < all_stops.size(); ++leg) {
+      compute_leg(new_stops[leg], all_stops[leg + 1]);
+      compute_leg(old_stops[leg], new_stops[leg + 1]);
+    }
 
     candidates = rank_candidates(groups, connections, options.round_trip_options(), *reader);
     if (all_seeds_used ||
@@ -391,7 +415,8 @@ void thor_worker_t::round_trip(Api& request) {
       }
     } catch (const std::exception& e) {
       // if the best candidate fails, the next one simply becomes the first route
-      LOG_DEBUG("Round trip candidate {} failed to edge walk: {}", i, e.what());
+      LOG_DEBUG("Round trip candidate {} failed to edge walk: {}, stitched shape: {}", i, e.what(),
+                encode(shape));
     }
   }
 

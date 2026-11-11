@@ -1399,6 +1399,18 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     if (overlap_factor) {
       options.mutable_round_trip_options()->set_overlap_factor(*overlap_factor);
     }
+
+    // a round trip shouldn't turn around halfway, so u-turns cost an hour unless the user says
+    // otherwise
+    constexpr float kRoundTripUturnPenalty = 3600.f;
+    const auto costing_name = Costing_Enum_Name(options.costing_type());
+    if (!rapidjson::get_optional<float>(doc, ("/costing_options/" + costing_name + "/uturn_penalty")
+                                                 .c_str())) {
+      auto costing = options.mutable_costings()->find(options.costing_type());
+      if (costing != options.mutable_costings()->end()) {
+        costing->second.mutable_options()->set_uturn_penalty(kRoundTripUturnPenalty);
+      }
+    }
   }
 
   // force these into the output so its obvious what we did to the user
