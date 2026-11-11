@@ -405,6 +405,9 @@ struct graph_parser {
         case Use::kSteps:
           way_.set_use(Use::kSteps);
           break;
+        case Use::kLadder:
+          way_.set_use(Use::kLadder);
+          break;
         case Use::kEscalator:
           way_.set_use(Use::kEscalator);
           break;
@@ -419,10 +422,12 @@ struct graph_parser {
           break;
         case Use::kParkingAisle:
           way_.set_destination_only(true);
+          way_.set_destination_only_hgv(true);
           way_.set_use(Use::kParkingAisle);
           break;
         case Use::kDriveway:
           way_.set_destination_only(true);
+          way_.set_destination_only_hgv(true);
           way_.set_use(Use::kDriveway);
           break;
         case Use::kAlley:
@@ -433,6 +438,7 @@ struct graph_parser {
           break;
         case Use::kDriveThru:
           way_.set_destination_only(true);
+          way_.set_destination_only_hgv(true);
           way_.set_use(Use::kDriveThru);
           break;
         case Use::kServiceRoad:
