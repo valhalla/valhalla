@@ -59,8 +59,8 @@ std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location
   if (!location.has_node_snap_tolerance_case())
     location.set_node_snap_tolerance(default_node_snap_tolerance);
 
-  const bool has_level =
-      location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
+  const bool has_level = location.has_search_filter() && location.search_filter().has_level_case() &&
+                         location.search_filter().level() != baldr::kMaxLevel;
 
   if (!location.has_search_cutoff_case() && !has_level) {
     // no level and no cutoff, provide regular default

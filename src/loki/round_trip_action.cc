@@ -137,13 +137,19 @@ double estimate_radius(double distance,
           (2 + 2 * (num_groups - 1) * std::sin((heading_tolerance / num_groups) * kRadPerDegD)));
 }
 
-// short round trips run through dense networks where a handful of seeds rarely gives good
-// candidates, so below kLongRoundTrip each group gets more seeds
+/**
+ * Decide how many points are seeded for each group. More points lead to better results but also mean
+ * more matrix pairs need to be calculated. On longer distances, this immensely slows down the matrix
+ * calculations, so lower the point count at higher distances.
+ *
+ * @param  distance the desired distance in meters provided in the request options
+ * @return the number of points per group to randomly seed
+ */
 size_t points_per_group(double distance) {
-  constexpr double kShortRoundTrip = 2000.;
-  constexpr double kLongRoundTrip = 10000.;
-  constexpr size_t kShortPoints = 10;
-  constexpr size_t kLongPoints = 3;
+  constexpr double kShortRoundTrip = 4000.;
+  constexpr double kLongRoundTrip = 15000.;
+  constexpr size_t kShortPoints = 40;
+  constexpr size_t kLongPoints = 12;
 
   // 1 at or below kShortRoundTrip, 0 at or above kLongRoundTrip, linear in between
   const double t =
@@ -162,7 +168,7 @@ void loki_worker_t::round_trip(Api& request) {
 
   parse_costing(request);
 
-  // only allow a single location for now
+  // only allow a single location
   if (request.options().locations_size() == 0) {
     throw valhalla_exception_t{120};
   } else if (request.options().locations_size() > 1) {
@@ -178,17 +184,17 @@ void loki_worker_t::round_trip(Api& request) {
   try {
     parse_round_trip_options(request, max_roundtrip_distances.at(costing_name));
   } catch (const valhalla_exception_t&) { throw; } catch (const std::exception& e) {
-    throw valhalla_exception_t{100, e.what()};
+    LOG_ERROR("{}", e.what());
+    throw valhalla_exception_t{100};
   }
 
   auto& round_trip_options = options.round_trip_options();
-  size_t num_groups = round_trip_options.heading_tolerance() < 15   ? 1
-                      : round_trip_options.heading_tolerance() < 45 ? 2
-                                                                    : 3;
 
-  // the ring covers the range of plausible road network factors rather than a tolerance around a
-  // single one: dense grids detour little, sparse rural networks a lot. The candidate ranking then
-  // picks whichever seeds match the requested distance
+  // choose the number of seed groups based on how wide the round trip should be
+  size_t num_groups = round_trip_options.heading_tolerance() < 20    ? 2
+                      : round_trip_options.heading_tolerance() <= 45 ? 3
+                                                                     : 4;
+
   constexpr double kMinRoadNetworkFactor = 1.2;
   constexpr double kMaxRoadNetworkFactor = 2.0;
   const auto radius_lo =
@@ -202,32 +208,68 @@ void loki_worker_t::round_trip(Api& request) {
                                    round_trip_options.heading_tolerance(), radius_lo, radius_hi,
                                    num_groups, points_per_group(round_trip_options.distance()));
 
-  auto* locations = options.mutable_locations();
+  // the search computes reach up to the highest minimum reachability of all locations it's given, so
+  // the seeds are searched separately from the start
+  google::protobuf::RepeatedPtrField<Location> seeds;
   for (size_t i = 0; i < seeded_points.size(); ++i) {
     const auto& seed_group = seeded_points[i];
     for (const auto& pt : seed_group) {
-      auto l = locations->Add();
+      auto l = seeds.Add();
       l->mutable_ll()->set_lng(pt.lng());
       l->mutable_ll()->set_lat(pt.lat());
+      // downstream needs to know what group a seed location belongs to
+      // 0 means it's the start location
       l->set_round_trip_group_index(i + 1);
     }
   }
-  // snapping to a node would correlate every edge around it, we want exactly one directed edge per
-  // seed. parse_location clamps the reachability to service_limits.max_reachability
-  constexpr uint32_t kSeedMinReachability = 100;
-  // a seed snapping to a road far outside the ring makes its legs too long, better to drop it
+
+  // a seed snapping to a road far outside the annular sector creates routes that are too long, so
+  // only search near the ring
   constexpr double kMinSeedSearchCutoff = 200.;
   const auto seed_search_cutoff =
       static_cast<uint32_t>(std::max(kMinSeedSearchCutoff, (radius_hi - radius_lo) / 2.));
-  for (auto it = locations->begin() + 1; it != locations->end(); ++it) {
+  // seeds are driven through, so keep them off roads that lead nowhere or that nobody wants a round
+  // trip to pass through
+  constexpr uint64_t kSeedExcludeUses = [] {
+    uint64_t mask = 0;
+    for (auto use :
+         {Use::kRamp, Use::kTurnChannel, Use::kDriveway, Use::kAlley, Use::kParkingAisle,
+          Use::kEmergencyAccess, Use::kDriveThru, Use::kCuldesac, Use::kServiceRoad, Use::kRestArea,
+          Use::kServiceArea, Use::kSteps, Use::kElevator, Use::kEscalator, Use::kLadder,
+          Use::kPlatform, Use::kFerry, Use::kRailFerry, Use::kConstruction}) {
+      mask |= uint64_t{1} << static_cast<uint8_t>(use);
+    }
+    return mask;
+  }();
+  // motor vehicle round trips should run along proper roads, and a seed on a motorway can't be passed
+  // through without a long detour to the next exit
+  const bool is_motor_vehicle = mode == sif::TravelMode::kDrive;
+  for (auto it = seeds.begin(); it != seeds.end(); ++it) {
+    auto* filter = it->mutable_search_filter();
+    filter->set_exclude_uses(kSeedExcludeUses);
+    filter->set_exclude_dead_ends(true);
+    filter->set_exclude_not_thru(true);
+    if (is_motor_vehicle) {
+      filter->set_min_road_class(valhalla::RoadClass::kTertiary);
+      filter->set_max_road_class(valhalla::RoadClass::kTrunk);
+    }
     it->set_node_snap_tolerance(0);
-    it->set_minimum_reachability(kSeedMinReachability);
+    it->set_minimum_reachability(
+        0); // reach is expensive, so we don't calculate it for the seeded locations and instead rely
+            // on the scoring of permutations in thor to filter out unfound matrix pairs
     it->set_search_cutoff(seed_search_cutoff);
   }
-  parse_locations(request.mutable_options()->mutable_locations(), request, valhalla_exception_t{112});
+  auto* locations = options.mutable_locations();
+  parse_locations(locations, request, valhalla_exception_t{112});
+  parse_locations(&seeds, request);
 
   try {
-    search_.search(*options.mutable_locations(), mode_costing[static_cast<size_t>(mode)]);
+    search_.search(*locations, mode_costing[static_cast<size_t>(mode)]);
+    search_.clear();
+    search_.search(seeds, mode_costing[static_cast<size_t>(mode)]);
+    for (auto& seed : seeds) {
+      locations->Add(std::move(seed));
+    }
     // TODO: what do we do with uncorrelated seed locations?
     // the sensible thing would be to regenerate points and try again for those
     // for now we just drop them down below
@@ -246,45 +288,34 @@ void loki_worker_t::round_trip(Api& request) {
         locations->at(0).mutable_correlation()->mutable_filtered_edges());
   }
 
-  // a seed is passed through on a single directed edge, so neither direction may lead into a dead
-  // end: we'd either continue into it after the seed or have had to drive into it to get there
-  graph_tile_ptr tile;
-  const auto leads_nowhere = [&](const GraphId& id) {
-    const auto* de = reader->directededge(id, tile);
-    return !de || de->deadend() || de->not_thru();
-  };
-
-  // keep the most reachable usable edge per seed, drop seeds without one. A single directed edge
-  // means a leg arriving at a seed and the next one leaving it travel the same edge in the same
-  // direction, so the matrix can't produce u-turns at seeds. The start keeps all its edges, its
-  // departure and arrival are separate matrix entries
+  const PointLL start_ll(locations->at(0).ll().lng(), locations->at(0).ll().lat());
   for (auto it = locations->begin() + 1; it != locations->end();) {
     auto* correlation = it->mutable_correlation();
     // if we have nothing but filtered edges, promote them
     if (correlation->edges_size() == 0) {
       correlation->mutable_edges()->Swap(correlation->mutable_filtered_edges());
     }
-
-    const PathEdge* best = nullptr;
-    for (const auto& edge : correlation->edges()) {
-      const GraphId id(edge.graph_id());
-      if (leads_nowhere(id) || leads_nowhere(reader->GetOpposingEdgeId(id, tile))) {
-        continue;
-      }
-      // we arrive on the edge and leave on it, so both directions of reach matter
-      if (!best || std::min(edge.inbound_reach(), edge.outbound_reach()) >
-                       std::min(best->inbound_reach(), best->outbound_reach())) {
-        best = &edge;
-      }
-    }
-
-    if (!best) {
+    // drop seeds that didn't correlate at all
+    if (correlation->edges_size() == 0) {
       it = locations->erase(it);
       continue;
     }
-    const PathEdge kept = *best;
-    correlation->mutable_edges()->Clear();
-    *correlation->mutable_edges()->Add() = kept;
+    // keep a single directed edge, so the leg arriving at a seed and the leg leaving it drive that
+    // edge in the same direction. Otherwise the loop may turn around at the seed, which the stitched
+    // shape can't express. The groups go clockwise around the start, so at a seed the loop travels
+    // perpendicular to the start, clockwise. Keep the edge closest to that heading
+    const double loop_heading = start_ll.Heading(PointLL(it->ll().lng(), it->ll().lat())) + 90.;
+    const auto heading_diff = [loop_heading](const PathEdge& edge) {
+      const double d = std::fmod(std::abs(edge.heading() - loop_heading), 360.);
+      return d > 180. ? 360. - d : d;
+    };
+    auto* edges = correlation->mutable_edges();
+    auto best =
+        std::min_element(edges->begin(), edges->end(), [&](const PathEdge& a, const PathEdge& b) {
+          return heading_diff(a) < heading_diff(b);
+        });
+    edges->SwapElements(0, static_cast<int>(best - edges->begin()));
+    edges->DeleteSubrange(1, edges->size() - 1);
     ++it;
   }
 
@@ -334,16 +365,7 @@ void loki_worker_t::round_trip(Api& request) {
       throw valhalla_exception_t{171};
     }
   }
-
-  // finally, move all locations into sources and targets
-  // copy the start and keep it under locations
-  options.mutable_sources()->Add()->CopyFrom(*locations->begin());
-  options.mutable_targets()->Add()->CopyFrom(*locations->begin());
-  for (auto it = locations->begin() + 1; it != locations->end(); ++it) {
-    options.mutable_sources()->Add()->CopyFrom(*it);
-    options.mutable_targets()->Add(std::move(*it));
-  }
-  locations->DeleteSubrange(1, locations->size() - 1);
+  // thor finds the start and the seeds in locations and sets up its matrices from there
 }
 } // namespace loki
 } // namespace valhalla
