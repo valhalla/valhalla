@@ -959,13 +959,8 @@ private:
              reach.inbound >= pp.location->minimum_inbound_reachability();
     };
 
-    // the closest reachable of the best matches yields itself and its opposing edge, the other
-    // segments of the same street score the same
-    for (size_t i = 0; i < pool.size(); ++i) {
-      if (scores[i] != best_hint_score)
-        continue;
-
-      auto& candidate = pool[i];
+    // returns whether the candidate (or its opposing edge) made it into the location's edges
+    auto try_correlate = [&](candidate_t& candidate) -> bool {
       // it's possible that it isnt reachable but the opposing is, switch to that if so
       if (!is_reachable(get_reach(candidate.edge_id, candidate.edge))) {
         const DirectedEdge* opp_edge = nullptr;
@@ -974,7 +969,7 @@ private:
         if (!opp_edgeid || !costing->Allowed(opp_edge, opp_tile, opp_edgeid, kDisallowShortcut) ||
             search_filter(opp_edge, opp_edgeid, *costing, opp_tile, pp.location->search_filter()) ||
             !is_reachable(get_reach(opp_edgeid, opp_edge)))
-          continue;
+          return false;
 
         candidate.edge_id = opp_edgeid;
         candidate.edge = opp_edge;
@@ -984,12 +979,20 @@ private:
       // ignore node correlation (for now)
       const auto edge_count_before = correlation->edges_size();
       correlate_edge(*pp.location, candidate);
-      if (correlation->edges_size() > edge_count_before) {
-        correlation->set_street_matched(true);
-        return true;
-      }
+      return correlation->edges_size() > edge_count_before;
+    };
+
+    // the closest reachable of the best matches is always taken, the others only within the
+    // location's radius, the pool is sorted by distance
+    bool matched = false;
+    for (size_t i = 0; i < pool.size(); ++i) {
+      if (matched && pool[i].distance > pp.location->radius())
+        break;
+      if (scores[i] == best_hint_score && try_correlate(pool[i]))
+        matched = true;
     }
-    return false;
+    correlation->set_street_matched(matched);
+    return matched;
   }
 
   // create the PathLocation corresponding to the best projection of the given candidate
@@ -1010,7 +1013,7 @@ private:
       // keep a look up around so we dont add duplicates with worse scores
       correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
-      // first add the max 2 edges which have had the highest scored hint match
+      // first add the edges of the highest scored hint matches
       const int hint_end = correlate_hint(pp) ? pp.location->correlation().edges_size() : 0;
       // go through getting all the results for this one
       for (const auto& candidate : pp.reachable) {

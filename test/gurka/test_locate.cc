@@ -587,6 +587,18 @@ TEST_F(StreetHint, HintTakesClosestBestMatch) {
   EXPECT_EQ(get_locate_edge_ids(do_locate("Bergstr")), get_way_edge_ids("G", "H"));
 }
 
+TEST_F(StreetHint, HintRadiusTakesAllBestMatchesWithin) {
+  // GH is 20 m and AB 40 m away, both are Bergstraße
+  auto ids = get_way_edge_ids("G", "H");
+  ids.merge(get_way_edge_ids("A", "B"));
+  const auto api = do_locate("Bergstr", [](valhalla::Location& loc) { loc.set_radius(50); });
+  EXPECT_EQ(get_locate_edge_ids(api), ids);
+  EXPECT_TRUE(api.options().locations(0).correlation().street_matched());
+
+  const auto api_small = do_locate("Bergstr", [](valhalla::Location& loc) { loc.set_radius(30); });
+  EXPECT_EQ(get_locate_edge_ids(api_small), get_way_edge_ids("G", "H"));
+}
+
 TEST_F(StreetHint, HintUnreachableTakesNextBestMatch) {
   // the island GH is the closest best match but can't reach 3 nodes, AB is the same street
   auto reach = [](valhalla::Location& loc) { loc.set_minimum_reachability(3); };
