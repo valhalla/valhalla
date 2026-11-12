@@ -32,6 +32,12 @@ pub enum Error {
     NoTiles(PathBuf),
     #[error("no tile in {} matches the requested area", .0.display())]
     NoTilesInArea(PathBuf),
+    #[error(
+        "--in-place would truncate {} while reading it through {}; choose another output or drop --in-place",
+        .output.display(),
+        .input.display()
+    )]
+    InPlaceOverInput { input: PathBuf, output: PathBuf },
     #[error("tile {name} has {size} bytes, more than index.bin can describe")]
     TileTooLarge { name: String, size: u64 },
     #[error("tile {name} is too small to hold a graph tile header")]

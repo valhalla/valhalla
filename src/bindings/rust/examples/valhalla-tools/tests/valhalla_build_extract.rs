@@ -723,3 +723,181 @@ fn a_geofabrik_index_closing_the_connection_without_answer_is_an_error() {
 
     assert_eq!(output.status.code(), Some(1));
 }
+
+fn is_number_of(text: &str, digits: usize) -> bool {
+    text.len() == digits && text.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+/// Checks a leading `YYYY-MM-DD HH:MM:SS` and returns what follows it.
+fn after_date_time(line: &str) -> &str {
+    let (date, rest) = line.split_once(' ').unwrap();
+    let date: Vec<_> = date.split('-').collect();
+    let time: Vec<_> = rest[..8].split(':').collect();
+    let well_formed = date.len() == 3
+        && is_number_of(date[0], 4)
+        && is_number_of(date[1], 2)
+        && is_number_of(date[2], 2)
+        && time.len() == 3
+        && time.iter().all(|part| is_number_of(part, 2));
+    assert!(well_formed, "no date and time at the start of {line:?}");
+    &rest[8..]
+}
+
+fn extract_log_line(output: &Output) -> String {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    stderr
+        .lines()
+        .find(|line| line.contains("wrote the tile extract"))
+        .unwrap_or_else(|| panic!("no log line in {stderr:?}"))
+        .to_owned()
+}
+
+/// `2026-11-12 12:59:04,737  INFO: message key=value`
+fn assert_python_log_line(line: &str) {
+    let rest = after_date_time(line);
+    let (millis, rest) = rest.strip_prefix(',').unwrap().split_at(3);
+    assert!(is_number_of(millis, 3), "milliseconds in {line:?}");
+    assert!(
+        rest.starts_with("  INFO: wrote the tile extract tiles=3 path="),
+        "level and message in {line:?}"
+    );
+}
+
+#[test]
+fn log_lines_use_the_python_format_by_default() {
+    let workspace = Workspace::utrecht();
+
+    let output = workspace.build_extract(&["-v"]);
+
+    assert_python_log_line(&extract_log_line(&output));
+}
+
+#[test]
+fn the_python_log_format_has_milliseconds_and_a_right_aligned_level() {
+    let workspace = Workspace::utrecht();
+
+    let output = workspace.build_extract(&["-v", "--log-format", "python"]);
+
+    assert_python_log_line(&extract_log_line(&output));
+}
+
+#[test]
+fn the_valhalla_log_format_has_nanoseconds_and_a_bracketed_level() {
+    let workspace = Workspace::utrecht();
+
+    let output = workspace.build_extract(&["-v", "--log-format", "valhalla"]);
+
+    let line = extract_log_line(&output);
+    let rest = after_date_time(&line);
+    let (nanos, rest) = rest.strip_prefix('.').unwrap().split_at(9);
+    assert!(is_number_of(nanos, 9), "nanoseconds in {line:?}");
+    assert!(
+        rest.starts_with(" [INFO] wrote the tile extract tiles=3 path="),
+        "level and message in {line:?}"
+    );
+}
+
+#[test]
+fn in_place_archives_pass_the_format_checks_over_a_longer_old_file() {
+    let workspace = Workspace::utrecht();
+    for name in ["tiles.tar", "traffic.tar"] {
+        fs::write(workspace.path(name), vec![0xff; 100_000]).unwrap();
+    }
+
+    assert_success(&workspace.build_extract(&["--in-place", "-O", "-t"]));
+
+    let tiles: Vec<_> = UTRECHT.iter().collect();
+    let indexes_match = ["tiles.tar", "traffic.tar"].map(|name| {
+        let path = workspace.path(name);
+        read_index(&path) == index_of_members(&path, &tiles)
+    });
+    assert_eq!(indexes_match, [true, true]);
+}
+
+#[test]
+fn in_place_refuses_to_rewrite_its_input_tar() {
+    let workspace = Workspace::utrecht();
+    assert_success(&workspace.build_extract(&[]));
+    let extract = workspace.path("tiles.tar");
+    let before = fs::read(&extract).unwrap();
+
+    let output = workspace.build_extract(&["--in-place", "-O", "-e", extract.to_str().unwrap()]);
+
+    assert_eq!(
+        (output.status.code(), fs::read(&extract).unwrap()),
+        (Some(1), before)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn in_place_recognises_its_input_tar_behind_a_hard_link() {
+    let workspace = Workspace::utrecht();
+    assert_success(&workspace.build_extract(&[]));
+    let extract = workspace.path("tiles.tar");
+    let alias = workspace.path("alias.tar");
+    fs::hard_link(&extract, &alias).unwrap();
+    let before = fs::read(&extract).unwrap();
+
+    let output = workspace.build_extract(&["--in-place", "-O", "-e", alias.to_str().unwrap()]);
+
+    assert_eq!(
+        (output.status.code(), fs::read(&extract).unwrap()),
+        (Some(1), before)
+    );
+}
+
+#[cfg(unix)]
+fn symlinked_output(workspace: &Workspace) -> PathBuf {
+    let target = workspace.path("real/tiles.tar");
+    fs::create_dir_all(target.parent().unwrap()).unwrap();
+    fs::write(&target, "old").unwrap();
+    std::os::unix::fs::symlink(&target, workspace.path("tiles.tar")).unwrap();
+    target
+}
+
+#[cfg(unix)]
+#[test]
+fn in_place_writes_through_a_symlinked_output() {
+    let workspace = Workspace::utrecht();
+    let target = symlinked_output(&workspace);
+
+    assert_success(&workspace.build_extract(&["--in-place", "-O"]));
+
+    let link = fs::symlink_metadata(workspace.path("tiles.tar")).unwrap();
+    assert_eq!(
+        (link.is_symlink(), member_names(&target).len()),
+        (true, 1 + UTRECHT.len())
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn without_in_place_a_symlinked_output_is_replaced_by_a_regular_file() {
+    let workspace = Workspace::utrecht();
+    let target = symlinked_output(&workspace);
+
+    assert_success(&workspace.build_extract(&["-O"]));
+
+    let link = fs::symlink_metadata(workspace.path("tiles.tar")).unwrap();
+    assert_eq!(
+        (link.is_file(), fs::read(&target).unwrap()),
+        (true, b"old".to_vec())
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn in_place_keeps_the_permissions_of_an_existing_output() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let workspace = Workspace::utrecht();
+    let extract = workspace.path("tiles.tar");
+    fs::write(&extract, "old").unwrap();
+    fs::set_permissions(&extract, fs::Permissions::from_mode(0o640)).unwrap();
+
+    assert_success(&workspace.build_extract(&["--in-place", "-O"]));
+
+    let mode = fs::metadata(&extract).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o640);
+}

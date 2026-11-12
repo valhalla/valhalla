@@ -1,4 +1,4 @@
-use std::fs::{self, File};
+use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -47,14 +47,57 @@ pub(crate) struct ArchivedTile {
     pub(crate) entry: IndexEntry,
 }
 
-/// Writes `index.bin`, then one member per tile in order; `output` only appears once complete.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum WriteMode {
+    /// Build next to the output and rename it over the output once complete.
+    Replace,
+    /// Truncate and rewrite the output, following symlinks and keeping its owner and permissions.
+    InPlace,
+}
+
+enum OutputFile {
+    Temporary(NamedTempFile),
+    InPlace(File),
+}
+
+impl OutputFile {
+    fn create(output: &Path, mode: WriteMode) -> io::Result<Self> {
+        fs::create_dir_all(parent_dir(output))?;
+        match mode {
+            WriteMode::Replace => create_temp_file(output).map(Self::Temporary),
+            WriteMode::InPlace => OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(output)
+                .map(Self::InPlace),
+        }
+    }
+
+    fn file_mut(&mut self) -> &mut File {
+        match self {
+            Self::Temporary(temp) => temp.as_file_mut(),
+            Self::InPlace(file) => file,
+        }
+    }
+
+    fn finish(self, output: &Path) -> io::Result<()> {
+        match self {
+            Self::Temporary(temp) => temp.persist(output).map(drop).map_err(|error| error.error),
+            Self::InPlace(_) => Ok(()),
+        }
+    }
+}
+
+/// Writes `index.bin`, then one member per tile in order.
 pub(crate) fn write_indexed_tar<T, R: Read>(
     output: &Path,
+    mode: WriteMode,
     tiles: &[T],
     mut member: impl FnMut(&T) -> Result<Member<R>, Error>,
 ) -> Result<Vec<ArchivedTile>, Error> {
-    let mut temp = create_temp_file(output).map_err(Error::io(output))?;
-    let file = temp.as_file_mut();
+    let mut output_file = OutputFile::create(output, mode).map_err(Error::io(output))?;
+    let file = output_file.file_mut();
     let mtime = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |since_epoch| since_epoch.as_secs());
@@ -106,8 +149,7 @@ pub(crate) fn write_indexed_tar<T, R: Read>(
         file.sync_all()
     };
     finish(file).map_err(Error::io(output))?;
-    temp.persist(output)
-        .map_err(|error| Error::io(output)(error.error))?;
+    output_file.finish(output).map_err(Error::io(output))?;
     Ok(archived)
 }
 
@@ -143,12 +185,33 @@ fn append(
     Ok(offset)
 }
 
-fn create_temp_file(output: &Path) -> io::Result<NamedTempFile> {
-    let dir = match output.parent() {
+/// Whether both paths name the same existing file, through symlinks and hard links.
+pub(crate) fn is_same_file(a: &Path, b: &Path) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        match (fs::metadata(a), fs::metadata(b)) {
+            (Ok(a), Ok(b)) => a.dev() == b.dev() && a.ino() == b.ino(),
+            _ => false,
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        match (fs::canonicalize(a), fs::canonicalize(b)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
+fn parent_dir(output: &Path) -> &Path {
+    match output.parent() {
         Some(parent) if !parent.as_os_str().is_empty() => parent,
         _ => Path::new("."),
-    };
-    fs::create_dir_all(dir)?;
+    }
+}
+
+fn create_temp_file(output: &Path) -> io::Result<NamedTempFile> {
     let file_name = output
         .file_name()
         .map(|name| name.to_string_lossy())
@@ -162,7 +225,7 @@ fn create_temp_file(output: &Path) -> io::Result<NamedTempFile> {
         use std::os::unix::fs::PermissionsExt;
         builder.permissions(fs::Permissions::from_mode(0o666));
     }
-    builder.tempfile_in(dir)
+    builder.tempfile_in(parent_dir(output))
 }
 
 #[cfg(test)]
@@ -202,7 +265,7 @@ mod tests {
     fn a_tile_too_large_for_the_index_is_an_error() {
         let dir = tempfile::tempdir().unwrap();
         let output = dir.path().join("tiles.tar");
-        let result = write_indexed_tar(&output, &[()], |_| {
+        let result = write_indexed_tar(&output, WriteMode::Replace, &[()], |_| {
             Ok(Member {
                 name: "0/003/196.gph".to_owned(),
                 tile_id: 25568,
@@ -217,7 +280,7 @@ mod tests {
     fn a_failed_write_leaves_neither_output_nor_temporary_file() {
         let dir = tempfile::tempdir().unwrap();
         let output = dir.path().join("tiles.tar");
-        let result = write_indexed_tar(&output, &[()], |_| {
+        let result = write_indexed_tar(&output, WriteMode::Replace, &[()], |_| {
             Ok(Member {
                 name: "0/003/196.gph".to_owned(),
                 tile_id: 25568,

@@ -11,7 +11,7 @@ mod source;
 mod tile;
 mod traffic;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tracing::{debug, info};
 
@@ -19,6 +19,7 @@ pub use error::Error;
 pub use geofabrik::{GEOFABRIK_INDEX_URL, region_list};
 pub use geometry::{Rect, parse_bbox};
 
+use archive::WriteMode;
 use geometry::Polygon;
 use source::{SourceTile, TileSource};
 
@@ -40,6 +41,8 @@ pub struct Options {
     /// Output path; with it, an existing `mjolnir.tile_extract` becomes the input.
     pub extract_tar: Option<PathBuf>,
     pub overwrite: bool,
+    /// Rewrite existing outputs in place instead of replacing them; a failure can leave them partial.
+    pub in_place: bool,
     pub with_traffic: bool,
     pub filter: TileFilter,
     pub geofabrik_index_url: String,
@@ -79,15 +82,36 @@ pub fn run(options: &Options) -> Result<(), Error> {
         return Err(Error::NoTilesInArea(source.path().to_path_buf()));
     }
 
-    let archived = archive::write_indexed_tar(&output, &tiles, |tile| source.read_tile(tile))?;
+    let mode = if options.in_place {
+        WriteMode::InPlace
+    } else {
+        WriteMode::Replace
+    };
+    if let TileSource::Tar(input) = &source {
+        refuse_truncating_input(mode, input, &output)?;
+    }
+    let archived =
+        archive::write_indexed_tar(&output, mode, &tiles, |tile| source.read_tile(tile))?;
     info!(tiles = archived.len(), path = %output.display(), "wrote the tile extract");
 
     if options.with_traffic {
         let traffic_output = mjolnir
             .traffic_extract
             .unwrap_or_else(|| output.with_file_name("traffic.tar"));
-        traffic::write_extract(&output, &archived, &traffic_output)?;
+        refuse_truncating_input(mode, &output, &traffic_output)?;
+        traffic::write_extract(&output, &archived, &traffic_output, mode)?;
         info!(path = %traffic_output.display(), "wrote the traffic extract");
+    }
+    Ok(())
+}
+
+/// Rewriting a file in place while reading it would destroy the data being read.
+fn refuse_truncating_input(mode: WriteMode, input: &Path, output: &Path) -> Result<(), Error> {
+    if mode == WriteMode::InPlace && archive::is_same_file(input, output) {
+        return Err(Error::InPlaceOverInput {
+            input: input.to_path_buf(),
+            output: output.to_path_buf(),
+        });
     }
     Ok(())
 }

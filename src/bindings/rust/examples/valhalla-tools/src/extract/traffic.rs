@@ -5,7 +5,7 @@ use std::path::Path;
 use tracing::debug;
 
 use super::Error;
-use super::archive::{self, ArchivedTile, Member};
+use super::archive::{self, ArchivedTile, Member, WriteMode};
 
 /// `TRAFFIC_TILE_VERSION` in baldr/traffictile.h, which is the major version of Valhalla.
 const TRAFFIC_TILE_VERSION: u32 = 3;
@@ -19,9 +19,10 @@ pub(crate) fn write_extract(
     tile_extract: &Path,
     tiles: &[ArchivedTile],
     output: &Path,
+    mode: WriteMode,
 ) -> Result<(), Error> {
     let mut extract = File::open(tile_extract).map_err(Error::io(tile_extract))?;
-    archive::write_indexed_tar(output, tiles, |tile| {
+    archive::write_indexed_tar(output, mode, tiles, |tile| {
         let edge_count =
             read_directed_edge_count(&mut extract, tile).map_err(|source| match source.kind() {
                 io::ErrorKind::UnexpectedEof => Error::TruncatedTileHeader {

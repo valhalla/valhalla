@@ -11,6 +11,8 @@
     clippy::unimplemented
 )]
 
+mod log_format;
+
 use std::env;
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -19,6 +21,8 @@ use std::process::ExitCode;
 use clap::{ArgAction, ArgGroup, Parser};
 use tracing::Level;
 use valhalla_tools::extract::{self, Options, Rect, TileFilter};
+
+use log_format::{LineFormat, LogFormat};
 
 /// Replaces the Geofabrik index URL, for tests and mirrors.
 const GEOFABRIK_INDEX_URL_VAR: &str = "VALHALLA_GEOFABRIK_INDEX_URL";
@@ -41,6 +45,10 @@ struct Cli {
     /// Overwrite an existing output tar.
     #[arg(short = 'O', long)]
     overwrite: bool,
+    /// Write the tars directly at their final path, through symlinks and keeping an existing
+    /// file's owner and permissions. A failed run may leave a partial file behind.
+    #[arg(long)]
+    in_place: bool,
     /// Also write a traffic.tar skeleton.
     #[arg(short = 't', long)]
     with_traffic: bool,
@@ -63,11 +71,14 @@ struct Cli {
     /// Accumulative verbosity: -v for info, -vv for debug.
     #[arg(short, long = "verbosity", action = ArgAction::Count)]
     verbosity: u8,
+    /// Log line format: the Python script's or Valhalla's C++ logger's.
+    #[arg(long, value_enum, default_value_t = LogFormat::Python)]
+    log_format: LogFormat,
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    init_logging(cli.verbosity);
+    init_logging(cli.verbosity, cli.log_format);
     match run(cli) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
@@ -77,7 +88,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn init_logging(verbosity: u8) {
+fn init_logging(verbosity: u8, format: LogFormat) {
     let level = match verbosity {
         0 => Level::ERROR,
         1 => Level::INFO,
@@ -86,6 +97,7 @@ fn init_logging(verbosity: u8) {
     tracing_subscriber::fmt()
         .with_writer(io::stderr)
         .with_max_level(level)
+        .event_format(LineFormat(format))
         .init();
 }
 
@@ -117,6 +129,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
         inline_config: cli.inline_config,
         extract_tar: cli.extract_tar,
         overwrite: cli.overwrite,
+        in_place: cli.in_place,
         with_traffic: cli.with_traffic,
         filter,
         geofabrik_index_url,
