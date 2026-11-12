@@ -24,6 +24,13 @@ DST changes are the most important reason to update regularly.
 - if the parent timezone has an ID < 387, it just needs a bit shift of the parent timezone
 - if the parent timezone is itself a previously added new timezone, one might add another field to NodeInfo; follow the instructions in baldr/nodeinfo.h/cc
 4. Sanity check step 3! Both looking at the release notes of the IANA data and adding test cases.
+
+### Updating an existing tileset
+
+`valhalla_update_timezones -c valhalla.json` re-assigns the time zone of every node in `mjolnir.tile_dir` from `mjolnir.timezone`, so a new timezone db doesn't need a tileset rebuild. On node changes, the new tile's checksum is recalculated, same for the tileset's build id; transit nodes keep the time zone of their GTFS feed. Rebuild the tar extract afterwards if you serve one.
+
+This covers geometry changes only: the db's time zones need to be known to the compiled Valhalla instance, which also holds the IANA rules (DST changes). New timezones or rules still need the update process above.
+
 ### Important notes
 - The 2 repos we source our information from are not always in-sync. If there's a IANA release being skipped in the boundary builder project, it usually means that nothing changed wrt geometries. However, you'll need to verify that.
 - Regarding data compatibility:
