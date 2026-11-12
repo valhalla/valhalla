@@ -499,6 +499,19 @@ from_cache(const TP& tp,
   infos.emplace_back(tp.get_info());
   return infos.back();
 }
+
+// protect against missing tzdata on the host
+const date::tzdb& load_tzdb() {
+  if constexpr (!USE_OS_TZDB) {
+    return date::get_tzdb();
+  }
+  try {
+    return date::get_tzdb();
+  } catch (const std::runtime_error& e) {
+    throw std::runtime_error(
+        "Built with ENABLE_OS_TZDB but can't find the OS 'tzdata' package, install it.");
+  }
+}
 } // namespace
 
 using namespace valhalla::baldr;
@@ -507,7 +520,7 @@ namespace baldr {
 namespace DateTime {
 
 tz_db_t::tz_db_t() {
-  const auto& db = date::get_tzdb();
+  const auto& db = load_tzdb();
 
   // update timezones & run the tests will fail here if new timezones were added.
   // the OS zoneinfo lists links as zones which we don't keep around, so only check vendored tzdata

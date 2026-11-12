@@ -1,4 +1,5 @@
 #include "thor/worker.h"
+#include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include "thor/isochrone.h"
 
