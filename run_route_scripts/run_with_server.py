@@ -59,21 +59,25 @@ def make_request(post_body):
           f.write('%s' % json.dumps(response, sort_keys=True, indent=2))
 
       # summary json
-      elif args.format == 'json':
-        out = {'routes':[{'legs':[]}]}
-        for leg in response['trip']['legs']:
-          out['routes'][-1]['legs'].append({'maneuvers':[]})
-          for man in leg['maneuvers']:
-            out['routes'][-1]['legs'][-1]['maneuvers'].append({'length': man['length'], 'time': man['time'], 'instruction': man['instruction']})
-        out['performance'] = {'response_time': elapsed}
-        f.write('%s' % json.dumps(out, sort_keys=True, indent=2))
-
-      # csv
-      else:  
-        f.write('length (meters), time (seconds), instruction' + os.linesep)
-        for leg in response['trip']['legs']:
-          for man in leg['maneuvers']:
-            f.write('%d,%d,%s%s' % (man['length']*1000, man['time'], man['instruction'], os.linesep))
+      elif args.url.endswith("route"):
+        if args.format == 'json':
+          out = {'routes':[{'legs':[]}]}
+          for leg in response['trip']['legs']:
+            out['routes'][-1]['legs'].append({'maneuvers':[]})
+            for man in leg['maneuvers']:
+              out['routes'][-1]['legs'][-1]['maneuvers'].append({'length': man['length'], 'time': man['time'], 'instruction': man['instruction']})
+          out['performance'] = {'response_time': elapsed}
+          f.write('%s' % json.dumps(out, sort_keys=True, indent=2))
+        # csv
+        else:  
+          f.write('length (meters), time (seconds), instruction' + os.linesep)
+          for leg in response['trip']['legs']:
+            for man in leg['maneuvers']:
+              f.write('%d,%d,%s%s' % (man['length']*1000, man['time'], man['instruction'], os.linesep))
+      elif args.url.endswith("locate"):
+        out = {"performance": {"response_time": elapsed}}
+        f.write(json.dumps(out, sort_keys=True, indent=2))
+      
      
     except Exception as e:
       f.write('%s' % e)

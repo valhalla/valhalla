@@ -98,6 +98,9 @@ protected:
   unsigned int default_street_side_tolerance;
   unsigned int default_street_side_max_distance;
   float default_breakage_distance;
+  unsigned int default_street_hint_radius;
+  unsigned int max_street_hint_radius;
+  float default_street_hint_threshold;
   // Minimum and maximum walking distances for multimodal algorithms (to validate input).
   size_t min_multimodal_walking_dist;
   size_t max_multimodal_walking_dist;

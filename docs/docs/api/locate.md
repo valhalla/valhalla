@@ -334,6 +334,14 @@ Here are some sample results with `verbose` set to `true`:
 ```
 
 ### Attribute Descriptions for Responses
+#### Location
+
+| Key | Description |
+| :------------------ | :----------- |
+| `street` | The location's `street`, only present if it had one |
+| `street_score` | The best score any edge within `street_radius` reached against the `street`, also when it's below `street_threshold` |
+| `street_matched` | Whether `edges` are the ones matching the `street`, in which case `filtered_edges` holds what would have been correlated without it |
+
 #### Edge
 ##### Verbose
 

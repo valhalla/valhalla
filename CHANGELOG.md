@@ -31,6 +31,7 @@
    * CHANGED: a `tile_url` connection times out after 5 s instead of curl's default of 300 s, so a tile server that doesn't answer fails fast [#6424](https://github.com/valhalla/valhalla/pull/6424)
    * CHANGED: replace `memset` with C++20 default member initializers for bitfields in `DirectedEdge`, `NodeInfo`, and `GraphTileHeader`; drop empty default constructors where possible [#6128](https://github.com/valhalla/valhalla/issues/6128)
    * BREAKING: warning instead of error on failed linear cost factor edge walk [#6443](https://github.com/valhalla/valhalla/pull/6443) 
+   * ADDED: `street` location parameter to prefer streets with matching name [#6467](https://github.com/valhalla/valhalla/pull/6467)
    * UPDATED: timezone database to 2026f [#6454](https://github.com/valhalla/valhalla/pull/6454)
    * ADDED: Support pedestrian routing on `highway=ladder` [#6440](https://github.com/valhalla/valhalla/pull/6440)
    * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)

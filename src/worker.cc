@@ -235,6 +235,14 @@ void parse_location(valhalla::Location* location,
   if (street) {
     location->set_street(*street);
   }
+  auto street_hint_radius = rapidjson::get_optional<unsigned int>(r_loc, "/street_radius");
+  if (street_hint_radius) {
+    location->set_street_radius(*street_hint_radius);
+  }
+  auto street_hint_threshold = rapidjson::get_optional<float>(r_loc, "/street_threshold");
+  if (street_hint_threshold) {
+    location->set_street_threshold(*street_hint_threshold);
+  }
   auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
   if (date_time) {
     location->set_date_time(*date_time);

@@ -7,6 +7,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <format>
 #include <functional>
@@ -96,6 +97,16 @@ std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location
     location.mutable_search_filter()->set_exclude_closures(true);
   if (!location.search_filter().has_level())
     location.mutable_search_filter()->set_level(baldr::kMaxLevel);
+
+  // a 0 radius or threshold doesn't make sense, assume defaults and clamp threshold
+  if (!location.street_radius()) {
+    location.set_street_radius(default_street_hint_radius);
+  } else if (location.street_radius() > max_street_hint_radius) {
+    location.set_street_radius(max_street_hint_radius);
+  }
+  if (location.street_threshold() <= 0.f)
+    location.set_street_threshold(default_street_hint_threshold);
+  location.set_street_threshold(std::clamp(location.street_threshold(), 0.f, 1.f));
 
   return modified_search_cutoff;
 }
@@ -364,9 +375,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
+        kv.first == "max_radius" || kv.first == "max_street_radius" ||
+        kv.first == "max_timedep_distance" || kv.first == "max_timedep_distance_matrix" ||
+        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_exclude_polygons_vertices" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
         kv.first == "status" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
@@ -452,6 +464,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   if (!mvt_cache_dir_.empty() && !std::filesystem::exists(mvt_cache_dir_))
     std::filesystem::create_directory(mvt_cache_dir_);
   mvt_cache_min_zoom_ = config.get<uint32_t>("loki.service_defaults.mvt_cache_min_zoom");
+  default_street_hint_radius = config.get<unsigned int>("loki.service_defaults.street_radius", 200);
+  max_street_hint_radius = config.get<unsigned int>("service_limits.max_street_radius", 5000);
+  default_street_hint_threshold = config.get<float>("loki.service_defaults.street_threshold", 0.6);
 
   // signal that the worker started successfully
   started();
