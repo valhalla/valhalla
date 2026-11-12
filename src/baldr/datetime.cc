@@ -1,6 +1,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
+#include "midgard/logging.h"
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -484,11 +485,38 @@ tz_db_t::tz_db_t() {
   }
 
   zones.reserve(tz_name_to_id.size());
-  for (const auto& tz_pair : tz_name_to_id) {
-    // we find either the official timezone or we get the target timezone of a link (i.e. deprecated
-    // time zone)
-    auto* tz = db.locate_zone(tz_pair.first);
-    zones[tz_pair.second] = &*tz;
+  std::vector<std::pair<std::string, size_t>> missing_tz;
+  for (const auto& [name, idx] : tz_name_to_id) {
+    try {
+      // we find either the official timezone or we get the target timezone of a link (i.e.
+      // deprecated time zone)
+      zones[idx] = db.locate_zone(name);
+    } catch (const std::runtime_error&) {
+      // should never happen that we don't find a zone in our vendored tzdata
+      if constexpr (!USE_OS_TZDB) {
+        throw;
+      }
+      missing_tz.emplace_back(name, idx);
+    }
+  }
+
+  // older OS tzdata (than our vendored one) could lack new zones in which case
+  // we look for its predecessor in the lower 9 bits (valid down until 2018d)
+  constexpr size_t kBaseTzMask = (1 << 9) - 1;
+  for (const auto& [tz_name, tz_idx] : missing_tz) {
+    if (zones.contains(tz_idx)) {
+      // it's a renamed tz
+      continue;
+    }
+    // else see if it's a new one and try to find the deprecated one
+    const auto base_idx = zones.find(tz_idx & kBaseTzMask);
+    if (tz_idx > kBaseTzMask && base_idx != zones.end()) {
+      LOG_WARN("Time zone {} not in OS tzdb, falling back to {}", tz_name, base_idx->second->name());
+      zones[tz_idx] = base_idx->second;
+    } else {
+      // only fails for tzdata < 2018d releases
+      LOG_WARN("Time zone {} not in OS tzdb, can't resolve index {}", tz_name, tz_idx);
+    }
   }
 }
 
