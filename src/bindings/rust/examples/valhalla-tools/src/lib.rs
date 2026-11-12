@@ -1,5 +1,5 @@
 //! Valhalla data tools that do not need libvalhalla: the libraries behind the
-//! `valhalla_build_extract` and `valhalla_build_elevation` binaries.
+//! `valhalla_build_extract`, `valhalla_build_elevation` and `valhalla_build_config` binaries.
 #![forbid(unsafe_code)]
 #![deny(
     clippy::unwrap_used,
@@ -9,6 +9,7 @@
     clippy::unimplemented
 )]
 
+pub mod build_config;
 pub mod config;
 pub mod elevation;
 pub mod extract;

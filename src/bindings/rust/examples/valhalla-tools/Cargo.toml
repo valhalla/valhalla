@@ -14,13 +14,21 @@ path = "src/main.rs"
 name = "valhalla_build_elevation"
 path = "src/bin/valhalla_build_elevation.rs"
 
+[[bin]]
+name = "valhalla_build_config"
+path = "src/bin/valhalla_build_config.rs"
+
 [dependencies]
 anyhow = "1"
 # Local time with DST for the Python-style log lines, safe in multi-threaded processes.
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-clap = { version = "4", features = ["derive"] }
+# `string`: valhalla_build_config builds value names and defaults at runtime from its table.
+clap = { version = "4", features = ["derive", "string"] }
 # Elevation tiles are served gzipped and stored as such, gunzipped or recompressed to LZ4.
 flate2 = "1"
+# Ordered maps for Python's dict semantics, without serde_json's preserve_order changing the
+# other binaries.
+indexmap = "2"
 # liblz4 itself, as skadi and the script's python-lz4 use it, for its HC levels and frame options.
 lz4 = "1.28"
 serde_json = "1"

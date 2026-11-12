@@ -1542,6 +1542,7 @@ dependencies = [
  "chrono",
  "clap",
  "flate2",
+ "indexmap",
  "lz4",
  "serde_json",
  "tar",
