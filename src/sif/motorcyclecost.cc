@@ -279,10 +279,14 @@ public:
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
+               const baldr::GraphId& edgeid,
                uint16_t disallow_mask = kDisallowNone) const override {
+    if (AllowedLinearFeature(edgeid)) {
+      return true;
+    }
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+    return DynamicCost::Allowed(edge, tile, edgeid, disallow_mask) && !edge->bss_connection() &&
            (allow_closures || !tile->IsClosed(edge));
   }
   // Hidden in source file so we don't need it to be protected
@@ -462,6 +466,19 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= EdgeFactor(edgeid);
+  if (curvature_step_ > kNeutralCurvatureStep) {
+    uint32_t curvature =
+        (edge->use() != baldr::Use::kRoad || edge->link() || edge->roundabout() || edge->internal())
+            ? 0
+            : edge->curvature();
+    if (edge->density() < kCurvatureRuralDensity) {
+      factor *= kCurvatureFactor[curvature_step_][curvature];
+    } else if (edge->density() < kCurvatureUrbanDensity) {
+      factor *= suburban_curvature_factor_ * kCurvatureFactor[curvature_step_][curvature];
+    } else {
+      factor *= urban_curvature_factor_;
+    }
+  }
 
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
@@ -816,6 +833,25 @@ EXPECT_THAT(ctorTester->use_tolls , test::IsBetween(kUseTollsRange.min, kUseToll
    }
    **/
 }
+TEST(MotorcycleCost, testCurvatureFactorArray) {
+  for (uint32_t s = 0; s <= kNeutralCurvatureStep; s++) {
+    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
+      EXPECT_EQ(kCurvatureFactor[s][c], 1.f);
+    }
+  }
+
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    EXPECT_EQ(kCurvatureFactor[s][baldr::kMaxCurvatureFactor], 1.f);
+  }
+
+  for (uint32_t s = kNeutralCurvatureStep + 1; s < kCurvatureSteps; s++) {
+    for (uint32_t c = 0; c < baldr::kMaxCurvatureFactor; c++) {
+      EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s][c + 1]);
+      EXPECT_GT(kCurvatureFactor[s][c], kCurvatureFactor[s - 1][c]);
+    }
+  }
+}
+
 } // namespace
 
 #endif

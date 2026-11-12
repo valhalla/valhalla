@@ -245,6 +245,41 @@ constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
 
+constexpr uint32_t kCurvatureSteps = 21;
+constexpr uint32_t kNeutralCurvatureStep = kCurvatureSteps / 2;
+constexpr uint32_t kCurvatureRuralDensity = 3;
+constexpr uint32_t kCurvatureUrbanDensity = 7;
+constexpr float kMaxStraightRoadFactor = 6.f;
+constexpr float kSuburbanCurvatureFactor = 0.1f;
+constexpr float kUrbanCurvatureFactor = 2.f;
+
+constexpr float curvature_strength(uint32_t step) {
+  if (step <= kNeutralCurvatureStep) {
+    return 0.f;
+  }
+  float t = static_cast<float>(step - kNeutralCurvatureStep) / kNeutralCurvatureStep;
+  return t * t;
+}
+
+constexpr std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps>
+populate_curvaturefactor() {
+  std::array<std::array<float, baldr::kMaxCurvatureFactor + 1>, kCurvatureSteps> curvaturefactor{};
+  for (uint32_t s = 0; s < kCurvatureSteps; s++) {
+    float strength =
+        curvature_strength(s); // strength grows quadratically with use_curvature in range [0.5, 1.0]
+    for (uint32_t c = 0; c <= baldr::kMaxCurvatureFactor; c++) {
+      float straightness = static_cast<float>(baldr::kMaxCurvatureFactor - c) /
+                           baldr::kMaxCurvatureFactor; // inverted curvature
+      curvaturefactor[s][c] =
+          1.f +
+          kMaxStraightRoadFactor * strength * straightness *
+              straightness; // instead of favoring curvy roads, we increasingly avoid straight roads
+    }
+  }
+  return curvaturefactor;
+}
+constexpr auto kCurvatureFactor = populate_curvaturefactor();
+
 /**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior
@@ -429,11 +464,13 @@ public:
    *
    * @param edge           the edge that should or shouldnt be allowed
    * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param edgeid         the id of the edge
    * @param disallow_mask  a mask that controls additional properties that should disallow the edge
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
                               const baldr::graph_tile_ptr&,
+                              const baldr::GraphId&,
                               uint16_t disallow_mask = kDisallowNone) const {
     auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
@@ -788,6 +825,31 @@ public:
       }
     }
     return destonly_access_restr_mask;
+  }
+
+  /**
+   * Checks the edge's access restrictions (height, weight, etc.) against the vehicle, for
+   * filtering location candidates. Time-dependent restrictions and those that exempt
+   * destinations are skipped.
+   *
+   * @param edge    The edge to check
+   * @param tile    The edge's tile
+   * @param edgeid  The edge's id
+   * @return true if the vehicle is within every such restriction on the edge
+   */
+  inline bool MeetsAccessRestrictions(const baldr::DirectedEdge* edge,
+                                      const baldr::graph_tile_ptr& tile,
+                                      const baldr::GraphId& edgeid) const {
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_))
+      return true;
+
+    for (const auto& restriction : tile->GetAccessRestrictions(edgeid.id(), access_mask_)) {
+      if (restriction.except_destination())
+        continue;
+      if (!ModeSpecificAllowed(restriction))
+        return false;
+    }
+    return true;
   }
 
   /***
@@ -1317,6 +1379,13 @@ protected:
    */
   virtual void set_use_lit(float use_lit);
 
+  /**
+   * Set the curvature step index from the costing preference value.
+   * @param use_curvature curvature preference in range [0, 1]: <= 0.5 = no effect,
+   *                      1 = prefer curvy.
+   */
+  virtual void set_use_curvature(float use_curvature);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -1352,6 +1421,9 @@ protected:
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
   float speed_penalty_factor_; // Avoid faster edges than top speed factor.
+  uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
+  float suburban_curvature_factor_;
+  float urban_curvature_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1508,6 +1580,9 @@ protected:
     // Calculate lit factor from costing options.
     set_use_lit(costing_options.use_lit());
 
+    // Calculate curvature factor from costing options.
+    set_use_curvature(costing_options.use_curvature());
+
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
     service_factor_ = costing_options.service_factor();
@@ -1637,6 +1712,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
+
+  ranged_default_t<float> use_curvature_;
 
   ranged_default_t<float> closure_factor_;
   ranged_default_t<float> speed_penalty_factor_;

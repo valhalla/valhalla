@@ -233,7 +233,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   auto reverse_time_info = baldr::TimeInfo::invalid();
   if (check_invariant_reverse_time(request.options()) &&
       std::all_of(time_infos.begin(), time_infos.end(), [&time_infos](const baldr::TimeInfo& ti) {
-        return ti.valid && ti.local_time == time_infos.front().local_time;
+        return ti.valid && ti.unix_time == time_infos.front().unix_time;
       })) {
     reverse_time_info = time_infos.front();
   }
@@ -584,20 +584,20 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.unix_time,
                            time_info.timezone_index, restriction_idx, destonly_restriction_mask,
                            &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,
-                             &edgestatus_[FORWARD][index], time_info.local_time,
+                             &edgestatus_[FORWARD][index], time_info.unix_time,
                              time_info.timezone_index)) {
       return false;
     }
   } else {
-    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.local_time,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.unix_time,
                                   time_info.timezone_index, restriction_idx,
                                   destonly_restriction_mask, &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, false,
-                             &edgestatus_[FORWARD][index], time_info.local_time,
+                             &edgestatus_[FORWARD][index], time_info.unix_time,
                              time_info.timezone_index)) {
       return false;
     }
@@ -1127,7 +1127,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
                                                   time_infos[index].valid
-                                                      ? time_infos[index].local_time
+                                                      ? time_infos[index].unix_time
                                                       : 0,
                                                   time_infos[index].timezone_index, &edge_destonly);
 
@@ -1136,7 +1136,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile, edgeid)),
                              edge_destonly, directededge->forwardaccess() & kTruckAccess,
                              destonly_restriction_mask);
       auto newsortcost = GetAstarHeuristic<MatrixExpansionType::forward>(index,
@@ -1239,7 +1239,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       bool edge_destonly = false;
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.valid ? time_info.unix_time : 0,
                                                   time_info.timezone_index, &edge_destonly);
 
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, edgecost, mode_,
@@ -1247,7 +1247,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile, edgeid)),
                              edge_destonly, directededge->forwardaccess() & kTruckAccess,
                              destonly_restriction_mask);
 
