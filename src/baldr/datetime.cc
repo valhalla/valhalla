@@ -6,7 +6,11 @@
 #include <boost/algorithm/string/join.hpp>
 
 #include <algorithm>
+#include <array>
+#include <filesystem>
+#include <fstream>
 #include <sstream>
+#include <string_view>
 
 namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
@@ -438,6 +442,36 @@ const std::string check_tz_map(const date::tzdb& db) {
 
   return result;
 }
+
+constexpr std::array<std::string_view, 2> kOsTzDataPaths = {"/usr/share/zoneinfo/tzdata.zi",
+                                                            "/var/db/timezone/zoneinfo/tzdata.zi"};
+
+// the OS tzdb turns every link into a zone of its own, so read link -> target from tzdata.zi
+std::unordered_map<std::string, std::string> read_os_tz_links() {
+  std::unordered_map<std::string, std::string> links_to_targets;
+  for (const auto path : kOsTzDataPaths) {
+    std::ifstream zi_file{std::filesystem::path{path}};
+    if (!zi_file) {
+      continue;
+    }
+    std::string line, tag, target, link;
+    while (std::getline(zi_file, line)) {
+      if (!line.starts_with("L ")) {
+        continue;
+      }
+      // a line example: "L Europe/Kyiv Europe/Kiev"
+      std::istringstream in(line);
+      if (in >> tag >> target >> link) {
+        links_to_targets.emplace(std::move(link), std::move(target));
+      }
+    }
+  }
+  if (links_to_targets.empty())
+    LOG_WARN("No tzdata.zi found, time zone links won't resolve to their canonical name");
+
+  return links_to_targets;
+}
+
 // use a cache to store already constructed sys_info's since they aren't cheap
 template <typename TP>
 const date::sys_info&
@@ -484,19 +518,27 @@ tz_db_t::tz_db_t() {
     }
   }
 
+  // on systems with the tzdata.zi file, we use it to properly resolve the target tz's
+  std::unordered_map<std::string, std::string> tz_links;
+  if constexpr (USE_OS_TZDB) {
+    tz_links = read_os_tz_links();
+  }
+
   zones.reserve(tz_name_to_id.size());
   std::vector<std::pair<std::string, size_t>> missing_tz;
-  for (const auto& [name, idx] : tz_name_to_id) {
+  for (const auto& [tz_name, tz_idx] : tz_name_to_id) {
+    const auto tz_link = tz_links.find(tz_name);
+    const auto& target_name = tz_link != tz_links.end() ? tz_link->second : tz_name;
     try {
       // we find either the official timezone or we get the target timezone of a link (i.e.
       // deprecated time zone)
-      zones[idx] = db.locate_zone(name);
+      zones[tz_idx] = db.locate_zone(target_name);
     } catch (const std::runtime_error&) {
       // should never happen that we don't find a zone in our vendored tzdata
       if constexpr (!USE_OS_TZDB) {
-        throw;
+        throw std::runtime_error(std::format("Timezone {} can't be found in tzdata", target_name));
       }
-      missing_tz.emplace_back(name, idx);
+      missing_tz.emplace_back(tz_name, tz_idx);
     }
   }
 
