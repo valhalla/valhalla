@@ -1,6 +1,7 @@
 #include "thor/dijkstras.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include "sif/hierarchylimits.h"
 
 #include <algorithm>
 
@@ -119,11 +120,16 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
           : (FORWARD ? time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()))
                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone())));
 
+  // with hierarchy limits a level is only expanded up to a distance, transitions are still followed
+  const bool level_stopped = use_hierarchy_limits_ && node.level() < hierarchy_limits_.size() &&
+                             StopExpanding(hierarchy_limits_[node.level()], pred.path_distance());
+
   // Expand from end node in forward direction.
   GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile, pred.path_id());
   const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
+  for (uint32_t i = 0; !level_stopped && i < nodeinfo->edge_count();
+       ++i, ++directededge, ++edgeid, ++es) {
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge). skip shortcuts or if no access is allowed to this edge
     // (based on the costing method) or if a complex restriction exists for
@@ -246,6 +252,10 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const baldr::NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (use_hierarchy_limits_ && trans->up() && node.level() < hierarchy_limits_.size()) {
+        auto& limits = hierarchy_limits_[node.level()];
+        limits.set_up_transition_count(limits.up_transition_count() + 1);
+      }
       ExpandInner<expansion_direction>(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
                                        true, offset_time);
     }
@@ -307,6 +317,12 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+  if (use_hierarchy_limits_) {
+    hierarchy_limits_ = costing_->GetHierarchyLimits();
+    for (auto& limits : hierarchy_limits_) {
+      limits.set_up_transition_count(0);
+    }
+  }
 
   // Prepare for a graph traversal
   Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());

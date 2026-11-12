@@ -1400,6 +1400,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.mutable_round_trip_options()->set_overlap_factor(*overlap_factor);
     }
 
+    auto distance_tolerance =
+        rapidjson::get_optional<double>(doc, "/round_trip_options/distance_tolerance");
+    if (distance_tolerance) {
+      options.mutable_round_trip_options()->set_distance_tolerance(*distance_tolerance);
+    }
+
     // a round trip shouldn't turn around halfway, so u-turns cost an hour unless the user says
     // otherwise
     constexpr float kRoundTripUturnPenalty = 3600.f;

@@ -578,6 +578,10 @@ message Options {
     oneof has_overlap_factor {
       double overlap_factor = 4;  // how strongly to avoid driving the same road twice, 0 = don't care
     }
+
+    oneof has_distance_tolerance {
+      double distance_tolerance = 7;  // accepted relative deviation from distance, larger is faster
+    }
   }
 
   RoundTripOptions round_trip_options = 67;
