@@ -36,6 +36,7 @@
    * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
    * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452)
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
+   * ADDED: `ENABLE_OS_TZDB` CMake option to use the OS time zone database at runtime instead of the vendored tzdata [#XXXX](https://github.com/valhalla/valhalla/pull/XXXX)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
