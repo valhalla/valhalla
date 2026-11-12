@@ -246,23 +246,24 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
-  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
+  const uint64_t current_unix_time = time_info.valid ? time_info.unix_time : 0;
   uint8_t restriction_idx = kInvalidRestriction;
   uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   bool edge_destonly = false;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
-                           restriction_idx, destonly_restriction_mask, &edge_destonly) ||
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, current_unix_time,
+                           time_info.timezone_index, restriction_idx, destonly_restriction_mask,
+                           &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                             &edgestatus_forward_, localtime, time_info.timezone_index)) {
+                             &edgestatus_forward_, current_unix_time, time_info.timezone_index)) {
       return false;
     }
   } else {
-    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, current_unix_time,
                                   time_info.timezone_index, restriction_idx,
                                   destonly_restriction_mask, &edge_destonly) ||
         costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                             &edgestatus_reverse_, localtime, time_info.timezone_index)) {
+                             &edgestatus_reverse_, current_unix_time, time_info.timezone_index)) {
       return false;
     }
   }
@@ -1061,7 +1062,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     bool edge_destonly = false;
     auto destonly_restriction_mask =
         costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                time_info.valid ? time_info.local_time : 0,
+                                                time_info.valid ? time_info.unix_time : 0,
                                                 time_info.timezone_index, &edge_destonly);
 
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
@@ -1171,7 +1172,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     bool edge_destonly = false;
     auto destonly_restriction_mask =
         costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                time_info.valid ? time_info.local_time : 0,
+                                                time_info.valid ? time_info.unix_time : 0,
                                                 time_info.timezone_index, &edge_destonly);
 
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,

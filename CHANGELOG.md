@@ -19,6 +19,8 @@
    * FIXED: interpolate elevation of nodes inside tunnels, bridges and ferries from their portals [#6436](https://github.com/valhalla/valhalla/pull/6436)
    * FIXED: `service=driveway`, `parking_aisle` and `drive-through` are now destination only for trucks too, like they already were for cars [#6446](https://github.com/valhalla/valhalla/pull/6446)
    * FIXED: duplicate definition of `OverwriteBits` [#6478](https://github.com/valhalla/valhalla/pull/6478)
+   * FIXED: ETA were off by 27 secs _per leg_ due to faulty clock usage [#6486](https://github.com/valhalla/valhalla/pull/6486)
+   * FIXED: respect time-dependent `private` roads [#6498](https://github.com/valhalla/valhalla/pull/6498)
    * FIXED: `ignore_oneways` is respected by reverse unidir A* (`arrive_by`), isochrones, bidirectional A* and CostMatrix, and allowed `linear_cost_factors` in reverse unidir A* [#6484](https://github.com/valhalla/valhalla/pull/6484)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
@@ -36,6 +38,7 @@
    * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
    * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
    * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452)
+   * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
