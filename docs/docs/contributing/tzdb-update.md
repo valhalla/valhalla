@@ -18,12 +18,19 @@ DST changes are the most important reason to update regularly.
     ```
     git -C third_party/tz checkout <release_tag>
     ```
-2. Update `scripts/valhalla_build_timezones` to download the latest release
+2. Update the default release in `scripts/valhalla_build_timezones`
 3. Run `datetime` test. If any timezones were merged/renamed, it'll fail with a pretty-print of new/old elements for copy/pasting convenience. However, if entirely new timezones were added, there's more manual work:
 - identify which timezone the new one is carved out of (look into the submoduled `tz` repo's NEWS)
 - if the parent timezone has an ID < 387, it just needs a bit shift of the parent timezone
 - if the parent timezone is itself a previously added new timezone, one might add another field to NodeInfo; follow the instructions in baldr/nodeinfo.h/cc
 4. Sanity check step 3! Both looking at the release notes of the IANA data and adding test cases.
+
+### Updating an existing tileset
+
+`valhalla_update_timezones -c valhalla.json` re-assigns the time zone of every node in `mjolnir.tile_dir` from `mjolnir.timezone`, so a new timezone db doesn't need a tileset rebuild. On node changes, the new tile's checksum is recalculated, same for the tileset's build id; transit nodes keep the time zone of their GTFS feed. Rebuild the tar extract afterwards if you serve one.
+
+This covers geometry changes only, the IANA rules (DST changes) are compiled into Valhalla. Time zones of the db which are unknown to the Valhalla build are logged and their nodes keep their current time zone, which is the one they were carved out of. Running it again after a Valhalla update on the same `tzdata` release assigns them properly.
+
 ### Important notes
 - The 2 repos we source our information from are not always in-sync. If there's a IANA release being skipped in the boundary builder project, it usually means that nothing changed wrt geometries. However, you'll need to verify that.
 - Regarding data compatibility:
