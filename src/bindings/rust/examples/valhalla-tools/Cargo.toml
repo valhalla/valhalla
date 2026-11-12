@@ -1,0 +1,21 @@
+[package]
+name = "valhalla-tools"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Pure Rust on purpose: these tools must not need libvalhalla, so no `valhalla` dependency.
+[[bin]]
+name = "valhalla_build_extract"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde_json = "1"
+tar = { version = "0.4", default-features = false }
+tempfile = "3"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std"] }
+ureq = "3"

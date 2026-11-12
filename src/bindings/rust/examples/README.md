@@ -13,4 +13,5 @@ cargo run -p <example> -- --help
 | [reachability](reachability/src/main.rs) | snap a coordinate the way the router does, then run your own search under Valhalla's access rules | `Actor::locate`, `Access`, `node_transitions` |
 | [match-polyline](match-polyline/src/main.rs) | map-match with typed protobuf and walk the response | `Actor::trace_attributes`, `proto::Options`, `proto::Api` |
 | [traffic_debug](traffic_debug/src/main.rs) | read and write a live `traffic.tar` through a typed API | `LiveTraffic`, `TrafficTile`, `ConfigBuilder` |
+| [valhalla-tools](valhalla-tools/src/main.rs) | `valhalla_build_extract` in pure Rust, without libvalhalla: tar a tile set with its `index.bin`, optionally with an empty `traffic.tar` | none, it only reads tile headers |
 | [valhalla-service](valhalla-service/src/main.rs) | Rust version of Valhalla's [`valhalla_service`](https://github.com/valhalla/valhalla/blob/master/src/valhalla_service.cc) with Actor API over HTTP, JSON and protobuf | `Actor`, all Valhalla endpoints |
