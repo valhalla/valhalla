@@ -741,6 +741,9 @@ uint32_t day_of_week_mask(const std::string& date_time) {
 // date_time is in the format of 2015-05-06T08:00
 std::string
 get_duration(const std::string& date_time, const uint32_t seconds, const date::time_zone* time_zone) {
+  if (!time_zone) {
+    return "";
+  }
 
   date::local_seconds date;
   date = get_formatted_date(date_time);
