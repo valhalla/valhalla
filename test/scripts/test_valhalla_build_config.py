@@ -1,4 +1,6 @@
 import unittest
+import json
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import valhalla_build_config
@@ -9,6 +11,61 @@ mock_parser.add_argument = MagicMock()
 
 
 class TestBuildConfig(unittest.TestCase):
+    def test_config_schema_matches_defaults(self):
+        schema = valhalla_build_config.config_schema()
+        schema_path = Path(__file__).parents[2] / "schema" / "config_schema.json"
+
+        with schema_path.open(encoding="utf-8") as schema_file:
+            checked_in_schema = json.load(schema_file)
+
+        self.assertEqual(checked_in_schema, schema)
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(
+            schema["properties"]["mjolnir"]["properties"]["tile_dir"]["description"],
+            "Location to read/write tiles to/from",
+        )
+
+    def test_config_schema_validates_default_configuration(self):
+        schema = valhalla_build_config.config_schema()
+
+        def without_optional(value):
+            if isinstance(value, dict):
+                return {
+                    key: without_optional(child)
+                    for key, child in value.items()
+                    if not isinstance(child, valhalla_build_config.Optional)
+                }
+            return value
+
+        def validate(value, definition, path=""):
+            expected_type = definition.get("type")
+            if expected_type == "object":
+                self.assertIsInstance(value, dict, path)
+                for key in definition.get("required", []):
+                    self.assertIn(key, value, path)
+                for key, child in value.items():
+                    self.assertIn(key, definition["properties"], path)
+                    validate(value[key], definition["properties"][key], f"{path}.{key}")
+            elif expected_type == "array":
+                self.assertIsInstance(value, list, path)
+                for item in value:
+                    validate(item, definition.get("items", {}), path)
+            elif expected_type == "boolean":
+                self.assertIsInstance(value, bool, path)
+            elif expected_type == "integer":
+                self.assertIsInstance(value, int, path)
+                self.assertNotIsInstance(value, bool, path)
+            elif expected_type == "number":
+                self.assertIsInstance(value, (int, float), path)
+                self.assertNotIsInstance(value, bool, path)
+            elif expected_type == "string":
+                self.assertIsInstance(value, str, path)
+
+        validate(
+            without_optional(valhalla_build_config.config),
+            schema,
+        )
+
     def test_add_leaf_types(self):
         # test all data types, except for bool & list
         # they have custom lambdas we can't test this way
@@ -118,9 +175,7 @@ class TestBuildConfig(unittest.TestCase):
         valhalla_build_config.override_config(args, leaves, config)
         # the Optional arg should be removed
         self.assertEqual(len(config["0"]), 2)
-        self.assertEqual(
-            config, {"0": {"bool": True, "1": {"list": ["item1", "item2", "item3"]}}}
-        )
+        self.assertEqual(config, {"0": {"bool": True, "1": {"list": ["item1", "item2", "item3"]}}})
 
 
 class TestMergeJson(unittest.TestCase):
@@ -385,9 +440,7 @@ class TestMergeJson(unittest.TestCase):
         new = {"shared": "new"}
         report = valhalla_build_config.MergeReport()
 
-        result = valhalla_build_config.merge_json(
-            old, new, report, remove_keys=["remove_subtree"]
-        )
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=["remove_subtree"])
 
         self.assertIn("keep", result)
         self.assertNotIn("remove_subtree", result)
@@ -401,9 +454,7 @@ class TestMergeJson(unittest.TestCase):
 
         # Even if we specify "both" in remove_keys, it should be preserved
         # because it exists in both old and new (old value is kept)
-        result = valhalla_build_config.merge_json(
-            old, new, report, remove_keys=["both", "old_only"]
-        )
+        result = valhalla_build_config.merge_json(old, new, report, remove_keys=["both", "old_only"])
 
         self.assertIn("both", result)
         self.assertEqual(result["both"], "old_value")  # preserved from old
@@ -424,30 +475,22 @@ class TestShouldRemoveKey(unittest.TestCase):
 
     def test_exact_match(self):
         """Test exact key path match."""
-        self.assertTrue(
-            valhalla_build_config.should_remove_key("mjolnir.logging", ["mjolnir.logging"])
-        )
+        self.assertTrue(valhalla_build_config.should_remove_key("mjolnir.logging", ["mjolnir.logging"]))
 
     def test_child_of_specified_path(self):
         """Test that children of specified paths are removed."""
         self.assertTrue(
-            valhalla_build_config.should_remove_key(
-                "mjolnir.logging.type", ["mjolnir.logging"]
-            )
+            valhalla_build_config.should_remove_key("mjolnir.logging.type", ["mjolnir.logging"])
         )
 
     def test_no_match(self):
         """Test that unrelated keys are not removed."""
-        self.assertFalse(
-            valhalla_build_config.should_remove_key("loki.service", ["mjolnir.logging"])
-        )
+        self.assertFalse(valhalla_build_config.should_remove_key("loki.service", ["mjolnir.logging"]))
 
     def test_partial_match_not_removed(self):
         """Test that partial matches (not children) are not removed."""
         # "mjolnir.log" is not a child of "mjolnir.logging"
-        self.assertFalse(
-            valhalla_build_config.should_remove_key("mjolnir.log", ["mjolnir.logging"])
-        )
+        self.assertFalse(valhalla_build_config.should_remove_key("mjolnir.log", ["mjolnir.logging"]))
 
 
 if __name__ == "__main__":
