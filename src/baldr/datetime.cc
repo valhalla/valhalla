@@ -494,11 +494,14 @@ tz_db_t::tz_db_t() {
 }
 
 size_t tz_db_t::to_index(const std::string& zone) const {
-  auto it = tz_name_to_id.find(zone);
-  if (it != tz_name_to_id.cend()) {
-    return it->second;
-  }
+  if (const auto index = find_index(zone); index != kUnknownTimeZone)
+    return index;
   throw std::runtime_error(zone + " can't be resolved to a non-deprecated time zone.");
+}
+
+uint32_t tz_db_t::find_index(const std::string& zone) const {
+  auto it = tz_name_to_id.find(zone);
+  return it != tz_name_to_id.cend() ? static_cast<uint32_t>(it->second) : kUnknownTimeZone;
 }
 
 const date::time_zone* tz_db_t::from_index(size_t index) const {
