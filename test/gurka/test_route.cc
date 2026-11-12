@@ -298,9 +298,9 @@ protected:
       return historical;
     });
 
-    // tests below use saturday at 9am and thursday 4am (27 if for leap seconds)
-    size_t second_of_week_constrained = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
-    size_t second_of_week_freeflow = 3 * 24 * 60 * 60 + 4 * 60 * 60 + 27;
+    // tests below use saturday at 9am and thursday 4am
+    size_t second_of_week_constrained = 5 * 24 * 60 * 60 + 9 * 60 * 60;
+    size_t second_of_week_freeflow = 3 * 24 * 60 * 60 + 4 * 60 * 60;
     auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     for (auto tile_id : reader->GetTileSet()) {
       auto tile = reader->GetGraphTile(tile_id);

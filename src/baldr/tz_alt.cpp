@@ -105,7 +105,6 @@
 #include "date_time_backward.h"
 #include "date_time_etcetera.h"
 #include "date_time_europe.h"
-#include "date_time_leapseconds.h"
 #include "date_time_northamerica.h"
 #include "date_time_southamerica.h"
 #include "date_time_windows_zones.h"
@@ -4067,8 +4066,6 @@ static std::vector<std::string> get_tz_data_file_list() {
                                  date_time_northamerica + date_time_northamerica_len);
   tz_data_file_list.emplace_back(date_time_southamerica,
                                  date_time_southamerica + date_time_southamerica_len);
-  tz_data_file_list.emplace_back(date_time_leapseconds,
-                                 date_time_leapseconds + date_time_leapseconds_len);
   return tz_data_file_list;
 }
 

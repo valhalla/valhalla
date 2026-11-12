@@ -1,20 +1,6 @@
 ## Process the IANA Time Zone Database files
 set(tz_db_files africa antarctica asia australasia backward etcetera europe
-  northamerica southamerica leapseconds)
-
-# Select make command based on platform
-if(WIN32)
-  set(MAKE_CMD nmake)
-else()
-  set(MAKE_CMD make)
-endif()
-
-# Process the leap seconds file (it's in .gitignore of the tz repo)
-add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds
-COMMAND ${MAKE_CMD} leapseconds
-WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/tz
-COMMENT "Compiling third_party/tz/leapseconds with awk"
-DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
+  northamerica southamerica)
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
@@ -24,7 +10,7 @@ foreach(tz_db_file ${tz_db_files})
         --variable-name date_time_${tz_db_file} --skip 1 --raw
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     COMMENT "Compiling third_party/tz/${tz_db_file} to date_time_${tz_db_file}.h"
-    DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file} ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds)
+    DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file})
 endforeach()
 
 # Process the windowsZones.xml file
@@ -104,7 +90,6 @@ else()
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
-      ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
