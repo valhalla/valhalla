@@ -13,6 +13,8 @@ const INDEX_NAME: &str = "index.bin";
 const INDEX_ENTRY_SIZE: u64 = 16;
 /// Two zero blocks mark the end of a tar.
 const END_OF_ARCHIVE: [u8; 1024] = [0; 1024];
+/// Python's `tarfile` pads archives to whole records of this size.
+const RECORD_SIZE: u64 = 10240;
 
 /// One `index.bin` record, laid out like `tile_index_entry` in baldr/graphreader.cc.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,11 +35,68 @@ impl IndexEntry {
     }
 }
 
+/// Header fields of a member; a value its ustar field cannot hold is written as 0.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct MemberMetadata {
+    pub(crate) mode: u32,
+    pub(crate) uid: u64,
+    pub(crate) gid: u64,
+    /// Whole seconds since the epoch.
+    pub(crate) mtime: u64,
+}
+
+impl MemberMetadata {
+    /// The defaults of `tarfile.TarInfo`, stamped with the current time.
+    pub(crate) fn created_now() -> Self {
+        let mtime = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |since_epoch| since_epoch.as_secs());
+        Self {
+            mode: 0o644,
+            uid: 0,
+            gid: 0,
+            mtime,
+        }
+    }
+
+    /// What `tarfile` records for a file it adds from disk, without user and group names.
+    #[cfg(unix)]
+    pub(crate) fn of_file(metadata: &fs::Metadata) -> Self {
+        use std::os::unix::fs::MetadataExt;
+        Self {
+            mode: metadata.mode() & 0o7777,
+            uid: metadata.uid().into(),
+            gid: metadata.gid().into(),
+            mtime: u64::try_from(metadata.mtime()).unwrap_or(0),
+        }
+    }
+
+    #[cfg(not(unix))]
+    pub(crate) fn of_file(metadata: &fs::Metadata) -> Self {
+        let mtime = metadata
+            .modified()
+            .ok()
+            .and_then(|modified| modified.duration_since(UNIX_EPOCH).ok())
+            .map_or(0, |since_epoch| since_epoch.as_secs());
+        Self {
+            mode: if metadata.permissions().readonly() {
+                0o444
+            } else {
+                0o666
+            },
+            uid: 0,
+            gid: 0,
+            mtime,
+        }
+    }
+}
+
 /// A tile to store: `content` must yield exactly `size` bytes.
 pub(crate) struct Member<R> {
     pub(crate) name: String,
     pub(crate) tile_id: u32,
     pub(crate) size: u64,
+    pub(crate) metadata: MemberMetadata,
     pub(crate) content: R,
 }
 
@@ -47,12 +106,15 @@ pub(crate) struct ArchivedTile {
     pub(crate) entry: IndexEntry,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum WriteMode {
-    /// Build next to the output and rename it over the output once complete.
-    Replace,
-    /// Truncate and rewrite the output, following symlinks and keeping its owner and permissions.
+/// How an output tar is written.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum WriteMode {
+    /// Truncate and rewrite the output, following symlinks and keeping its owner and permissions;
+    /// a failure leaves a partial file.
+    #[default]
     InPlace,
+    /// Build next to the output and rename it over the output once complete.
+    Atomic,
 }
 
 enum OutputFile {
@@ -64,7 +126,7 @@ impl OutputFile {
     fn create(output: &Path, mode: WriteMode) -> io::Result<Self> {
         fs::create_dir_all(parent_dir(output))?;
         match mode {
-            WriteMode::Replace => create_temp_file(output).map(Self::Temporary),
+            WriteMode::Atomic => create_temp_file(output).map(Self::Temporary),
             WriteMode::InPlace => OpenOptions::new()
                 .write(true)
                 .create(true)
@@ -98,13 +160,12 @@ pub(crate) fn write_indexed_tar<T, R: Read>(
 ) -> Result<Vec<ArchivedTile>, Error> {
     let mut output_file = OutputFile::create(output, mode).map_err(Error::io(output))?;
     let file = output_file.file_mut();
-    let mtime = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |since_epoch| since_epoch.as_secs());
 
     // Reserve index.bin as the first member; it is filled in once the offsets are known.
     let index_size = INDEX_ENTRY_SIZE * tiles.len() as u64;
-    append(file, INDEX_NAME, index_size, io::repeat(0), mtime).map_err(Error::io(output))?;
+    let index_metadata = MemberMetadata::created_now();
+    append(file, INDEX_NAME, index_size, &index_metadata, io::repeat(0))
+        .map_err(Error::io(output))?;
 
     let mut archived = Vec::with_capacity(tiles.len());
     for tile in tiles {
@@ -112,12 +173,13 @@ pub(crate) fn write_indexed_tar<T, R: Read>(
             name,
             tile_id,
             size,
+            metadata,
             content,
         } = member(tile)?;
         let Ok(indexed_size) = u32::try_from(size) else {
             return Err(Error::TileTooLarge { name, size });
         };
-        let offset = match append(file, &name, size, content, mtime) {
+        let offset = match append(file, &name, size, &metadata, content) {
             Ok(offset) => offset,
             Err(source) => {
                 return Err(Error::CopyTile {
@@ -127,7 +189,6 @@ pub(crate) fn write_indexed_tar<T, R: Read>(
                 });
             }
         };
-        debug!(tile = name, offset, size, "added tile");
         archived.push(ArchivedTile {
             name,
             entry: IndexEntry {
@@ -138,12 +199,22 @@ pub(crate) fn write_indexed_tar<T, R: Read>(
         });
     }
 
+    for tile in &archived {
+        let IndexEntry { offset, size, .. } = tile.entry;
+        debug!("Tile {} with offset: {offset}, size: {size}", tile.name);
+    }
+
     let index: Vec<u8> = archived
         .iter()
         .flat_map(|tile| tile.entry.to_bytes())
         .collect();
     let finish = |file: &mut File| -> io::Result<()> {
         file.write_all(&END_OF_ARCHIVE)?;
+        let end = file.stream_position()?;
+        io::copy(
+            &mut io::repeat(0).take(end.next_multiple_of(RECORD_SIZE) - end),
+            file,
+        )?;
         file.seek(SeekFrom::Start(BLOCK_SIZE))?;
         file.write_all(&index)?;
         file.sync_all()
@@ -158,16 +229,20 @@ fn append(
     file: &mut File,
     name: &str,
     size: u64,
+    metadata: &MemberMetadata,
     content: impl Read,
-    mtime: u64,
 ) -> io::Result<u64> {
     let mut header = tar::Header::new_ustar();
     header.set_path(name)?;
     header.set_size(size);
-    header.set_mode(0o644);
-    header.set_uid(0);
-    header.set_gid(0);
-    header.set_mtime(mtime);
+    header.set_mode(
+        fit_octal_field(metadata.mode.into(), 8)
+            .try_into()
+            .unwrap_or(0),
+    );
+    header.set_uid(fit_octal_field(metadata.uid, 8));
+    header.set_gid(fit_octal_field(metadata.gid, 8));
+    header.set_mtime(fit_octal_field(metadata.mtime, 12));
     header.set_entry_type(tar::EntryType::Regular);
     header.set_cksum();
     file.write_all(header.as_bytes())?;
@@ -183,6 +258,15 @@ fn append(
     let padding = size.next_multiple_of(BLOCK_SIZE) - size;
     io::copy(&mut io::repeat(0).take(padding), file)?;
     Ok(offset)
+}
+
+/// `value` if it fits a NUL-terminated octal field of `field_size` bytes, else 0.
+fn fit_octal_field(value: u64, field_size: u32) -> u64 {
+    if value < 8_u64.pow(field_size - 1) {
+        value
+    } else {
+        0
+    }
 }
 
 /// Whether both paths name the same existing file, through symlinks and hard links.
@@ -248,16 +332,40 @@ mod tests {
     }
 
     #[test]
+    fn a_value_too_large_for_its_ustar_field_is_written_as_zero() {
+        assert_eq!(
+            [
+                fit_octal_field(0o7777777, 8),
+                fit_octal_field(0o10000000, 8)
+            ],
+            [0o7777777, 0]
+        );
+    }
+
+    #[test]
     fn a_member_shorter_than_announced_is_an_error() {
         let mut file = tempfile::tempfile().unwrap();
-        let result = append(&mut file, "0/003/196.gph", 100, &[1_u8; 10][..], 0);
+        let result = append(
+            &mut file,
+            "0/003/196.gph",
+            100,
+            &MemberMetadata::created_now(),
+            &[1_u8; 10][..],
+        );
         assert_eq!(result.unwrap_err().kind(), io::ErrorKind::UnexpectedEof);
     }
 
     #[test]
     fn member_data_is_padded_to_a_whole_block() {
         let mut file = tempfile::tempfile().unwrap();
-        append(&mut file, "0/003/196.gph", 700, io::repeat(1), 0).unwrap();
+        append(
+            &mut file,
+            "0/003/196.gph",
+            700,
+            &MemberMetadata::created_now(),
+            io::repeat(1),
+        )
+        .unwrap();
         assert_eq!(file.stream_position().unwrap(), 512 + 1024);
     }
 
@@ -265,11 +373,12 @@ mod tests {
     fn a_tile_too_large_for_the_index_is_an_error() {
         let dir = tempfile::tempdir().unwrap();
         let output = dir.path().join("tiles.tar");
-        let result = write_indexed_tar(&output, WriteMode::Replace, &[()], |_| {
+        let result = write_indexed_tar(&output, WriteMode::Atomic, &[()], |_| {
             Ok(Member {
                 name: "0/003/196.gph".to_owned(),
                 tile_id: 25568,
                 size: u64::from(u32::MAX) + 1,
+                metadata: MemberMetadata::created_now(),
                 content: io::empty(),
             })
         });
@@ -280,11 +389,12 @@ mod tests {
     fn a_failed_write_leaves_neither_output_nor_temporary_file() {
         let dir = tempfile::tempdir().unwrap();
         let output = dir.path().join("tiles.tar");
-        let result = write_indexed_tar(&output, WriteMode::Replace, &[()], |_| {
+        let result = write_indexed_tar(&output, WriteMode::Atomic, &[()], |_| {
             Ok(Member {
                 name: "0/003/196.gph".to_owned(),
                 tile_id: 25568,
                 size: 100,
+                metadata: MemberMetadata::created_now(),
                 content: io::empty(),
             })
         });

@@ -112,9 +112,15 @@ fn assert_success(output: &Output) {
 
 const BLOCK_SIZE: usize = 512;
 
+const RECORD_SIZE: usize = 10240;
+
 #[derive(Debug)]
 struct Member {
     name: String,
+    mode: u64,
+    uid: u64,
+    gid: u64,
+    mtime: u64,
     data_offset: usize,
     data: Vec<u8>,
 }
@@ -129,10 +135,10 @@ fn read_tar(path: &Path) -> Vec<Member> {
     loop {
         let header = &bytes[position..position + BLOCK_SIZE];
         if header.iter().all(|&byte| byte == 0) {
-            assert_eq!(
-                &bytes[position..],
-                &[0; 2 * BLOCK_SIZE][..],
-                "the tar must end with exactly two zero blocks"
+            let end = &bytes[position..];
+            assert!(
+                end.len() >= 2 * BLOCK_SIZE && end.iter().all(|&byte| byte == 0),
+                "the tar must end with at least two zero blocks and nothing else"
             );
             return members;
         }
@@ -155,6 +161,10 @@ fn read_tar(path: &Path) -> Vec<Member> {
         let data_offset = position + BLOCK_SIZE;
         members.push(Member {
             name: String::from_utf8(header[..name_length].to_vec()).unwrap(),
+            mode: octal(&header[100..108]),
+            uid: octal(&header[108..116]),
+            gid: octal(&header[116..124]),
+            mtime: octal(&header[136..148]),
             data_offset,
             data: bytes[data_offset..data_offset + size].to_vec(),
         });
@@ -269,12 +279,12 @@ fn the_bytes_at_each_index_offset_are_the_source_tile() {
 }
 
 #[test]
-fn the_extract_is_a_whole_number_of_tar_blocks() {
+fn the_extract_is_padded_to_whole_10240_byte_records_like_python_tarfile() {
     let workspace = Workspace::utrecht();
     assert_success(&workspace.build_extract(&[]));
 
     let size = fs::metadata(workspace.path("tiles.tar")).unwrap().len();
-    assert_eq!(size % 512, 0);
+    assert_eq!(size % RECORD_SIZE as u64, 0);
 }
 
 #[test]
@@ -314,12 +324,12 @@ fn the_traffic_index_points_at_the_traffic_tiles() {
 }
 
 #[test]
-fn the_traffic_extract_is_a_whole_number_of_tar_blocks() {
+fn the_traffic_extract_is_padded_to_whole_10240_byte_records() {
     let workspace = Workspace::utrecht();
     assert_success(&workspace.build_extract(&["-t"]));
 
     let size = fs::metadata(workspace.path("traffic.tar")).unwrap().len();
-    assert_eq!(size % 512, 0);
+    assert_eq!(size % RECORD_SIZE as u64, 0);
 }
 
 #[test]
@@ -390,12 +400,20 @@ fn a_bbox_touching_no_tile_is_an_error() {
 }
 
 #[test]
-fn an_invalid_bbox_is_a_usage_error() {
+fn an_invalid_bbox_exits_with_1_and_the_scripts_critical_line() {
     let workspace = Workspace::utrecht();
 
     let output = workspace.build_extract(&["--bbox", "5,52,4,53"]);
 
-    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.code() == Some(1)
+            && stderr
+                .trim_end()
+                .ends_with(" CRITICAL: Bbox invalid: [5.0, 52.0, 4.0, 53.0]"),
+        "exit {:?}, stderr: {stderr}",
+        output.status.code()
+    );
 }
 
 #[test]
@@ -539,12 +557,12 @@ fn extract_tar_without_mjolnir_tile_extract_reads_the_tile_dir() {
 }
 
 #[test]
-fn a_failed_traffic_extract_leaves_no_file_behind() {
+fn with_atomic_a_failed_traffic_extract_leaves_no_file_behind() {
     let workspace = Workspace::with_tiles(&[&UTRECHT[0]]);
     // Too short to hold the record counts the traffic tile is sized from.
     fs::write(workspace.tile_dir().join("0/003/197.gph"), [0; 20]).unwrap();
 
-    let output = workspace.build_extract(&["--with-traffic"]);
+    let output = workspace.build_extract(&["--with-traffic", "--atomic"]);
 
     assert_eq!(output.status.code(), Some(1));
     let mut entries: Vec<_> = fs::read_dir(workspace.dir.path())
@@ -570,7 +588,10 @@ fn an_empty_tile_dir_is_reported_as_such() {
     let output = workspace.build_extract(&[]);
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("no tiles found in"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("CRITICAL: Couldn't find usable tiles in "),
+        "stderr: {stderr}"
+    );
 }
 
 #[test]
@@ -743,22 +764,21 @@ fn after_date_time(line: &str) -> &str {
     &rest[8..]
 }
 
-fn extract_log_line(output: &Output) -> String {
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    stderr
-        .lines()
-        .find(|line| line.contains("wrote the tile extract"))
-        .unwrap_or_else(|| panic!("no log line in {stderr:?}"))
+fn finished_line(stream: &[u8]) -> String {
+    let text = String::from_utf8_lossy(stream);
+    text.lines()
+        .find(|line| line.contains("Finished tarring"))
+        .unwrap_or_else(|| panic!("no log line in {text:?}"))
         .to_owned()
 }
 
-/// `2026-11-12 12:59:04,737  INFO: message key=value`
+/// `2026-11-12 12:59:04,737  INFO: message`
 fn assert_python_log_line(line: &str) {
     let rest = after_date_time(line);
     let (millis, rest) = rest.strip_prefix(',').unwrap().split_at(3);
     assert!(is_number_of(millis, 3), "milliseconds in {line:?}");
     assert!(
-        rest.starts_with("  INFO: wrote the tile extract tiles=3 path="),
+        rest.starts_with("  INFO: Finished tarring 3 tiles to "),
         "level and message in {line:?}"
     );
 }
@@ -769,7 +789,7 @@ fn log_lines_use_the_python_format_by_default() {
 
     let output = workspace.build_extract(&["-v"]);
 
-    assert_python_log_line(&extract_log_line(&output));
+    assert_python_log_line(&finished_line(&output.stderr));
 }
 
 #[test]
@@ -778,72 +798,94 @@ fn the_python_log_format_has_milliseconds_and_a_right_aligned_level() {
 
     let output = workspace.build_extract(&["-v", "--log-format", "python"]);
 
-    assert_python_log_line(&extract_log_line(&output));
+    assert_python_log_line(&finished_line(&output.stderr));
 }
 
 #[test]
 fn the_valhalla_log_format_has_nanoseconds_and_a_bracketed_level() {
     let workspace = Workspace::utrecht();
 
-    let output = workspace.build_extract(&["-v", "--log-format", "valhalla"]);
+    let mut config = workspace.config();
+    config["logging"] = json!({"type": "std_err", "color": false});
 
-    let line = extract_log_line(&output);
+    let output = build_extract(&config)
+        .args(["-v", "--log-format", "valhalla"])
+        .output()
+        .unwrap();
+
+    let line = finished_line(&output.stderr);
     let rest = after_date_time(&line);
     let (nanos, rest) = rest.strip_prefix('.').unwrap().split_at(9);
     assert!(is_number_of(nanos, 9), "nanoseconds in {line:?}");
     assert!(
-        rest.starts_with(" [INFO] wrote the tile extract tiles=3 path="),
+        rest.starts_with(" [INFO] Finished tarring 3 tiles to "),
         "level and message in {line:?}"
     );
 }
 
+fn indexes_match_members(workspace: &Workspace, names: &[&str]) -> Vec<bool> {
+    let tiles: Vec<_> = UTRECHT.iter().collect();
+    names
+        .iter()
+        .map(|name| {
+            let path = workspace.path(name);
+            read_index(&path) == index_of_members(&path, &tiles)
+        })
+        .collect()
+}
+
 #[test]
-fn in_place_archives_pass_the_format_checks_over_a_longer_old_file() {
+fn outputs_are_rewritten_in_place_over_longer_old_files() {
     let workspace = Workspace::utrecht();
     for name in ["tiles.tar", "traffic.tar"] {
         fs::write(workspace.path(name), vec![0xff; 100_000]).unwrap();
     }
 
-    assert_success(&workspace.build_extract(&["--in-place", "-O", "-t"]));
+    assert_success(&workspace.build_extract(&["-O", "-t"]));
 
-    let tiles: Vec<_> = UTRECHT.iter().collect();
-    let indexes_match = ["tiles.tar", "traffic.tar"].map(|name| {
-        let path = workspace.path(name);
-        read_index(&path) == index_of_members(&path, &tiles)
-    });
-    assert_eq!(indexes_match, [true, true]);
+    assert_eq!(
+        indexes_match_members(&workspace, &["tiles.tar", "traffic.tar"]),
+        [true, true]
+    );
 }
 
 #[test]
-fn in_place_refuses_to_rewrite_its_input_tar() {
+fn atomic_outputs_pass_the_same_format_checks() {
     let workspace = Workspace::utrecht();
-    assert_success(&workspace.build_extract(&[]));
-    let extract = workspace.path("tiles.tar");
-    let before = fs::read(&extract).unwrap();
 
-    let output = workspace.build_extract(&["--in-place", "-O", "-e", extract.to_str().unwrap()]);
+    assert_success(&workspace.build_extract(&["--atomic", "-t"]));
 
     assert_eq!(
-        (output.status.code(), fs::read(&extract).unwrap()),
-        (Some(1), before)
+        indexes_match_members(&workspace, &["tiles.tar", "traffic.tar"]),
+        [true, true]
     );
 }
 
 #[cfg(unix)]
 #[test]
-fn in_place_recognises_its_input_tar_behind_a_hard_link() {
+fn an_input_tar_behind_a_hard_link_is_read_whole_before_being_replaced() {
     let workspace = Workspace::utrecht();
     assert_success(&workspace.build_extract(&[]));
-    let extract = workspace.path("tiles.tar");
+    fs::remove_dir_all(workspace.tile_dir()).unwrap();
     let alias = workspace.path("alias.tar");
-    fs::hard_link(&extract, &alias).unwrap();
-    let before = fs::read(&extract).unwrap();
+    fs::hard_link(workspace.path("tiles.tar"), &alias).unwrap();
 
-    let output = workspace.build_extract(&["--in-place", "-O", "-e", alias.to_str().unwrap()]);
+    let output = workspace.build_extract(&["-v", "-O", "-e", alias.to_str().unwrap()]);
+    assert_success(&output);
 
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stored: Vec<_> = read_tar(&alias)
+        .into_iter()
+        .skip(1)
+        .map(|member| member.data)
+        .collect();
+    let sources: Vec<_> = UTRECHT.iter().map(tile_bytes).collect();
     assert_eq!(
-        (output.status.code(), fs::read(&extract).unwrap()),
-        (Some(1), before)
+        (
+            stderr.contains("is also the input, writing it through a temporary file"),
+            stored
+        ),
+        (true, sources)
     );
 }
 
@@ -858,11 +900,11 @@ fn symlinked_output(workspace: &Workspace) -> PathBuf {
 
 #[cfg(unix)]
 #[test]
-fn in_place_writes_through_a_symlinked_output() {
+fn the_output_is_written_through_a_symlink_by_default() {
     let workspace = Workspace::utrecht();
     let target = symlinked_output(&workspace);
 
-    assert_success(&workspace.build_extract(&["--in-place", "-O"]));
+    assert_success(&workspace.build_extract(&["-O"]));
 
     let link = fs::symlink_metadata(workspace.path("tiles.tar")).unwrap();
     assert_eq!(
@@ -873,11 +915,11 @@ fn in_place_writes_through_a_symlinked_output() {
 
 #[cfg(unix)]
 #[test]
-fn without_in_place_a_symlinked_output_is_replaced_by_a_regular_file() {
+fn with_atomic_a_symlinked_output_is_replaced_by_a_regular_file() {
     let workspace = Workspace::utrecht();
     let target = symlinked_output(&workspace);
 
-    assert_success(&workspace.build_extract(&["-O"]));
+    assert_success(&workspace.build_extract(&["-O", "--atomic"]));
 
     let link = fs::symlink_metadata(workspace.path("tiles.tar")).unwrap();
     assert_eq!(
@@ -888,7 +930,7 @@ fn without_in_place_a_symlinked_output_is_replaced_by_a_regular_file() {
 
 #[cfg(unix)]
 #[test]
-fn in_place_keeps_the_permissions_of_an_existing_output() {
+fn the_permissions_of_an_existing_output_are_kept_by_default() {
     use std::os::unix::fs::PermissionsExt;
 
     let workspace = Workspace::utrecht();
@@ -896,8 +938,282 @@ fn in_place_keeps_the_permissions_of_an_existing_output() {
     fs::write(&extract, "old").unwrap();
     fs::set_permissions(&extract, fs::Permissions::from_mode(0o640)).unwrap();
 
-    assert_success(&workspace.build_extract(&["--in-place", "-O"]));
+    assert_success(&workspace.build_extract(&["-O"]));
 
     let mode = fs::metadata(&extract).unwrap().permissions().mode();
     assert_eq!(mode & 0o777, 0o640);
+}
+
+#[cfg(unix)]
+#[test]
+fn tile_members_carry_the_mode_owner_and_whole_second_mtime_of_their_file() {
+    use std::os::unix::fs::{MetadataExt, PermissionsExt};
+    use std::time::UNIX_EPOCH;
+
+    let workspace = Workspace::with_tiles(&[&UTRECHT[0]]);
+    let tile = workspace.tile_dir().join(UTRECHT[0].name);
+    fs::set_permissions(&tile, fs::Permissions::from_mode(0o640)).unwrap();
+    let mtime = UNIX_EPOCH + Duration::from_millis(1_700_000_000_750);
+    fs::File::options()
+        .write(true)
+        .open(&tile)
+        .unwrap()
+        .set_modified(mtime)
+        .unwrap();
+    let file = fs::metadata(&tile).unwrap();
+
+    assert_success(&workspace.build_extract(&[]));
+
+    let member = read_tar(&workspace.path("tiles.tar")).pop().unwrap();
+    assert_eq!(
+        (member.mode, member.uid, member.gid, member.mtime),
+        (
+            0o640,
+            u64::from(file.uid()),
+            u64::from(file.gid()),
+            1_700_000_000
+        )
+    );
+}
+
+#[test]
+fn members_copied_from_a_tar_keep_their_header_fields() {
+    let workspace = Workspace::utrecht();
+    assert_success(&workspace.build_extract(&[]));
+    let copy = workspace.path("copy.tar");
+
+    assert_success(&workspace.build_extract(&["-e", copy.to_str().unwrap()]));
+
+    let fields = |path: &Path| -> Vec<_> {
+        read_tar(path)
+            .into_iter()
+            .skip(1)
+            .map(|member| {
+                (
+                    member.name,
+                    member.mode,
+                    member.uid,
+                    member.gid,
+                    member.mtime,
+                )
+            })
+            .collect()
+    };
+    assert_eq!(fields(&copy), fields(&workspace.path("tiles.tar")));
+}
+
+#[test]
+fn index_bin_has_the_header_fields_of_a_fresh_tarinfo() {
+    let workspace = Workspace::utrecht();
+    assert_success(&workspace.build_extract(&[]));
+
+    let index = &read_tar(&workspace.path("tiles.tar"))[0];
+    assert_eq!((index.mode, index.uid, index.gid), (0o644, 0, 0));
+}
+
+#[test]
+fn an_existing_output_is_reported_with_the_scripts_critical_line() {
+    let workspace = Workspace::utrecht();
+    fs::write(workspace.path("tiles.tar"), "keep me").unwrap();
+
+    let output = workspace.build_extract(&[]);
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let expected = format!(
+        " CRITICAL: File exists. Specify --overwrite to overwrite {}",
+        workspace.path("tiles.tar").display()
+    );
+    assert!(stderr.trim_end().ends_with(&expected), "stderr: {stderr}");
+}
+
+#[test]
+fn region_list_logs_the_fetch_at_info_level_without_v() {
+    let server = FakeServer::answer_once(http_ok(&geofabrik_index()));
+
+    let output = Command::new(env!("CARGO_BIN_EXE_valhalla_build_extract"))
+        .env("VALHALLA_GEOFABRIK_INDEX_URL", &server.url)
+        .args(["--region", "list"])
+        .output()
+        .unwrap();
+    server.join();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let expected = format!(
+        "  INFO: Fetching Geofabrik index from {}...",
+        server_url_of(&stderr)
+    );
+    assert!(stderr.contains(&expected), "stderr: {stderr}");
+}
+
+/// The URL in the fetch line, so the expectation does not depend on the server port.
+fn server_url_of(stderr: &str) -> &str {
+    stderr
+        .split("Fetching Geofabrik index from ")
+        .nth(1)
+        .and_then(|rest| rest.split("...").next())
+        .unwrap_or_default()
+}
+
+fn valhalla_run(workspace: &Workspace, logging: Option<Value>, args: &[&str]) -> Output {
+    let mut config = workspace.config();
+    if let Some(logging) = logging {
+        config["logging"] = logging;
+    }
+    build_extract(&config)
+        .args(["--log-format", "valhalla", "-v"])
+        .args(args)
+        .output()
+        .unwrap()
+}
+
+fn has_finished_line(stream: &[u8]) -> bool {
+    String::from_utf8_lossy(stream).contains("Finished tarring")
+}
+
+#[test]
+fn the_std_err_logger_writes_to_stderr_only() {
+    let workspace = Workspace::utrecht();
+
+    let output = valhalla_run(&workspace, Some(json!({"type": "std_err"})), &[]);
+
+    assert_eq!(
+        (
+            has_finished_line(&output.stderr),
+            has_finished_line(&output.stdout)
+        ),
+        (true, false)
+    );
+}
+
+#[test]
+fn the_std_out_logger_writes_to_stdout_only() {
+    let workspace = Workspace::utrecht();
+
+    let output = valhalla_run(&workspace, Some(json!({"type": "std_out"})), &[]);
+
+    assert_eq!(
+        (
+            has_finished_line(&output.stderr),
+            has_finished_line(&output.stdout)
+        ),
+        (false, true)
+    );
+}
+
+#[test]
+fn a_coloured_console_logger_uses_the_cpp_ansi_sequences() {
+    let workspace = Workspace::utrecht();
+
+    let output = valhalla_run(
+        &workspace,
+        Some(json!({"type": "std_err", "color": true})),
+        &[],
+    );
+
+    let line = finished_line(&output.stderr);
+    assert!(
+        after_date_time(&line).contains(" \x1b[32;1m[INFO]\x1b[0m Finished tarring 3 tiles to "),
+        "line: {line:?}"
+    );
+}
+
+#[test]
+fn a_console_logger_without_color_true_is_plain() {
+    let workspace = Workspace::utrecht();
+
+    let output = valhalla_run(
+        &workspace,
+        Some(json!({"type": "std_err", "color": "yes"})),
+        &[],
+    );
+
+    let line = finished_line(&output.stderr);
+    assert!(
+        after_date_time(&line).contains(" [INFO] Finished tarring 3 tiles to "),
+        "line: {line:?}"
+    );
+}
+
+#[test]
+fn without_a_logging_section_the_default_logger_is_coloured_stdout_with_a_warning() {
+    let workspace = Workspace::utrecht();
+
+    let output = valhalla_run(&workspace, None, &[]);
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let warning =
+        " \x1b[33;1m[WARN]\x1b[0m No top-level 'logging' section in config, using default logger.";
+    assert!(
+        stdout
+            .lines()
+            .next()
+            .is_some_and(|line| line.ends_with(warning))
+            && stdout.contains(" \x1b[32;1m[INFO]\x1b[0m Finished tarring"),
+        "stdout: {stdout:?}"
+    );
+}
+
+#[test]
+fn the_file_logger_appends_plain_valhalla_lines() {
+    let workspace = Workspace::utrecht();
+    let log = workspace.path("logs/build.log");
+    fs::create_dir_all(log.parent().unwrap()).unwrap();
+    fs::write(&log, "earlier line\n").unwrap();
+    let logging = json!({"type": "file", "file_name": log, "color": true});
+
+    assert_success(&valhalla_run(&workspace, Some(logging), &[]));
+
+    let text = fs::read_to_string(&log).unwrap();
+    let line = finished_line(text.as_bytes());
+    let rest = after_date_time(&line);
+    assert!(
+        text.starts_with("earlier line\n")
+            && is_number_of(&rest[1..10], 9)
+            && rest[10..].starts_with(" [INFO] Finished tarring 3 tiles to "),
+        "log: {text:?}"
+    );
+}
+
+#[test]
+fn the_file_logger_rolls_into_numbered_archives() {
+    let workspace = Workspace::utrecht();
+    let log = workspace.path("build.log");
+    let logging = json!({
+        "type": "file", "file_name": log, "max_file_size": 1, "max_archived_files": 2
+    });
+
+    assert_success(&valhalla_run(&workspace, Some(logging), &["-v"]));
+
+    let exists = ["build.log", "build.log.1", "build.log.2", "build.log.3"]
+        .map(|name| workspace.path(name).exists());
+    assert_eq!(exists, [true, true, true, false]);
+}
+
+#[test]
+fn an_unknown_logger_type_is_reported_like_the_cpp_factory() {
+    let workspace = Workspace::utrecht();
+
+    let output = valhalla_run(&workspace, Some(json!({"type": "syslog"})), &[]);
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.code() == Some(1)
+            && stderr.contains("[ERROR] Couldn't produce logger for type: syslog"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn the_python_format_ignores_the_logging_section() {
+    let workspace = Workspace::utrecht();
+    let log = workspace.path("build.log");
+    let mut config = workspace.config();
+    config["logging"] = json!({"type": "file", "file_name": log});
+
+    let output = build_extract(&config).arg("-v").output().unwrap();
+
+    assert_eq!(
+        (log.exists(), has_finished_line(&output.stderr)),
+        (false, true)
+    );
 }

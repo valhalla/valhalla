@@ -20,23 +20,20 @@ impl Rect {
 
 /// Parses a `minx,miny,maxx,maxy` bounding box in degrees.
 pub fn parse_bbox(text: &str) -> Result<Rect, Error> {
-    let invalid = |reason| Error::InvalidBbox {
-        text: text.to_owned(),
-        reason,
-    };
+    let not_numbers = || Error::BboxNotNumbers(text.to_owned());
     let coordinates = text
         .split(',')
         .map(|value| value.trim().parse::<f64>())
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| invalid("expected comma-separated numbers"))?;
+        .map_err(|_| not_numbers())?;
     let [min_x, min_y, max_x, max_y] = coordinates[..] else {
-        return Err(invalid("expected 4 values: minx,miny,maxx,maxy"));
+        return Err(not_numbers());
     };
-    if !(-180.0 <= min_x && min_x < max_x && max_x <= 180.0) {
-        return Err(invalid("x values must be increasing and within -180..180"));
-    }
-    if !(-90.0 <= min_y && min_y < max_y && max_y <= 90.0) {
-        return Err(invalid("y values must be increasing and within -90..90"));
+    // Written as "within range" so that NaN fails too.
+    let x_valid = -180.0 <= min_x && min_x < max_x && max_x <= 180.0;
+    let y_valid = -90.0 <= min_y && min_y < max_y && max_y <= 90.0;
+    if !(x_valid && y_valid) {
+        return Err(Error::InvalidBbox(coordinates));
     }
     Ok(Rect {
         min_x,
@@ -200,6 +197,12 @@ mod tests {
     #[test]
     fn a_bbox_beyond_the_pole_is_rejected() {
         assert!(parse_bbox("0,-90.5,1,1").is_err());
+    }
+
+    #[test]
+    fn an_out_of_range_bbox_is_reported_with_python_float_reprs() {
+        let message = parse_bbox("5,52,4,nan").unwrap_err().to_string();
+        assert_eq!(message, "Bbox invalid: [5.0, 52.0, 4.0, nan]");
     }
 
     #[test]

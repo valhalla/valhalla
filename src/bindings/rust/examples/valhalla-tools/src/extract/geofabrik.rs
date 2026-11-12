@@ -14,23 +14,26 @@ pub const GEOFABRIK_INDEX_URL: &str = "https://download.geofabrik.de/index-v1.js
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 fn fetch_index(url: &str) -> Result<Value, Error> {
-    info!(url, "fetching the Geofabrik index");
+    info!("Fetching Geofabrik index from {url}...");
     let agent: ureq::Agent = ureq::Agent::config_builder()
+        .http_status_as_error(false)
         .timeout_connect(Some(TIMEOUT))
         .timeout_per_read(Some(TIMEOUT))
         .timeout_per_write(Some(TIMEOUT))
         .build()
         .into();
-    let response = agent.get(url).call().map_err(|error| match error {
-        ureq::Error::StatusCode(status) => Error::HttpStatus {
-            url: url.to_owned(),
-            status,
-        },
-        other => Error::Download {
-            url: url.to_owned(),
-            source: Box::new(other),
-        },
+    let response = agent.get(url).call().map_err(|error| Error::Download {
+        url: url.to_owned(),
+        reason: Box::new(error),
     })?;
+    let status = response.status();
+    if !status.is_success() {
+        return Err(Error::HttpStatus {
+            url: url.to_owned(),
+            status: status.as_u16(),
+            reason: status.canonical_reason().unwrap_or_default(),
+        });
+    }
     serde_json::from_reader(response.into_body().into_reader()).map_err(|source| {
         Error::InvalidIndex {
             url: url.to_owned(),
@@ -65,9 +68,9 @@ pub(crate) fn region_polygons(url: &str, regions: &[String]) -> Result<Vec<Polyg
         let feature =
             find_region(&index, region).ok_or_else(|| Error::UnknownRegion(region.clone()))?;
         info!(
-            name = property(feature, "name"),
-            id = property(feature, "id"),
-            "using region boundary"
+            "Using boundary for '{}' ({})",
+            property(feature, "name"),
+            property(feature, "id")
         );
         match geojson::polygons(&feature["geometry"]) {
             Some(region_polygons) if !region_polygons.is_empty() => {

@@ -4,7 +4,7 @@ use std::io::{self, Read, Seek, SeekFrom, Take};
 use std::path::{Path, PathBuf};
 
 use super::Error;
-use super::archive::Member;
+use super::archive::{Member, MemberMetadata};
 use super::tile::Tile;
 
 #[derive(Debug)]
@@ -19,6 +19,7 @@ pub(crate) struct SourceTile {
     pub(crate) name: String,
     pub(crate) position: Tile,
     pub(crate) size: u64,
+    pub(crate) metadata: MemberMetadata,
     /// Where the tile data starts in its file: 0 in a tile directory, past the member header in a tar.
     data_offset: u64,
 }
@@ -55,6 +56,7 @@ impl TileSource {
             name: tile.name.clone(),
             tile_id: tile.position.id(),
             size: tile.size,
+            metadata: tile.metadata,
             content,
         })
     }
@@ -83,6 +85,7 @@ fn list_dir(root: &Path) -> Result<Vec<SourceTile>, Error> {
                 position: Tile::from_path(&name)?,
                 name,
                 size: metadata.len(),
+                metadata: MemberMetadata::of_file(&metadata),
                 data_offset: 0,
             });
         }
@@ -105,7 +108,7 @@ fn list_tar(path: &Path) -> Result<Vec<SourceTile>, Error> {
     // A later member replaces an earlier one with the same name, as when extracting.
     let mut by_name = HashMap::new();
     for entry in archive.entries().map_err(Error::io(path))? {
-        let entry = entry.map_err(Error::io(path))?;
+        let mut entry = entry.map_err(Error::io(path))?;
         let name = String::from_utf8_lossy(&entry.path_bytes()).into_owned();
         if !entry.header().entry_type().is_file() || !name.ends_with(".gph") {
             continue;
@@ -114,11 +117,48 @@ fn list_tar(path: &Path) -> Result<Vec<SourceTile>, Error> {
             position: Tile::from_path(&name)?,
             name: name.clone(),
             size: entry.size(),
+            metadata: member_metadata(&mut entry).map_err(Error::io(path))?,
             data_offset: entry.raw_file_position(),
         };
         by_name.insert(name, tile);
     }
     Ok(by_name.into_values().collect())
+}
+
+/// The member's header fields, with the PAX records that override them (Python writes
+/// fractional mtimes as PAX records).
+fn member_metadata(entry: &mut tar::Entry<'_, File>) -> io::Result<MemberMetadata> {
+    let header = entry.header();
+    let mut metadata = MemberMetadata {
+        mode: header.mode()? & 0o7777,
+        uid: header.uid()?,
+        gid: header.gid()?,
+        mtime: header.mtime()?,
+    };
+    if let Some(extensions) = entry.pax_extensions()? {
+        for extension in extensions {
+            let extension = extension?;
+            let (Ok(key), Ok(value)) = (extension.key(), extension.value()) else {
+                continue;
+            };
+            match key {
+                "mtime" => {
+                    if let Ok(seconds) = value.parse::<f64>() {
+                        // Whole seconds, like the ustar field; negative times are not representable.
+                        metadata.mtime = if seconds >= 0.0 {
+                            seconds.trunc() as u64
+                        } else {
+                            0
+                        };
+                    }
+                }
+                "uid" => metadata.uid = value.parse().unwrap_or(0),
+                "gid" => metadata.gid = value.parse().unwrap_or(0),
+                _ => {}
+            }
+        }
+    }
+    Ok(metadata)
 }
 
 #[cfg(test)]

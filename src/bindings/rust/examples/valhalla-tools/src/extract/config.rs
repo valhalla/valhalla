@@ -2,6 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
+use tracing::warn;
 
 use super::Error;
 
@@ -15,10 +16,21 @@ pub(crate) struct Mjolnir {
 
 /// Reads the config file, then lets the inline config replace its top-level keys.
 pub(crate) fn load(file: Option<&Path>, inline: Option<&str>) -> Result<Mjolnir, Error> {
-    if file.is_none() && inline.is_none() {
+    if file.is_none() && inline.is_none_or(str::is_empty) {
         return Err(Error::NoConfig);
     }
+    if file.is_none() {
+        warn!("Only inline-config will be used.");
+    }
+    mjolnir(&merge(file, inline)?)
+}
 
+/// A top-level section of the merged config, or `None` if it is absent or the config unreadable.
+pub fn section(file: Option<&Path>, inline: Option<&str>, key: &str) -> Option<Value> {
+    merge(file, inline).ok()?.remove(key)
+}
+
+fn merge(file: Option<&Path>, inline: Option<&str>) -> Result<Map<String, Value>, Error> {
     let mut config = Map::new();
     if let Some(path) = file {
         let text = fs::read_to_string(path).map_err(Error::io(path))?;
@@ -32,7 +44,7 @@ pub(crate) fn load(file: Option<&Path>, inline: Option<&str>) -> Result<Mjolnir,
         let value = serde_json::from_str(inline).map_err(Error::InlineConfig)?;
         config.extend(into_object(value, || "--inline-config".to_owned())?);
     }
-    mjolnir(&config)
+    Ok(config)
 }
 
 fn into_object(value: Value, origin: impl FnOnce() -> String) -> Result<Map<String, Value>, Error> {
@@ -91,6 +103,11 @@ mod tests {
     #[test]
     fn no_config_at_all_is_an_error() {
         assert!(matches!(load(None, None), Err(Error::NoConfig)));
+    }
+
+    #[test]
+    fn an_empty_inline_config_alone_is_no_config() {
+        assert!(matches!(load(None, Some("")), Err(Error::NoConfig)));
     }
 
     #[test]

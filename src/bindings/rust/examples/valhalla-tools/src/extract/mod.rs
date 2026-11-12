@@ -11,23 +11,25 @@ mod source;
 mod tile;
 mod traffic;
 
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use tracing::{debug, info};
 
+pub use archive::WriteMode;
+pub use config::section as config_section;
 pub use error::Error;
 pub use geofabrik::{GEOFABRIK_INDEX_URL, region_list};
 pub use geometry::{Rect, parse_bbox};
 
-use archive::WriteMode;
 use geometry::Polygon;
 use source::{SourceTile, TileSource};
 
 #[derive(Debug, Clone)]
 pub enum TileFilter {
     All,
-    /// Tiles touching the bounding box.
-    Bbox(Rect),
+    /// Tiles touching the `minx,miny,maxx,maxy` bounding box, checked when the tiles are selected.
+    Bbox(String),
     /// Tiles touching a polygon of the `*.geojson` files in this directory.
     GeojsonDir(PathBuf),
     /// Tiles touching the boundary of any of these Geofabrik regions.
@@ -41,8 +43,7 @@ pub struct Options {
     /// Output path; with it, an existing `mjolnir.tile_extract` becomes the input.
     pub extract_tar: Option<PathBuf>,
     pub overwrite: bool,
-    /// Rewrite existing outputs in place instead of replacing them; a failure can leave them partial.
-    pub in_place: bool,
+    pub write_mode: WriteMode,
     pub with_traffic: bool,
     pub filter: TileFilter,
     pub geofabrik_index_url: String,
@@ -65,55 +66,73 @@ pub fn run(options: &Options) -> Result<(), Error> {
         .as_ref()
         .filter(|tar| options.extract_tar.is_some() && tar.is_file());
     let source = if let Some(tar) = input_tar {
+        debug!("Using tar file to extract tiles");
         TileSource::Tar(tar.clone())
     } else if let Some(dir) = mjolnir.tile_dir.as_ref().filter(|dir| dir.is_dir()) {
+        debug!("Using graph dir to extract tiles");
         TileSource::Dir(dir.clone())
     } else {
-        return Err(Error::NoTileSource);
+        return Err(Error::NoTileSource {
+            config: options.config.clone(),
+        });
     };
-    debug!(?source, "reading tiles");
 
-    let tiles = source.list_tiles()?;
+    let tiles = select_tiles(
+        source.list_tiles()?,
+        &options.filter,
+        &options.geofabrik_index_url,
+    )?;
     if tiles.is_empty() {
-        return Err(Error::NoTiles(source.path().to_path_buf()));
-    }
-    let tiles = select_tiles(tiles, &options.filter, &options.geofabrik_index_url)?;
-    if tiles.is_empty() {
-        return Err(Error::NoTilesInArea(source.path().to_path_buf()));
+        return Err(Error::NoTiles(resolved(source.path())));
     }
 
-    let mode = if options.in_place {
-        WriteMode::InPlace
-    } else {
-        WriteMode::Replace
+    let mode = options.write_mode;
+    let extract_mode = match &source {
+        TileSource::Tar(input) => mode_for(mode, input, &output),
+        TileSource::Dir(_) => mode,
     };
-    if let TileSource::Tar(input) = &source {
-        refuse_truncating_input(mode, input, &output)?;
-    }
-    let archived =
-        archive::write_indexed_tar(&output, mode, &tiles, |tile| source.read_tile(tile))?;
-    info!(tiles = archived.len(), path = %output.display(), "wrote the tile extract");
+    let archived = archive::write_indexed_tar(&output, extract_mode, &tiles, |tile| {
+        debug!("Adding tile {} to the tar file", tile.name);
+        source.read_tile(tile)
+    })?;
+    info!(
+        "Finished tarring {} tiles to {}",
+        archived.len(),
+        output.display()
+    );
 
     if options.with_traffic {
+        info!("Start creating traffic extract...");
         let traffic_output = mjolnir
             .traffic_extract
             .unwrap_or_else(|| output.with_file_name("traffic.tar"));
-        refuse_truncating_input(mode, &output, &traffic_output)?;
-        traffic::write_extract(&output, &archived, &traffic_output, mode)?;
-        info!(path = %traffic_output.display(), "wrote the traffic extract");
+        let traffic_mode = mode_for(mode, &output, &traffic_output);
+        traffic::write_extract(&output, &archived, &traffic_output, traffic_mode)?;
+        info!(
+            "Finished creating the traffic extract at {}",
+            traffic_output.display()
+        );
     }
     Ok(())
 }
 
-/// Rewriting a file in place while reading it would destroy the data being read.
-fn refuse_truncating_input(mode: WriteMode, input: &Path, output: &Path) -> Result<(), Error> {
+/// Truncating the file being read would destroy it, so that output goes through a temporary file.
+fn mode_for(mode: WriteMode, input: &Path, output: &Path) -> WriteMode {
     if mode == WriteMode::InPlace && archive::is_same_file(input, output) {
-        return Err(Error::InPlaceOverInput {
-            input: input.to_path_buf(),
-            output: output.to_path_buf(),
-        });
+        info!(
+            "{} is also the input, writing it through a temporary file",
+            output.display()
+        );
+        return WriteMode::Atomic;
     }
-    Ok(())
+    mode
+}
+
+/// The absolute path, with symlinks resolved when it exists, like Python's `Path.resolve()`.
+fn resolved(path: &Path) -> PathBuf {
+    fs::canonicalize(path)
+        .or_else(|_| std::path::absolute(path))
+        .unwrap_or_else(|_| path.to_path_buf())
 }
 
 enum Area {
@@ -137,7 +156,7 @@ fn select_tiles(
 ) -> Result<Vec<SourceTile>, Error> {
     let area = match filter {
         TileFilter::All => return Ok(tiles),
-        TileFilter::Bbox(bbox) => Area::Rect(*bbox),
+        TileFilter::Bbox(bbox) => Area::Rect(parse_bbox(bbox)?),
         TileFilter::GeojsonDir(dir) => Area::Polygons(geojson::read_dir(dir)?),
         TileFilter::Regions(regions) => {
             Area::Polygons(geofabrik::region_polygons(geofabrik_index_url, regions)?)

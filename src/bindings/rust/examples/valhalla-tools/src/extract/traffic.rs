@@ -5,7 +5,7 @@ use std::path::Path;
 use tracing::debug;
 
 use super::Error;
-use super::archive::{self, ArchivedTile, Member, WriteMode};
+use super::archive::{self, ArchivedTile, Member, MemberMetadata, WriteMode};
 
 /// `TRAFFIC_TILE_VERSION` in baldr/traffictile.h, which is the major version of Valhalla.
 const TRAFFIC_TILE_VERSION: u32 = 3;
@@ -30,13 +30,14 @@ pub(crate) fn write_extract(
                 },
                 _ => Error::io(tile_extract)(source),
             })?;
-        debug!(tile = tile.name, edge_count, "traffic tile");
+        debug!("Traffic tile {} has {edge_count} directed edges", tile.name);
         let speeds_size = TRAFFIC_SPEED_SIZE * u64::from(edge_count);
         let header = traffic_header(tile.entry.tile_id, edge_count);
         Ok(Member {
             name: tile.name.clone(),
             tile_id: tile.entry.tile_id,
             size: TRAFFIC_HEADER_SIZE + speeds_size,
+            metadata: MemberMetadata::created_now(),
             content: Cursor::new(header).chain(io::repeat(0).take(speeds_size)),
         })
     })?;

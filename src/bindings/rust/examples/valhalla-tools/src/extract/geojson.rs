@@ -33,7 +33,7 @@ fn exterior_ring(rings: &Value) -> Option<Polygon> {
 
 /// Polygons of every feature in the `*.geojson` files directly inside `dir`.
 pub(crate) fn read_dir(dir: &Path) -> Result<Vec<Polygon>, Error> {
-    let entries = fs::read_dir(dir).map_err(|_| Error::NoGeoJson(dir.to_path_buf()))?;
+    let entries = fs::read_dir(dir).map_err(|_| Error::NoGeoJson(super::resolved(dir)))?;
     let mut files = Vec::new();
     for entry in entries {
         let path = entry.map_err(Error::io(dir))?.path();
@@ -45,7 +45,7 @@ pub(crate) fn read_dir(dir: &Path) -> Result<Vec<Polygon>, Error> {
         }
     }
     if files.is_empty() {
-        return Err(Error::NoGeoJson(dir.to_path_buf()));
+        return Err(Error::NoGeoJson(super::resolved(dir)));
     }
 
     let mut polygons = Vec::new();
