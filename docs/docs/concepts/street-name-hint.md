@@ -15,11 +15,6 @@ Valhalla supports a location's `street` (see [API docs](https://valhalla.github.
 5. **Score candidate names**: Each trigram in the pool gets scored against the `street`, by adding up the weights of the shared trigrams and dividing by the total weight of all `street` trigrams. `street` trigrams which aren't found in the pool lower the score significantly.
 6. **Keep the best scored candidate**: We only keep the candidate with the highest score. If there's a tie of multiple edge candidates with the same score, e.g. several segments of the same street, the closest reachable one wins. If the best score is at least `street_threshold`, we use _only_ that edge and its opposing if no other hard or soft location filter applies. All other loki edge candidates move to the filtered edges.
 
-## Recommendations
-
-- use a result of a geocoder as input, ideally on the same dataset as the graph
-- don't set other location filters
-
 ## Known limitations
 
 In the current state, the implementation all but expects the `street` from a geocoder with the same data source for road names.

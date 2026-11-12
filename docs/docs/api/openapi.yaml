@@ -509,7 +509,7 @@ components:
           minimum: 0
           x-rad-max: 1000
           x-rad-default: 200
-          description: Radius in meters in which edges are scored against `street`, defaults to 200.
+          description: Radius in meters in which edges are scored against `street`, defaults to 200. The max value is service configuration dependent (5000 by default).
         street_threshold:
           type: number
           minimum: 0

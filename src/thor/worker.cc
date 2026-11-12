@@ -76,11 +76,11 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
-        kv.first == "skadi" || kv.first == "trace" || kv.first == "isochrone" ||
-        kv.first == "centroid" || kv.first == "status" ||
+        kv.first == "max_radius" || kv.first == "max_street_radius" ||
+        kv.first == "max_timedep_distance" || kv.first == "max_timedep_distance_matrix" ||
+        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_exclude_polygons_vertices" || kv.first == "skadi" || kv.first == "trace" ||
+        kv.first == "isochrone" || kv.first == "centroid" || kv.first == "status" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
         kv.first == "max_linear_cost_edges") {

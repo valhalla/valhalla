@@ -506,7 +506,8 @@ protected:
   }
 
   static Api do_locate(const std::string& hint,
-                       const std::function<void(valhalla::Location&)>& mod = {}) {
+                       const std::function<void(valhalla::Location&)>& mod = {},
+                       const boost::property_tree::ptree* config = nullptr) {
     Api request;
     auto* options = request.mutable_options();
     options->set_action(Options::locate);
@@ -519,7 +520,7 @@ protected:
     if (mod)
       mod(*loc);
 
-    tyr::actor_t actor(map.config);
+    tyr::actor_t actor(config ? *config : map.config);
     actor.locate("", nullptr, &request);
     return request;
   }
@@ -561,6 +562,16 @@ TEST_F(StreetHint, HintWithoutMatchKeepsBaseline) {
 
 TEST_F(StreetHint, HintOutsideRadiusKeepsBaseline) {
   const auto api = do_locate("Bahnhofstr", [](valhalla::Location& loc) { loc.set_street_radius(5); });
+  EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
+}
+
+TEST_F(StreetHint, RadiusClampedToMaxStreetRadius) {
+  // EF is 30 m away, the limit keeps it out of reach despite the large requested radius
+  auto config = map.config;
+  config.put("service_limits.max_street_radius", 25);
+  const auto api = do_locate(
+      "Bahnhofstr", [](valhalla::Location& loc) { loc.set_street_radius(1000); }, &config);
+  EXPECT_EQ(api.options().locations(0).street_radius(), 25);
   EXPECT_EQ(get_locate_edge_ids(api), get_way_edge_ids("C", "D"));
 }
 
