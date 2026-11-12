@@ -15,7 +15,7 @@ mod py_literal;
 
 use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::Path;
 
 use indexmap::IndexMap;
 
@@ -24,7 +24,7 @@ pub use json::{MAX_DEPTH, ParseError, Value, dumps, parse};
 pub use merge::{MergeReport, merge_json, should_remove_key};
 pub use table::{DefaultValue, LEAVES, Leaf, Literal, OptionalKind};
 
-use crate::paths::pure_path;
+use crate::paths::{pure_path, python_display};
 
 /// Where the script has a message for the same situation, the wording is the script's.
 #[derive(Debug, thiserror::Error)]
@@ -95,8 +95,7 @@ pub fn run(
     let mut output_config = config(&arguments.values);
     let mut report = None;
     if let Some(path) = &arguments.merge_config {
-        let path = pure_path(path);
-        let existing = read_config(&path)?;
+        let existing = read_config(&pure_path(path))?;
         let mut merge_report = MergeReport::default();
         output_config = merge_json(
             &existing,
@@ -119,15 +118,16 @@ pub fn run(
     match &arguments.output {
         Some(path) => {
             let path = pure_path(path);
+            let display = python_display(&path);
             // Python's text mode writes `\r\n` on Windows.
             if cfg!(windows) {
                 text = text.replace('\n', "\r\n");
             }
             fs::write(&path, text).map_err(|source| Error::Write {
-                path: path.clone(),
+                path: display.clone(),
                 source,
             })?;
-            writeln!(stderr, "Config written to: {path}").map_err(Error::Stderr)?;
+            writeln!(stderr, "Config written to: {display}").map_err(Error::Stderr)?;
         }
         None => {
             stdout.write_all(text.as_bytes()).map_err(Error::Stdout)?;
@@ -137,19 +137,20 @@ pub fn run(
     Ok(())
 }
 
-fn read_config(path: &str) -> Result<Value, Error> {
-    let bytes = fs::read(PathBuf::from(path)).map_err(|source| {
+fn read_config(path: &Path) -> Result<Value, Error> {
+    let display = python_display(path);
+    let bytes = fs::read(path).map_err(|source| {
         if source.kind() == io::ErrorKind::NotFound {
-            Error::NotFound(path.to_owned())
+            Error::NotFound(display.clone())
         } else {
             Error::Read {
-                path: path.to_owned(),
+                path: display.clone(),
                 source,
             }
         }
     })?;
     let text = String::from_utf8(bytes).map_err(|source| Error::NotUtf8 {
-        path: path.to_owned(),
+        path: display,
         source,
     })?;
     Ok(parse(&text)?)

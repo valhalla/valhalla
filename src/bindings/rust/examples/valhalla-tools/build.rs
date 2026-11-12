@@ -6,7 +6,14 @@ use std::{env, fs};
 #[path = "build/py_literal.rs"]
 mod py_literal;
 
-fn main() -> py_literal::Result<()> {
+fn main() {
+    if let Err(error) = run() {
+        eprintln!("{error}");
+        std::process::exit(1);
+    }
+}
+
+fn run() -> py_literal::Result<()> {
     let manifest_dir =
         PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("no CARGO_MANIFEST_DIR")?);
     let script = manifest_dir

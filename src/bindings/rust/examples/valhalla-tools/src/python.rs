@@ -1,5 +1,7 @@
 //! Python's text representations, for messages that must read as the scripts' do.
 
+use crate::python_printable::is_printable;
+
 /// `repr()` of a Python float: the shortest round-tripping digits, in positional notation
 /// for exponents from -4 to 15 and in scientific notation, such as `1e-05`, otherwise.
 pub(crate) fn float_repr(value: f64) -> String {
@@ -186,6 +188,40 @@ pub(crate) fn strtobool(text: &str) -> Option<bool> {
     }
 }
 
+/// `repr()` of a Python str: single quotes unless only double quotes avoid escaping, and
+/// escapes for the quote, backslashes and characters that are not printable.
+pub(crate) fn str_repr(text: &str) -> String {
+    let quote = if text.contains('\'') && !text.contains('"') {
+        '"'
+    } else {
+        '\''
+    };
+    let mut repr = String::from(quote);
+    for c in text.chars() {
+        match c {
+            c if c == quote || c == '\\' => {
+                repr.push('\\');
+                repr.push(c);
+            }
+            '\t' => repr.push_str("\\t"),
+            '\n' => repr.push_str("\\n"),
+            '\r' => repr.push_str("\\r"),
+            ' '..='~' => repr.push(c),
+            c if !c.is_ascii() && is_printable(c) => repr.push(c),
+            c => {
+                let code = u32::from(c);
+                repr.push_str(&match code {
+                    ..=0xff => format!("\\x{code:02x}"),
+                    0x100..=0xffff => format!("\\u{code:04x}"),
+                    _ => format!("\\U{code:08x}"),
+                });
+            }
+        }
+    }
+    repr.push(quote);
+    repr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -311,6 +347,29 @@ mod tests {
         assert_eq!(
             ["YES", "On", "0", "F", "maybe", ""].map(strtobool),
             [Some(true), Some(true), Some(false), Some(false), None, None]
+        );
+    }
+
+    #[test]
+    fn str_repr_quotes_and_escapes_like_python() {
+        assert_eq!(
+            [
+                "a",
+                "it's",
+                "it's \"x\"",
+                "\\\t\n\r\u{1}\u{7f}",
+                "é😀",
+                "\u{a0}\u{202e}\u{e000}\u{10ffff}"
+            ]
+            .map(str_repr),
+            [
+                "'a'",
+                "\"it's\"",
+                "'it\\'s \"x\"'",
+                "'\\\\\\t\\n\\r\\x01\\x7f'",
+                "'é😀'",
+                "'\\xa0\\u202e\\ue000\\U0010ffff'",
+            ]
         );
     }
 }

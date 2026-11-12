@@ -9,6 +9,131 @@ pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 /// Options of the script that are not config leaves.
 const FIXED_OPTIONS: [&str; 5] = ["help", "merge-config", "output", "remove-old", "report"];
 
+/// The options the script adds by name, all but argparse's own `-h/--help`.
+const NAMED_OPTIONS: [&str; 8] = [
+    "-m",
+    "--merge-config",
+    "-o",
+    "--output",
+    "-r",
+    "--remove-old",
+    "-p",
+    "--report",
+];
+
+/// Top-level blocks of the script whose behaviour the Rust port reproduces: the line a block
+/// starts with, the line it ends before (by default the next unindented line other than a
+/// closing bracket) and the FNV-1a hash of its lines with trailing whitespace trimmed.
+const GUARDED_BLOCKS: [(&str, Option<&str>, u64); 11] = [
+    ("class MergeReport:", None, 0xd1d89beeffa36c5a),
+    ("def should_remove_key(", None, 0x675f110d479d5a98),
+    ("def merge_json(", None, 0x0e77b583639ed161),
+    ("def strtobool(", None, 0x58d965ebb6746cc1),
+    ("class Optional:", None, 0xabfb199bc2ba8f93),
+    ("def ipc_endpoint(", None, 0x22f1d8952d64dd36),
+    ("def add_leaf_args(", None, 0x03c147502aaad2d9),
+    ("def override_config(", None, 0xcc54159548a6ecc5),
+    ("leaves = []", Some("def main("), 0x9bead09274d7ec70),
+    ("def main(", None, 0x6cd64d5e372eef27),
+    ("if __name__ ==", None, 0x9b2c1201677e498a),
+];
+
+/// Fails when the script changed in a way the generated table cannot follow, or the Rust port
+/// may no longer reproduce.
+pub fn check_drift(source: &str) -> Result<()> {
+    let lines: Vec<&str> = source.lines().map(str::trim_end).collect();
+    let mut problems = Vec::new();
+    for line in &lines {
+        let mutation = [
+            "config[",
+            "config.",
+            "help_text[",
+            "help_text.",
+            "del config",
+            "del help_text",
+        ]
+        .iter()
+        .find(|prefix| line.starts_with(*prefix));
+        if let Some(prefix) = mutation {
+            problems.push(format!(
+                "top-level `{prefix}` changes a dict the table is read from"
+            ));
+        }
+    }
+    let mut named = named_options(source);
+    named.sort_unstable();
+    let mut expected = NAMED_OPTIONS.to_vec();
+    expected.sort_unstable();
+    if named != expected {
+        problems.push(format!(
+            "add_argument() option strings are {named:?}, expected {expected:?}"
+        ));
+    }
+    for (start, end, expected) in GUARDED_BLOCKS {
+        match block(&lines, start, end) {
+            None => problems.push(format!("no `{start}` block")),
+            Some(text) => {
+                let hash = fnv1a(&text);
+                if hash != expected {
+                    problems.push(format!(
+                        "`{start}` changed: check that src/build_config still reproduces it, then \
+                         set its hash in build/py_literal.rs to {hash:#018x}"
+                    ));
+                }
+            }
+        }
+    }
+    if problems.is_empty() {
+        Ok(())
+    } else {
+        Err(problems.join("\n").into())
+    }
+}
+
+/// The lines from the one starting with `start` to the one before `end`, or before the next
+/// unindented line other than a closing bracket.
+fn block(lines: &[&str], start: &str, end: Option<&str>) -> Option<String> {
+    let first = lines.iter().position(|line| line.starts_with(start))?;
+    let length = lines[first + 1..]
+        .iter()
+        .position(|line| match end {
+            Some(end) => line.starts_with(end),
+            None => !line.is_empty() && !line.starts_with([' ', '\t', ')', ']', '}']),
+        })
+        .unwrap_or(lines.len() - first - 1);
+    Some(lines[first..=first + length].join("\n"))
+}
+
+/// The string literals starting with `-` in the script's `add_argument(` calls.
+fn named_options(source: &str) -> Vec<String> {
+    let mut options = Vec::new();
+    for (index, _) in source.match_indices("add_argument(") {
+        let mut depth = 0;
+        let mut chars = source[index + "add_argument".len()..].chars();
+        while let Some(c) = chars.next() {
+            match c {
+                '(' => depth += 1,
+                ')' if depth == 1 => break,
+                ')' => depth -= 1,
+                quote @ ('"' | '\'') => {
+                    let text: String = chars.by_ref().take_while(|&c| c != quote).collect();
+                    if text.starts_with('-') {
+                        options.push(text);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    options
+}
+
+fn fnv1a(text: &str) -> u64 {
+    text.bytes().fold(0xcbf2_9ce4_8422_2325, |hash, byte| {
+        (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3)
+    })
+}
+
 #[derive(Debug)]
 enum Py {
     Dict(Vec<(String, Py)>),
@@ -26,8 +151,13 @@ enum Py {
     },
 }
 
-/// The Rust source of `LEAVES` for the script text `source`.
+/// The Rust source of `LEAVES` for the script text `source`, once [`check_drift`] passed.
 pub fn generate(source: &str) -> Result<String> {
+    check_drift(source)?;
+    table(source)
+}
+
+fn table(source: &str) -> Result<String> {
     let config = parse_assignment(source, "config")?;
     let help = parse_assignment(source, "help_text")?;
     let mut leaves = Vec::new();
@@ -120,23 +250,20 @@ fn literal(value: &Py) -> Result<String> {
     })
 }
 
-/// Parses the dict literal assigned to `name` at the top level of the script.
+/// Parses the dict literal assigned to `name` at the top level of the script, which must assign
+/// it once. Lines may end in `\r\n`.
 fn parse_assignment(source: &str, name: &str) -> Result<Py> {
     let prefix = format!("{name} = ");
-    let mut offset = 0;
-    let start = loop {
-        let line = source[offset..]
-            .lines()
-            .next()
-            .ok_or_else(|| format!("no top-level '{name} = '"))?;
-        if let Some(rest) = line.strip_prefix(&prefix) {
-            break offset + line.len() - rest.len();
-        }
-        offset += line.len() + 1;
-        if offset >= source.len() {
-            return Err(format!("no top-level '{name} = '").into());
-        }
-    };
+    let mut starts = source
+        .match_indices(&prefix)
+        .filter(|&(index, _)| index == 0 || source[..index].ends_with('\n'))
+        .map(|(index, _)| index + prefix.len());
+    let start = starts
+        .next()
+        .ok_or_else(|| format!("no top-level '{name} = '"))?;
+    if starts.next().is_some() {
+        return Err(format!("'{name}' is assigned more than once").into());
+    }
     let mut parser = Parser {
         text: source,
         pos: start,
@@ -285,6 +412,8 @@ impl<'a> Parser<'a> {
         Ok(Py::Str(text))
     }
 
+    /// A Python int or float literal: digits with single underscores between them, then for a
+    /// float a `.` fraction and/or an exponent.
     fn number(&mut self) -> Result<Py> {
         let negative = if self.eat('-') {
             true
@@ -294,71 +423,55 @@ impl<'a> Parser<'a> {
         };
         self.skip_blank();
         let rest = self.rest();
-        let length = rest
-            .find(|c: char| {
-                !(c.is_ascii_alphanumeric() || c == '_' || c == '.' || c == '+' || c == '-')
-            })
-            .unwrap_or(rest.len());
-        // `+`/`-` only belong to the literal right after an exponent marker.
-        let mut end = 0;
         let bytes = rest.as_bytes();
-        while end < length {
-            let b = bytes[end];
-            if (b == b'+' || b == b'-') && !(end > 0 && matches!(bytes[end - 1], b'e' | b'E')) {
-                break;
+        let digit = |index: usize| bytes.get(index).is_some_and(u8::is_ascii_digit);
+        let digits_from = |start: usize| {
+            let mut end = start;
+            while digit(end) || (bytes.get(end) == Some(&b'_') && end > start && digit(end + 1)) {
+                end += 1;
             }
-            end += 1;
+            end
+        };
+        let whole_end = digits_from(0);
+        let mut end = whole_end;
+        let mut float = false;
+        if bytes.get(end) == Some(&b'.') {
+            float = true;
+            end = digits_from(end + 1);
         }
-        let token = &rest[..end];
-        self.pos += end;
+        let has_digits = whole_end > 0 || end > whole_end + 1;
+        if has_digits && matches!(bytes.get(end), Some(b'e' | b'E')) {
+            let sign = usize::from(matches!(bytes.get(end + 1), Some(b'+' | b'-')));
+            let exponent_end = digits_from(end + 1 + sign);
+            if exponent_end > end + 1 + sign {
+                float = true;
+                end = exponent_end;
+            }
+        }
+        let trailing = rest[end..]
+            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == '.'))
+            .unwrap_or(rest.len() - end);
+        let token = &rest[..end + trailing];
+        self.pos += token.len();
         let invalid = || self.error(&format!("unsupported number literal {token:?}"));
-        let digits_ok = |part: &str| {
-            !part.is_empty()
-                && !part.starts_with('_')
-                && !part.ends_with('_')
-                && !part.contains("__")
-                && part.chars().all(|c| c.is_ascii_digit() || c == '_')
-        };
-        let sign = if negative { "-" } else { "" };
-        if token.chars().all(|c| c.is_ascii_digit() || c == '_') {
-            if !digits_ok(token) {
-                return Err(invalid());
-            }
-            let digits = token.replace('_', "");
-            if digits.len() > 1
-                && digits.starts_with('0')
-                && !digits.trim_start_matches('0').is_empty()
-            {
-                return Err(invalid());
-            }
-            let digits = digits.trim_start_matches('0');
-            return Ok(Py::Int(if digits.is_empty() {
-                "0".to_owned()
-            } else {
-                format!("{sign}{digits}")
-            }));
-        }
-        let (mantissa, exponent) = match token.find(['e', 'E']) {
-            Some(index) => (&token[..index], Some(&token[index + 1..])),
-            None => (token, None),
-        };
-        let (whole, fraction) = match mantissa.split_once('.') {
-            Some((whole, fraction)) => (whole, fraction),
-            None if exponent.is_some() => (mantissa, ""),
-            None => return Err(invalid()),
-        };
-        let parts_ok = (whole.is_empty() || digits_ok(whole))
-            && (fraction.is_empty() || digits_ok(fraction))
-            && !(whole.is_empty() && fraction.is_empty());
-        let exponent_ok =
-            exponent.is_none_or(|e| digits_ok(e.strip_prefix(['+', '-']).unwrap_or(e)));
-        if !parts_ok || !exponent_ok {
+        let digits = token.replace('_', "");
+        // Python refuses leading zeros in a nonzero int, such as `01`.
+        let leading_zero = digits.len() > 1
+            && digits.starts_with('0')
+            && digits.contains(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+        if !has_digits || trailing > 0 || (!float && leading_zero) {
             return Err(invalid());
         }
-        let value: f64 = format!("{sign}{}", token.replace('_', ""))
-            .parse()
-            .map_err(|_| invalid())?;
-        Ok(Py::Float(value))
+        if float {
+            let value: f64 = digits.parse().map_err(|_| invalid())?;
+            return Ok(Py::Float(if negative { -value } else { value }));
+        }
+        let digits = digits.trim_start_matches('0');
+        Ok(Py::Int(match (digits.is_empty(), negative) {
+            (true, _) => "0".to_owned(),
+            (false, true) => format!("-{digits}"),
+            (false, false) => digits.to_owned(),
+        }))
     }
 
     fn name(&mut self) -> Result<Py> {
@@ -423,12 +536,12 @@ mod tests {
     }
 
     fn error(config: &str, help: &str) -> String {
-        generate(&script(config, help)).unwrap_err().to_string()
+        table(&script(config, help)).unwrap_err().to_string()
     }
 
     #[test]
     fn every_supported_literal_becomes_a_leaf() {
-        let table = generate(&script(
+        let table = table(&script(
             r#"{
     "a": {"s": 's\'"', "i": -1_000, "f": 1e8, "t": True, "n": None, "l": [7, "x", [.5]],
           "o": Optional(list), "e": ipc_endpoint("/tmp/x", 8003),},  # comment
@@ -454,7 +567,7 @@ mod tests {
     #[test]
     fn a_missing_assignment_is_an_error() {
         assert_eq!(
-            generate("config = {}\n").unwrap_err().to_string(),
+            table("config = {}\n").unwrap_err().to_string(),
             "no top-level 'help_text = '"
         );
     }
@@ -532,5 +645,69 @@ mod tests {
             ),
             "option --merge-config is defined twice"
         );
+    }
+
+    const SCRIPT: &str = include_str!("../../../../../../scripts/valhalla_build_config");
+
+    fn drift(source: &str) -> String {
+        generate(source).unwrap_err().to_string()
+    }
+
+    #[test]
+    fn the_script_generates_a_table() {
+        assert!(
+            generate(SCRIPT)
+                .unwrap()
+                .contains("option: \"statsd-tags\"")
+        );
+    }
+
+    #[test]
+    fn a_script_with_crlf_line_ends_generates_the_same_table() {
+        let crlf = SCRIPT.replace('\n', "\r\n");
+        assert_eq!(generate(&crlf).unwrap(), generate(SCRIPT).unwrap());
+    }
+
+    #[test]
+    fn a_second_assignment_is_an_error() {
+        let source = SCRIPT.replace("def add_leaf_args(", "config = {}\n\n\ndef add_leaf_args(");
+        assert_eq!(drift(&source), "'config' is assigned more than once");
+    }
+
+    #[test]
+    fn a_change_to_a_guarded_function_is_an_error() {
+        let source = SCRIPT.replace(r#""y", "yes""#, r#""y", "yes", "yup""#);
+        assert!(
+            drift(&source).starts_with("`def strtobool(` changed: "),
+            "{}",
+            drift(&source)
+        );
+    }
+
+    #[test]
+    fn a_missing_guarded_function_is_an_error() {
+        let source = SCRIPT.replace("def ipc_endpoint(", "def endpoint(");
+        assert!(drift(&source).contains("no `def ipc_endpoint(` block"));
+    }
+
+    #[test]
+    fn top_level_changes_to_the_dicts_are_errors() {
+        for line in [
+            "config[\"x\"] = 1",
+            "help_text.update({})",
+            "del config[\"x\"]",
+        ] {
+            let source = format!("{SCRIPT}\n{line}\n");
+            assert!(
+                drift(&source).contains("changes a dict the table is read from"),
+                "{line}"
+            );
+        }
+    }
+
+    #[test]
+    fn another_named_option_is_an_error() {
+        let source = format!("{SCRIPT}\nparser.add_argument(\"-x\", \"--extra\")\n");
+        assert!(drift(&source).starts_with("add_argument() option strings are "));
     }
 }

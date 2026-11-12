@@ -1,5 +1,6 @@
+use std::ffi::OsString;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 use tempfile::TempDir;
@@ -51,7 +52,7 @@ fn keys(value: &Value) -> Vec<&str> {
 }
 
 fn parsed(args: &[&str]) -> Result<Parsed, UsageError> {
-    let args: Vec<String> = args.iter().map(|arg| (*arg).to_owned()).collect();
+    let args: Vec<OsString> = args.iter().map(OsString::from).collect();
     build_config::parse_args(&args)
 }
 
@@ -92,7 +93,7 @@ fn merged(old: &str, new: &str, remove_keys: Option<&[&str]>) -> (Value, MergeRe
     (result, report)
 }
 
-// Ported from test/scripts/test_valhalla_build_config.py: leaves and their types.
+// Mirrors test/scripts/test_valhalla_build_config.py: leaves and their types.
 
 #[test]
 fn leaves_parse_values_with_their_type() {
@@ -227,7 +228,7 @@ fn the_help_command_is_consistent() {
     build_config::command().debug_assert();
 }
 
-// Ported: merge_json.
+// Mirrors test/scripts/test_valhalla_build_config.py: merge_json.
 
 #[test]
 fn merge_preserves_old_values() {
@@ -455,7 +456,7 @@ fn merge_remove_keys_does_not_affect_existing_in_new() {
     assert_eq!(report.removed, ["old_only"]);
 }
 
-// Ported: should_remove_key.
+// Mirrors test/scripts/test_valhalla_build_config.py: should_remove_key.
 
 #[test]
 fn should_remove_key_none_removes_nothing() {
@@ -583,7 +584,7 @@ fn a_short_option_takes_an_attached_value() {
     assert_eq!(arguments(&["-rp"]).remove_old, Some(vec!["p".to_owned()]));
     assert_eq!(
         arguments(&["-mfile.json"]).merge_config,
-        Some("file.json".to_owned())
+        Some(PathBuf::from("file.json"))
     );
 }
 
@@ -672,7 +673,7 @@ fn help_goes_to_stdout_with_each_option_s_help_and_default() {
     let dir = TempDir::new().unwrap();
     let output = run(dir.path(), &["-h"]);
     assert_eq!(output.status.code(), Some(0));
-    assert!(stdout(&output).contains("--mjolnir-tile-dir <MJOLNIR_TILE_DIR>"));
+    assert!(stdout(&output).contains("--mjolnir-tile-dir <TEXT>"));
     assert!(stdout(&output).contains("[default: /data/valhalla]"));
 }
 
@@ -805,4 +806,119 @@ fn merge_configs_deeper_than_the_limit_exit_1() {
             position + 1
         )
     );
+}
+
+/// The message after `error: `, which is argparse's.
+fn usage_error(args: &[&str]) -> String {
+    let dir = TempDir::new().unwrap();
+    let output = run(dir.path(), args);
+    assert_eq!(output.status.code(), Some(2));
+    let first_line = stderr(&output)
+        .lines()
+        .next()
+        .unwrap_or_default()
+        .to_owned();
+    first_line.strip_prefix("error: ").unwrap().to_owned()
+}
+
+#[test]
+fn an_invalid_int_reads_as_argparse_with_a_python_repr() {
+    assert_eq!(
+        usage_error(&["--mjolnir-max-cache-size", "it's"]),
+        r#"argument --mjolnir-max-cache-size: invalid int value: "it's""#
+    );
+    assert_eq!(
+        usage_error(&["--mjolnir-max-cache-size", "\té\u{202e}"]),
+        r"argument --mjolnir-max-cache-size: invalid int value: '\té\u202e'"
+    );
+}
+
+#[test]
+fn an_invalid_float_reads_as_argparse() {
+    assert_eq!(
+        usage_error(&["--meili-default-sigma-z", "1,5"]),
+        "argument --meili-default-sigma-z: invalid float value: '1,5'"
+    );
+}
+
+#[test]
+fn an_invalid_bool_reads_as_argparse() {
+    assert_eq!(
+        usage_error(&["--logging-color", "maybe"]),
+        "argument --logging-color: invalid <lambda> value: 'maybe'"
+    );
+}
+
+#[test]
+fn an_ambiguous_option_reads_as_argparse() {
+    assert_eq!(
+        usage_error(&["--mjolnir-tile", "x"]),
+        "ambiguous option: --mjolnir-tile could match --mjolnir-tile-url, --mjolnir-tile-url-gz, \
+         --mjolnir-tile-url-user-pw, --mjolnir-tile-dir, --mjolnir-tile-extract"
+    );
+}
+
+#[test]
+fn unrecognized_arguments_read_as_argparse() {
+    assert_eq!(
+        usage_error(&["stray", "--unknown"]),
+        "unrecognized arguments: stray --unknown"
+    );
+}
+
+#[test]
+fn a_missing_value_reads_as_argparse() {
+    assert_eq!(
+        usage_error(&["-m"]),
+        "argument -m/--merge-config: expected one argument"
+    );
+    assert_eq!(
+        usage_error(&["--statsd-tags"]),
+        "argument --statsd-tags: expected at least one argument"
+    );
+}
+
+#[test]
+fn an_explicit_value_for_a_flag_reads_as_argparse() {
+    assert_eq!(
+        usage_error(&["--report=1"]),
+        "argument -p/--report: ignored explicit argument '1'"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn merge_and_output_paths_need_not_be_utf8() {
+    use std::os::unix::ffi::OsStrExt;
+    let dir = TempDir::new().unwrap();
+    let name = std::ffi::OsStr::from_bytes(b"caf\xe9.json");
+    fs::write(dir.path().join(name), "{}").unwrap();
+    let mut merge_attached = OsString::from("-m");
+    merge_attached.push(name);
+    let output = Command::new(env!("CARGO_BIN_EXE_valhalla_build_config"))
+        .current_dir(dir.path())
+        .arg(merge_attached)
+        .arg("--output")
+        .arg(name)
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+    assert_eq!(stderr(&output), "Config written to: caf\\udce9.json\n");
+}
+
+#[cfg(unix)]
+#[test]
+fn other_values_that_are_not_utf8_are_usage_errors() {
+    use std::os::unix::ffi::OsStrExt;
+    let dir = TempDir::new().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_valhalla_build_config"))
+        .current_dir(dir.path())
+        .arg("--mjolnir-tile-dir")
+        .arg(std::ffi::OsStr::from_bytes(b"caf\xe9"))
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(stderr(&output).starts_with(
+        "error: argument --mjolnir-tile-dir: value is not valid UTF-8: 'caf\u{fffd}'"
+    ));
 }

@@ -56,13 +56,6 @@ pub enum ParseError {
     },
 }
 
-impl ParseError {
-    /// Whether Python reports it as `JSONDecodeError`, rather than failing otherwise.
-    pub fn is_syntax(&self) -> bool {
-        matches!(self, Self::Syntax { .. })
-    }
-}
-
 /// `json.loads` of the text Python reads from a file in text mode, where any `\r\n` or `\r` is
 /// already a `\n`; positions in errors count characters, as Python's do.
 pub fn parse(text: &str) -> Result<Value, ParseError> {
@@ -91,13 +84,10 @@ struct Parser<'a> {
     depth: usize,
 }
 
-/// A parsed value and the index after it.
-type Parsed = Option<(Value, usize)>;
+/// A scanned value and the index after it.
+type Scanned = Option<(Value, usize)>;
 
-/// Parses a container whose opening bracket is just before the given index.
-type ContainerParser<'a> = fn(&mut Parser<'a>, usize) -> Result<(Value, usize), ParseError>;
-
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     fn at(&self, index: usize) -> Option<char> {
         self.chars.get(index).copied()
     }
@@ -131,7 +121,7 @@ impl<'a> Parser<'a> {
 
     /// The value at `index`, or `None` where Python's scanner raises `StopIteration`, which its
     /// callers report as "Expecting value" at `index`.
-    fn value(&mut self, index: usize) -> Result<Parsed, ParseError> {
+    fn value(&mut self, index: usize) -> Result<Scanned, ParseError> {
         let rest = &self.chars[index.min(self.chars.len())..];
         let constant = |word: &str, value: Value| {
             let length = word.chars().count();
@@ -143,8 +133,24 @@ impl<'a> Parser<'a> {
                 let (text, end) = self.string(index + 1)?;
                 Some((Value::Str(text), end))
             }
-            Some('{') => Some(self.nested(index, Self::object)?),
-            Some('[') => Some(self.nested(index, Self::array)?),
+            Some(open @ ('{' | '[')) => {
+                if self.depth == MAX_DEPTH {
+                    let (line, column) = self.location(index);
+                    return Err(ParseError::TooDeep {
+                        line,
+                        column,
+                        position: index,
+                    });
+                }
+                self.depth += 1;
+                let container = if open == '{' {
+                    self.object(index + 1)
+                } else {
+                    self.array(index + 1)
+                };
+                self.depth -= 1;
+                Some(container?)
+            }
             Some('n') => constant("null", Value::Null),
             Some('t') => constant("true", Value::Bool(true)),
             Some('f') => constant("false", Value::Bool(false)),
@@ -158,26 +164,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn nested(
-        &mut self,
-        index: usize,
-        parse: ContainerParser<'a>,
-    ) -> Result<(Value, usize), ParseError> {
-        if self.depth == MAX_DEPTH {
-            let (line, column) = self.location(index);
-            return Err(ParseError::TooDeep {
-                line,
-                column,
-                position: index,
-            });
-        }
-        self.depth += 1;
-        let parsed = parse(self, index + 1);
-        self.depth -= 1;
-        parsed
-    }
-
-    fn number(&self, start: usize) -> Result<Parsed, ParseError> {
+    fn number(&self, start: usize) -> Result<Scanned, ParseError> {
         let digits_from = |mut index: usize| {
             while self.at(index).is_some_and(|c| c.is_ascii_digit()) {
                 index += 1;
