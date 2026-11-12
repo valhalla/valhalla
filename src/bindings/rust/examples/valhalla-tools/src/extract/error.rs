@@ -1,15 +1,17 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::python::float_list_repr;
+
 /// Where the script has a message for the same situation, the wording is the script's.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("No valid config file or inline config used.")]
     NoConfig,
-    #[error("invalid --inline-config JSON")]
-    InlineConfig(#[source] serde_json::Error),
-    #[error("{0} must be a JSON object")]
-    ConfigNotObject(String),
+    #[error(transparent)]
+    Config(#[from] crate::config::Error),
+    #[error(transparent)]
+    GeoJson(#[from] crate::geojson::Error),
     #[error("the configuration has no 'mjolnir' object")]
     MissingMjolnir,
     #[error("'mjolnir.{key}' must be a string")]
@@ -25,7 +27,7 @@ pub enum Error {
     NoTileSource { config: Option<PathBuf> },
     #[error("BBOX {0} is not a comma-separated string of coordinates.")]
     BboxNotNumbers(String),
-    #[error("Bbox invalid: [{}]", python_floats(.0))]
+    #[error("Bbox invalid: {}", float_list_repr(.0))]
     InvalidBbox(Vec<f64>),
     #[error("Couldn't get level and tile ID for tile {name}")]
     InvalidTilePath { name: String },
@@ -54,16 +56,6 @@ pub enum Error {
         #[source]
         source: io::Error,
     },
-    #[error("invalid JSON in {}", path.display())]
-    Json {
-        path: PathBuf,
-        #[source]
-        source: serde_json::Error,
-    },
-    #[error("Geojson directory does not exist or contains no GeoJSON files: {}", .0.display())]
-    NoGeoJson(PathBuf),
-    #[error("{}: expected a FeatureCollection with valid Polygon or MultiPolygon geometries", .0.display())]
-    InvalidGeoJson(PathBuf),
     // The cause is part of the sentence, as in the script, rather than a separate source.
     #[error("Could not fetch Geofabrik index: {reason}")]
     Download {
@@ -97,18 +89,4 @@ impl Error {
 
 fn display_or_none(path: Option<&Path>) -> String {
     path.map_or_else(|| "None".to_owned(), |path| path.display().to_string())
-}
-
-/// Floats as Python's `repr` writes them in the common cases.
-fn python_floats(values: &[f64]) -> String {
-    let reprs: Vec<_> = values
-        .iter()
-        .map(|value| match value {
-            value if value.is_nan() => "nan".to_owned(),
-            value if value.is_infinite() && *value > 0.0 => "inf".to_owned(),
-            value if value.is_infinite() => "-inf".to_owned(),
-            value => format!("{value:?}"),
-        })
-        .collect();
-    reprs.join(", ")
 }

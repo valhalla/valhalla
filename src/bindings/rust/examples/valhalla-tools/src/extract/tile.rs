@@ -1,5 +1,5 @@
 use super::Error;
-use super::geometry::Rect;
+use crate::geometry::Rect;
 
 // Limits of a GraphId's level and tile index, see baldr/graphid.h and baldr/graphconstants.h.
 const MAX_LEVEL: u8 = 7;

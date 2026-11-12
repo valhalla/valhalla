@@ -391,6 +391,18 @@ fn a_bbox_with_negative_values_is_accepted_as_a_separate_argument() {
 }
 
 #[test]
+fn a_repeated_option_keeps_its_last_value_like_argparse() {
+    let workspace = Workspace::with_tiles(&[&UTRECHT[0], &ANTARCTIC]);
+
+    assert_success(&workspace.build_extract(&["-b", "0,0,1,1", "-b", "-180,-90,-179.9,-89.9"]));
+
+    assert_eq!(
+        member_names(&workspace.path("tiles.tar")),
+        ["index.bin", ANTARCTIC.name]
+    );
+}
+
+#[test]
 fn a_bbox_touching_no_tile_is_an_error() {
     let workspace = Workspace::utrecht();
 

@@ -1,4 +1,4 @@
-//! Log line formats of the binary: the Python script's or Valhalla's C++ logger's.
+//! Log line formats of the binaries: the Python scripts' or Valhalla's C++ logger's.
 
 use std::fmt::{self, Write};
 
@@ -23,6 +23,9 @@ pub struct LineFormat {
     pub format: LogFormat,
     /// Colours the level as the C++ console loggers do; only used by the Valhalla format.
     pub color: bool,
+    /// The target of the errors the Python format names `CRITICAL`, the others being `ERROR`.
+    /// Without one, every error is critical, as when a tool only logs the error it exits on.
+    pub critical_target: Option<&'static str>,
 }
 
 impl<S, N> FormatEvent<S, N> for LineFormat
@@ -40,7 +43,14 @@ where
         match self.format {
             LogFormat::Python => {
                 let timestamp = python_timestamp(&Local::now());
-                write!(writer, "{timestamp} {:>5}: ", python_level_name(level))?;
+                let critical = self
+                    .critical_target
+                    .is_none_or(|target| event.metadata().target() == target);
+                write!(
+                    writer,
+                    "{timestamp} {:>5}: ",
+                    python_level_name(level, critical)
+                )?;
             }
             LogFormat::Valhalla => {
                 write!(writer, "{} ", valhalla_timestamp(&Utc::now()))?;
@@ -82,10 +92,11 @@ fn color_code(level: Level) -> u8 {
     }
 }
 
-/// Python's `logging` level names; errors are fatal here, which the script logs as critical.
-fn python_level_name(level: Level) -> &'static str {
+/// Python's `logging` level names; `tracing` has no level above error for critical.
+fn python_level_name(level: Level, critical: bool) -> &'static str {
     match level {
-        Level::ERROR => "CRITICAL",
+        Level::ERROR if critical => "CRITICAL",
+        Level::ERROR => "ERROR",
         Level::WARN => "WARNING",
         Level::INFO => "INFO",
         Level::DEBUG => "DEBUG",

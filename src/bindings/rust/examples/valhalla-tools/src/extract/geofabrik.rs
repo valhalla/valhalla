@@ -1,31 +1,23 @@
 use std::collections::BTreeMap;
-use std::time::Duration;
 
 use serde_json::Value;
 use tracing::info;
 
 use super::Error;
-use super::geojson;
-use super::geometry::Polygon;
+use crate::geojson;
+use crate::geometry::Polygon;
 
 pub const GEOFABRIK_INDEX_URL: &str = "https://download.geofabrik.de/index-v1.json";
 
-/// Applies to connecting and to each read or write, not to the whole download.
-const TIMEOUT: Duration = Duration::from_secs(30);
-
 fn fetch_index(url: &str) -> Result<Value, Error> {
     info!("Fetching Geofabrik index from {url}...");
-    let agent: ureq::Agent = ureq::Agent::config_builder()
-        .http_status_as_error(false)
-        .timeout_connect(Some(TIMEOUT))
-        .timeout_per_read(Some(TIMEOUT))
-        .timeout_per_write(Some(TIMEOUT))
-        .build()
-        .into();
-    let response = agent.get(url).call().map_err(|error| Error::Download {
-        url: url.to_owned(),
-        reason: Box::new(error),
-    })?;
+    let response = crate::http::agent()
+        .get(url)
+        .call()
+        .map_err(|error| Error::Download {
+            url: url.to_owned(),
+            reason: Box::new(error),
+        })?;
     let status = response.status();
     if !status.is_success() {
         return Err(Error::HttpStatus {

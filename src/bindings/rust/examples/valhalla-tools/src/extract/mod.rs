@@ -2,11 +2,10 @@
 //! empty `traffic.tar` matching it.
 
 mod archive;
+mod bbox;
 mod config;
 mod error;
 mod geofabrik;
-mod geojson;
-mod geometry;
 mod source;
 mod tile;
 mod traffic;
@@ -16,13 +15,15 @@ use std::path::{Path, PathBuf};
 
 use tracing::{debug, info};
 
+pub use crate::geometry::Rect;
 pub use archive::WriteMode;
-pub use config::section as config_section;
+pub use bbox::parse_bbox;
 pub use error::Error;
 pub use geofabrik::{GEOFABRIK_INDEX_URL, region_list};
-pub use geometry::{Rect, parse_bbox};
 
-use geometry::Polygon;
+use crate::geojson;
+use crate::geometry::Polygon;
+use crate::paths::resolved;
 use source::{SourceTile, TileSource};
 
 #[derive(Debug, Clone)]
@@ -168,13 +169,6 @@ fn refuse_overwriting_inputs(
         }
     }
     Ok(())
-}
-
-/// The absolute path, with symlinks resolved when it exists, like Python's `Path.resolve()`.
-fn resolved(path: &Path) -> PathBuf {
-    fs::canonicalize(path)
-        .or_else(|_| std::path::absolute(path))
-        .unwrap_or_else(|_| path.to_path_buf())
 }
 
 enum Area {

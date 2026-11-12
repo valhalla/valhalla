@@ -3,21 +3,32 @@ name = "valhalla-tools"
 version = "0.1.0"
 edition = "2024"
 publish = false
+default-run = "valhalla_build_extract"
 
-# Pure Rust on purpose: these tools must not need libvalhalla, so no `valhalla` dependency.
+# These tools must not need libvalhalla, so no `valhalla` dependency.
 [[bin]]
 name = "valhalla_build_extract"
 path = "src/main.rs"
+
+[[bin]]
+name = "valhalla_build_elevation"
+path = "src/bin/valhalla_build_elevation.rs"
 
 [dependencies]
 anyhow = "1"
 # Local time with DST for the Python-style log lines, safe in multi-threaded processes.
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4", features = ["derive"] }
+# Elevation tiles are served gzipped and stored as such, gunzipped or recompressed to LZ4.
+flate2 = "1"
+# liblz4 itself, as skadi and the script's python-lz4 use it, for its HC levels and frame options.
+lz4 = "1.28"
 serde_json = "1"
 tar = { version = "0.4", default-features = false }
 tempfile = "3"
 thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std"] }
-ureq = "3"
+# Default features off: ureq's gzip feature would decode a tile served with
+# `Content-Encoding: gzip`; like the scripts' urllib, the tile must be stored as served.
+ureq = { version = "3", default-features = false, features = ["rustls"] }

@@ -1,10 +1,33 @@
+//! Polygons of GeoJSON files, as the scripts read them with shapely.
+
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use super::Error;
-use super::geometry::{Point, Polygon};
+use crate::geometry::{Point, Polygon};
+use crate::paths::resolved;
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Geojson directory does not exist or contains no GeoJSON files: {}", .0.display())]
+    NoFiles(PathBuf),
+    #[error("{}: expected a FeatureCollection with valid Polygon or MultiPolygon geometries", .0.display())]
+    Invalid(PathBuf),
+    #[error("I/O error on {}", path.display())]
+    Io {
+        path: PathBuf,
+        #[source]
+        source: io::Error,
+    },
+    #[error("invalid JSON in {}", path.display())]
+    Json {
+        path: PathBuf,
+        #[source]
+        source: serde_json::Error,
+    },
+}
 
 /// Exterior rings of a `Polygon` or `MultiPolygon` geometry; other geometry types have none.
 /// Returns `None` when the coordinates are malformed.
@@ -33,10 +56,15 @@ fn exterior_ring(rings: &Value) -> Option<Polygon> {
 
 /// Polygons of every feature in the `*.geojson` files directly inside `dir`.
 pub(crate) fn read_dir(dir: &Path) -> Result<Vec<Polygon>, Error> {
-    let entries = fs::read_dir(dir).map_err(|_| Error::NoGeoJson(super::resolved(dir)))?;
+    let entries = fs::read_dir(dir).map_err(|_| Error::NoFiles(resolved(dir)))?;
     let mut files = Vec::new();
     for entry in entries {
-        let path = entry.map_err(Error::io(dir))?.path();
+        let path = entry
+            .map_err(|source| Error::Io {
+                path: dir.to_path_buf(),
+                source,
+            })?
+            .path();
         if path
             .extension()
             .is_some_and(|extension| extension == "geojson")
@@ -45,7 +73,7 @@ pub(crate) fn read_dir(dir: &Path) -> Result<Vec<Polygon>, Error> {
         }
     }
     if files.is_empty() {
-        return Err(Error::NoGeoJson(super::resolved(dir)));
+        return Err(Error::NoFiles(resolved(dir)));
     }
 
     let mut polygons = Vec::new();
@@ -56,19 +84,22 @@ pub(crate) fn read_dir(dir: &Path) -> Result<Vec<Polygon>, Error> {
 }
 
 fn read_file(path: PathBuf) -> Result<Vec<Polygon>, Error> {
-    let text = fs::read_to_string(&path).map_err(Error::io(&path))?;
+    let text = match fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(source) => return Err(Error::Io { path, source }),
+    };
     let collection: Value = match serde_json::from_str(&text) {
         Ok(collection) => collection,
         Err(source) => return Err(Error::Json { path, source }),
     };
     let Some(features) = collection["features"].as_array() else {
-        return Err(Error::InvalidGeoJson(path));
+        return Err(Error::Invalid(path));
     };
     let mut file_polygons = Vec::new();
     for feature in features {
         match polygons(&feature["geometry"]) {
             Some(feature_polygons) => file_polygons.extend(feature_polygons),
-            None => return Err(Error::InvalidGeoJson(path)),
+            None => return Err(Error::Invalid(path)),
         }
     }
     Ok(file_polygons)

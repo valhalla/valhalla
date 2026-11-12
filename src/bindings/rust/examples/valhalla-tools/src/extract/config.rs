@@ -1,4 +1,3 @@
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
@@ -22,40 +21,7 @@ pub(crate) fn load(file: Option<&Path>, inline: Option<&str>) -> Result<Mjolnir,
     if file.is_none() {
         warn!("Only inline-config will be used.");
     }
-    mjolnir(&merge(file, inline)?)
-}
-
-/// A top-level section of the merged config, `None` when the config has none.
-pub fn section(
-    file: Option<&Path>,
-    inline: Option<&str>,
-    key: &str,
-) -> Result<Option<Value>, Error> {
-    Ok(merge(file, inline)?.remove(key))
-}
-
-fn merge(file: Option<&Path>, inline: Option<&str>) -> Result<Map<String, Value>, Error> {
-    let mut config = Map::new();
-    if let Some(path) = file {
-        let text = fs::read_to_string(path).map_err(Error::io(path))?;
-        let value = serde_json::from_str(&text).map_err(|source| Error::Json {
-            path: path.to_path_buf(),
-            source,
-        })?;
-        config = into_object(value, || path.display().to_string())?;
-    }
-    if let Some(inline) = inline {
-        let value = serde_json::from_str(inline).map_err(Error::InlineConfig)?;
-        config.extend(into_object(value, || "--inline-config".to_owned())?);
-    }
-    Ok(config)
-}
-
-fn into_object(value: Value, origin: impl FnOnce() -> String) -> Result<Map<String, Value>, Error> {
-    match value {
-        Value::Object(object) => Ok(object),
-        _ => Err(Error::ConfigNotObject(origin())),
-    }
+    mjolnir(&crate::config::merge(file, inline)?)
 }
 
 fn mjolnir(config: &Map<String, Value>) -> Result<Mjolnir, Error> {

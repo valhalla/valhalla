@@ -12,9 +12,6 @@
     clippy::unimplemented
 )]
 
-mod log_format;
-mod valhalla_logging;
-
 use std::env;
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -26,9 +23,7 @@ use tracing_subscriber::filter::Targets;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use valhalla_tools::extract::{self, Options, TileFilter, WriteMode};
-
-use log_format::{LineFormat, LogFormat};
-use valhalla_logging::Logger;
+use valhalla_tools::logging::{self, LineFormat, LogFormat, Logger};
 
 /// Events of this target are logged whatever the verbosity, as the C++ logger does.
 const UNFILTERED: &str = "valhalla_build_extract::unfiltered";
@@ -39,7 +34,10 @@ const GEOFABRIK_INDEX_URL_VAR: &str = "VALHALLA_GEOFABRIK_INDEX_URL";
 #[derive(Parser)]
 #[command(
     about = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract.",
-    group(ArgGroup::new("area").args(["bbox", "geojson_dir", "regions"]))
+    group(ArgGroup::new("area").args(["bbox", "geojson_dir", "regions"])),
+    args_override_self = true,
+    after_long_help = "Environment:\n  VALHALLA_GEOFABRIK_INDEX_URL  Replaces the Geofabrik index URL \
+                       (https://download.geofabrik.de/index-v1.json), for mirrors; empty means unset."
 )]
 struct Cli {
     /// Absolute or relative path to the Valhalla config JSON.
@@ -96,7 +94,11 @@ fn main() -> ExitCode {
         1 => Level::INFO,
         _ => Level::DEBUG,
     };
-    let logger = match logger(&cli) {
+    let logger = match logging::logger(
+        cli.log_format,
+        cli.config.as_deref(),
+        Some(&cli.inline_config),
+    ) {
         Ok(logger) => logger,
         Err(message) => {
             init_logging(level, cli.log_format, Logger::stderr());
@@ -127,18 +129,6 @@ fn lists_regions(cli: &Cli) -> bool {
         .any(|region| region.eq_ignore_ascii_case("list"))
 }
 
-/// Only the Valhalla format reads the config's `logging` section.
-fn logger(cli: &Cli) -> Result<Logger, String> {
-    if cli.log_format == LogFormat::Python {
-        return Ok(Logger::stderr());
-    }
-    match extract::config_section(cli.config.as_deref(), Some(&cli.inline_config), "logging") {
-        Ok(section) => valhalla_logging::from_section(section.as_ref()),
-        // The run reports the unreadable config, through the logger the C++ would start with.
-        Err(_) => Ok(Logger::default_console()),
-    }
-}
-
 fn init_logging(level: Level, format: LogFormat, logger: Logger) {
     let filter = Targets::new()
         .with_default(level)
@@ -149,6 +139,7 @@ fn init_logging(level: Level, format: LogFormat, logger: Logger) {
         .event_format(LineFormat {
             format,
             color: logger.color,
+            critical_target: None,
         })
         .finish()
         .with(filter)
@@ -157,7 +148,9 @@ fn init_logging(level: Level, format: LogFormat, logger: Logger) {
 
 fn run(cli: Cli) -> anyhow::Result<()> {
     let geofabrik_index_url = env::var(GEOFABRIK_INDEX_URL_VAR)
-        .unwrap_or_else(|_| extract::GEOFABRIK_INDEX_URL.to_owned());
+        .ok()
+        .filter(|url| !url.is_empty())
+        .unwrap_or_else(|| extract::GEOFABRIK_INDEX_URL.to_owned());
 
     if lists_regions(&cli) {
         let listing = extract::region_list(&geofabrik_index_url)?;
