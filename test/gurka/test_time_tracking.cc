@@ -311,7 +311,6 @@ TEST(TimeTracking, UnresolvableTimezone) {
   vtzero::vector_tile vt{tile_data};
   auto nodes_layer = vt.get_layer_by_name("nodes");
   ASSERT_TRUE(nodes_layer);
-  size_t tz_props = 0;
   while (auto feature = nodes_layer.next_feature()) {
     while (auto prop = feature.next_property()) {
       if (prop.key() == "timezone" && !prop.value().string_value().empty()) {
