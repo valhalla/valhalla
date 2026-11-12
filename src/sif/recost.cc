@@ -51,7 +51,7 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fail if the first edge is filtered
-  if (!ignore_access && costing.Allowed(edge, tile) == 0.f) {
+  if (!ignore_access && costing.Allowed(edge, tile, edge_id) == 0.f) {
     throw std::runtime_error("This path requires different edge access than this costing allows");
   }
 
@@ -97,12 +97,12 @@ void recost_forward(baldr::GraphReader& reader,
     uint8_t destonly_restriction_mask = 0;
     bool edge_destonly = false;
     // if its not time dependent set to 0 for Allowed method below
-    const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
+    const uint64_t current_unix_time = offset_time.valid ? offset_time.unix_time : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
     // evaluate time restrictions
     const auto next_id = edge_cb();
     if (predecessor != baldr::kInvalidLabel &&
-        (!costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
+        (!costing.Allowed(edge, label, tile, edge_id, current_unix_time, offset_time.timezone_index,
                           time_restrictions_TODO, destonly_restriction_mask, &edge_destonly) &&
          !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");

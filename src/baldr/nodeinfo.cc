@@ -3,13 +3,14 @@
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
 
-void access_json(uint16_t access, rapidjson::writer_wrapper_t& writer) {
+void node_access_json(uint16_t access, rapidjson::writer_wrapper_t& writer) {
   writer("bicycle", static_cast<bool>(access & kBicycleAccess));
   writer("bus", static_cast<bool>(access & kBusAccess));
   writer("car", static_cast<bool>(access & kAutoAccess));
@@ -33,21 +34,6 @@ void admin_json(const AdminInfo& admin, uint16_t tz_index, rapidjson::writer_wra
   if (tz) {
     writer("time_zone_name", tz->name());
   }
-}
-
-/**
- * Get the updated bit field.
- * @param dst  Data member to be updated.
- * @param src  Value to be updated.
- * @param pos  Position (pos element within the bit field).
- * @param len  Length of each element within the bit field.
- * @return  Returns an updated value for the bit field.
- */
-uint32_t
-OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
-  uint32_t shift = (pos * len);
-  uint32_t mask = (((uint32_t)1 << len) - 1) << shift;
-  return (dst & ~mask) | (src << shift);
 }
 
 } // namespace
@@ -265,7 +251,7 @@ void NodeInfo::json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& wri
   writer("edge_count", static_cast<uint64_t>(edge_count_));
 
   writer.start_object("access");
-  access_json(access_, writer);
+  node_access_json(access_, writer);
   writer.end_object();
 
   writer("tagged_access", static_cast<bool>(tagged_access_));

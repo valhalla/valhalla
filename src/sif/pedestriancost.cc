@@ -484,8 +484,12 @@ public:
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
+               const baldr::GraphId& edgeid,
                uint16_t disallow_mask = kDisallowNone) const override {
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && edge->use() < Use::kRailFerry &&
+    if (AllowedLinearFeature(edgeid)) {
+      return true;
+    }
+    return DynamicCost::Allowed(edge, tile, edgeid, disallow_mask) && edge->use() < Use::kRailFerry &&
            edge->sac_scale() <= max_hiking_difficulty_ &&
            (!edge->bss_connection() || project_on_bss_connection_);
   }
@@ -1199,13 +1203,13 @@ defaults.use_ferry_.max));
   }
 
   // transit_start_end_max_distance_
-  int_distributor.reset(make_distributor_from_range(kMultimodalStartEndMaxDistanceRange));
+  int_distributor.reset(make_distributor_from_range(kTransitTransferMaxDistanceRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_pedestriancost_from_json("transit_start_end_max_distance",
                                                    (*int_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->transit_start_end_max_distance_,
-                test::IsBetween(kMultimodalStartEndMaxDistanceRange.min,
-                                kMultimodalStartEndMaxDistanceRange.max));
+                test::IsBetween(kTransitTransferMaxDistanceRange.min,
+                                kTransitTransferMaxDistanceRange.max));
   }
 
   // transit_transfer_max_distance_
