@@ -25,9 +25,13 @@ pub(crate) fn load(file: Option<&Path>, inline: Option<&str>) -> Result<Mjolnir,
     mjolnir(&merge(file, inline)?)
 }
 
-/// A top-level section of the merged config, or `None` if it is absent or the config unreadable.
-pub fn section(file: Option<&Path>, inline: Option<&str>, key: &str) -> Option<Value> {
-    merge(file, inline).ok()?.remove(key)
+/// A top-level section of the merged config, `None` when the config has none.
+pub fn section(
+    file: Option<&Path>,
+    inline: Option<&str>,
+    key: &str,
+) -> Result<Option<Value>, Error> {
+    Ok(merge(file, inline)?.remove(key))
 }
 
 fn merge(file: Option<&Path>, inline: Option<&str>) -> Result<Map<String, Value>, Error> {

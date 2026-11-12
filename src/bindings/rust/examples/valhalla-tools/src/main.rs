@@ -21,12 +21,17 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{ArgAction, ArgGroup, Parser};
-use serde_json::{Map, Value};
 use tracing::{Level, error, warn};
+use tracing_subscriber::filter::Targets;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use valhalla_tools::extract::{self, Options, TileFilter, WriteMode};
 
 use log_format::{LineFormat, LogFormat};
-use valhalla_logging::{LogTarget, Logger};
+use valhalla_logging::Logger;
+
+/// Events of this target are logged whatever the verbosity, as the C++ logger does.
+const UNFILTERED: &str = "valhalla_build_extract::unfiltered";
 
 /// Replaces the Geofabrik index URL, for tests and mirrors.
 const GEOFABRIK_INDEX_URL_VAR: &str = "VALHALLA_GEOFABRIK_INDEX_URL";
@@ -50,8 +55,8 @@ struct Cli {
     /// Overwrites an output tar file.
     #[arg(short = 'O', long)]
     overwrite: bool,
-    /// Write each tar to a temporary file and rename it over the output once complete, instead
-    /// of rewriting the output in place.
+    /// Write each tar to a temporary file and rename it over the output path once complete,
+    /// instead of rewriting the output in place; an output symlink is replaced, not followed.
     #[arg(long)]
     atomic: bool,
     /// Flag to add a traffic.tar skeleton.
@@ -91,22 +96,21 @@ fn main() -> ExitCode {
         1 => Level::INFO,
         _ => Level::DEBUG,
     };
-    match logger(&cli) {
-        Ok((logger, missing_section)) => {
-            init_logging(level, cli.log_format, logger);
-            if missing_section {
-                warn!("No top-level 'logging' section in config, using default logger.");
-            }
-        }
+    let logger = match logger(&cli) {
+        Ok(logger) => logger,
         Err(message) => {
-            let stderr = Logger {
-                target: LogTarget::Stderr,
-                color: false,
-            };
-            init_logging(level, cli.log_format, stderr);
+            init_logging(level, cli.log_format, Logger::stderr());
             error!("{message}");
             return ExitCode::FAILURE;
         }
+    };
+    let announce_default = logger.announce_default;
+    init_logging(level, cli.log_format, logger);
+    if announce_default {
+        warn!(
+            target: UNFILTERED,
+            "No top-level 'logging' section in config, using default logger."
+        );
     }
     match run(cli) {
         Ok(()) => ExitCode::SUCCESS,
@@ -123,35 +127,31 @@ fn lists_regions(cli: &Cli) -> bool {
         .any(|region| region.eq_ignore_ascii_case("list"))
 }
 
-/// The logger and whether the config lacks a `logging` section, which only the Valhalla format reads.
-fn logger(cli: &Cli) -> Result<(Logger, bool), String> {
+/// Only the Valhalla format reads the config's `logging` section.
+fn logger(cli: &Cli) -> Result<Logger, String> {
     if cli.log_format == LogFormat::Python {
-        let stderr = Logger {
-            target: LogTarget::Stderr,
-            color: false,
-        };
-        return Ok((stderr, false));
+        return Ok(Logger::stderr());
     }
-    let section =
-        extract::config_section(cli.config.as_deref(), Some(&cli.inline_config), "logging");
-    match section {
-        Some(Value::Object(section)) => {
-            Ok((valhalla_logging::from_section(Some(&section))?, false))
-        }
-        // A scalar section has no keys, so no logger type either.
-        Some(_) => Ok((valhalla_logging::from_section(Some(&Map::new()))?, false)),
-        None => Ok((valhalla_logging::from_section(None)?, true)),
+    match extract::config_section(cli.config.as_deref(), Some(&cli.inline_config), "logging") {
+        Ok(section) => valhalla_logging::from_section(section.as_ref()),
+        // The run reports the unreadable config, through the logger the C++ would start with.
+        Err(_) => Ok(Logger::default_console()),
     }
 }
 
 fn init_logging(level: Level, format: LogFormat, logger: Logger) {
+    let filter = Targets::new()
+        .with_default(level)
+        .with_target(UNFILTERED, Level::TRACE);
     tracing_subscriber::fmt()
         .with_writer(logger.target)
-        .with_max_level(level)
+        .with_max_level(Level::TRACE)
         .event_format(LineFormat {
             format,
             color: logger.color,
         })
+        .finish()
+        .with(filter)
         .init();
 }
 

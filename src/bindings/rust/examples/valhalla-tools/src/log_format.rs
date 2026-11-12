@@ -18,7 +18,7 @@ pub enum LogFormat {
     Valhalla,
 }
 
-/// Writes the timestamp and level of the format, then the message and its fields as `key=value`.
+/// Writes the timestamp and level of the format, then the message; events carry no other field.
 pub struct LineFormat {
     pub format: LogFormat,
     /// Colours the level as the C++ console loggers do; only used by the Valhalla format.
@@ -39,33 +39,36 @@ where
         let level = *event.metadata().level();
         match self.format {
             LogFormat::Python => {
-                let now = Local::now();
-                write_date_time(&mut writer, &now)?;
-                // Truncated, not rounded, like `logging.Formatter.formatTime`.
-                let millis = now.timestamp_subsec_millis();
-                write!(writer, ",{millis:03} {:>5}: ", python_level_name(level))?;
+                let timestamp = python_timestamp(&Local::now());
+                write!(writer, "{timestamp} {:>5}: ", python_level_name(level))?;
             }
             LogFormat::Valhalla => {
-                let now = Utc::now();
-                write_date_time(&mut writer, &now)?;
-                write!(writer, ".{:09} ", now.timestamp_subsec_nanos())?;
+                write!(writer, "{} ", valhalla_timestamp(&Utc::now()))?;
                 match (self.color, color_code(level)) {
                     (true, code) => write!(writer, "\x1b[{code};1m[{level}]\x1b[0m ")?,
                     (false, _) => write!(writer, "[{level}] ")?,
                 }
             }
         }
-        let mut line = Line::default();
-        event.record(&mut line);
-        writeln!(writer, "{}{}", line.message, line.fields)
+        let mut message = Message::default();
+        event.record(&mut message);
+        writeln!(writer, "{}", message.0)
     }
 }
 
-fn write_date_time<Z: TimeZone>(writer: &mut Writer<'_>, time: &DateTime<Z>) -> fmt::Result
+/// `%(asctime)s` of Python's `logging`: milliseconds are truncated, not rounded.
+fn python_timestamp<Z: TimeZone>(time: &DateTime<Z>) -> String
 where
     Z::Offset: fmt::Display,
 {
-    write!(writer, "{}", time.format("%Y-%m-%d %H:%M:%S"))
+    let millis = time.timestamp_subsec_millis();
+    format!("{},{millis:03}", time.format("%Y-%m-%d %H:%M:%S"))
+}
+
+/// `append_timestamp` of src/midgard/logging.cc: `system_clock` printed with `%F %T`.
+fn valhalla_timestamp(time: &DateTime<Utc>) -> String {
+    let nanos = time.timestamp_subsec_nanos();
+    format!("{}.{nanos:09}", time.format("%Y-%m-%d %H:%M:%S"))
 }
 
 /// ANSI colours of the `colored` levels in src/midgard/logging.cc.
@@ -91,25 +94,47 @@ fn python_level_name(level: Level) -> &'static str {
 }
 
 #[derive(Default)]
-struct Line {
-    message: String,
-    fields: String,
-}
+struct Message(String);
 
-impl Visit for Line {
-    fn record_str(&mut self, field: &Field, value: &str) {
-        if field.name() == "message" {
-            self.message.push_str(value);
-        } else {
-            let _ = write!(self.fields, " {}={value}", field.name());
-        }
-    }
-
+impl Visit for Message {
     fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug) {
         if field.name() == "message" {
-            let _ = write!(self.message, "{value:?}");
-        } else {
-            let _ = write!(self.fields, " {}={value:?}", field.name());
+            let _ = write!(self.0, "{value:?}");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::{FixedOffset, TimeZone};
+
+    use super::*;
+
+    #[test]
+    fn python_milliseconds_are_truncated_not_rounded() {
+        let time = Utc.timestamp_opt(1_700_000_000, 999_900_000).single();
+        assert_eq!(
+            time.map(|time| python_timestamp(&time)).as_deref(),
+            Some("2023-11-14 22:13:20,999")
+        );
+    }
+
+    #[test]
+    fn python_timestamps_use_the_given_offset() {
+        let tokyo = FixedOffset::east_opt(9 * 3600);
+        let time = tokyo.and_then(|zone| zone.timestamp_opt(1_700_000_000, 0).single());
+        assert_eq!(
+            time.map(|time| python_timestamp(&time)).as_deref(),
+            Some("2023-11-15 07:13:20,000")
+        );
+    }
+
+    #[test]
+    fn valhalla_timestamps_have_nanoseconds() {
+        let time = Utc.timestamp_opt(1_700_000_000, 5).single();
+        assert_eq!(
+            time.map(|time| valhalla_timestamp(&time)).as_deref(),
+            Some("2023-11-14 22:13:20.000000005")
+        );
     }
 }

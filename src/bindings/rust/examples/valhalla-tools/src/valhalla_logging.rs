@@ -14,15 +14,42 @@ use tracing_subscriber::fmt::MakeWriter;
 pub struct Logger {
     pub target: LogTarget,
     pub color: bool,
+    /// Whether to warn, as the C++ does, that the config has no `logging` section.
+    pub announce_default: bool,
 }
 
-/// Builds the logger of the `logging` section; `None` gives the C++ default, coloured stdout.
-pub fn from_section(section: Option<&Map<String, Value>>) -> Result<Logger, String> {
-    let Some(section) = section else {
-        return Ok(Logger {
+impl Logger {
+    pub fn stderr() -> Self {
+        Self {
+            target: LogTarget::Stderr,
+            color: false,
+            announce_default: false,
+        }
+    }
+
+    /// The C++ default logger, `{"type": "std_out", "color": "true"}`.
+    pub fn default_console() -> Self {
+        Self {
             target: LogTarget::Stdout,
             color: true,
-        });
+            announce_default: false,
+        }
+    }
+}
+
+/// The logger of a parsed config's `logging` section; without one, the announced C++ default.
+pub fn from_section(section: Option<&Value>) -> Result<Logger, String> {
+    let empty = Map::new();
+    let section = match section {
+        None => {
+            return Ok(Logger {
+                announce_default: true,
+                ..Logger::default_console()
+            });
+        }
+        Some(Value::Object(section)) => section,
+        // A scalar section has no keys, so no logger type either.
+        Some(_) => &empty,
     };
     // The C++ reads every value as the text of a property tree node.
     let text = |key: &str| {
@@ -41,13 +68,25 @@ pub fn from_section(section: Option<&Map<String, Value>>) -> Result<Logger, Stri
         Some("file") => {
             let path = text("file_name").ok_or("No output file provided to file logger")?;
             let reopen_interval = match text("reopen_interval") {
-                Some(seconds) => seconds
-                    .parse()
-                    .map_err(|_| format!("{seconds} is not a valid reopen interval"))?,
+                Some(text) => strtoul(&text)
+                    .ok_or_else(|| format!("{text} is not a valid reopen interval"))?,
                 None => 300,
             };
-            let max_file_size = count(text("max_file_size"), "max_file_size")?;
-            let max_archived_files = count(text("max_archived_files"), "max_archived_files")?;
+            let max_file_size = match text("max_file_size").filter(|text| !text.is_empty()) {
+                Some(text) => strtol(&text)
+                    .and_then(|size| u64::try_from(size).ok())
+                    .ok_or_else(|| format!("{text} is not a valid max_file_size"))?,
+                None => 0,
+            };
+            let max_archived_files =
+                match text("max_archived_files").filter(|text| !text.is_empty()) {
+                    // `midgard::to_int<int>`, which does not skip whitespace.
+                    Some(text) => leading_integer(&text)
+                        .and_then(|count| i32::try_from(count).ok())
+                        .and_then(|count| u64::try_from(count).ok())
+                        .ok_or_else(|| format!("{text} is not a valid max_archived_files"))?,
+                    None => 0,
+                };
             // Rolling is only enabled when both limits are set.
             let rolling = (max_file_size > 0 && max_archived_files > 0)
                 .then_some((max_file_size, max_archived_files));
@@ -62,16 +101,40 @@ pub fn from_section(section: Option<&Map<String, Value>>) -> Result<Logger, Stri
     };
     // Only the console loggers colour their output.
     let color = color && matches!(target, LogTarget::Stdout | LogTarget::Stderr);
-    Ok(Logger { target, color })
+    Ok(Logger {
+        target,
+        color,
+        announce_default: false,
+    })
 }
 
-/// A non-negative limit; absent or empty means 0, that is disabled.
-fn count(value: Option<String>, key: &str) -> Result<u64, String> {
-    match value.as_deref() {
-        None | Some("") => Ok(0),
-        Some(text) => text
-            .parse()
-            .map_err(|_| format!("{text} is not a valid {key}")),
+/// The integer at the start of `text`, after an optional sign, ignoring what follows the
+/// digits, as `strtol` and `std::from_chars` read it. `None` without digits.
+fn leading_integer(text: &str) -> Option<i128> {
+    let (negative, digits) = match text.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, text.strip_prefix('+').unwrap_or(text)),
+    };
+    let end = digits
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(digits.len());
+    let magnitude: i128 = digits[..end].parse().ok()?;
+    Some(if negative { -magnitude } else { magnitude })
+}
+
+/// `std::stol`: leading whitespace skipped, `None` out of the `long` range.
+fn strtol(text: &str) -> Option<i64> {
+    leading_integer(text.trim_start_matches(|c: char| c.is_ascii_whitespace()))
+        .and_then(|value| i64::try_from(value).ok())
+}
+
+/// `std::stoul`, which also accepts a negative number and wraps it around.
+fn strtoul(text: &str) -> Option<u64> {
+    let value = leading_integer(text.trim_start_matches(|c: char| c.is_ascii_whitespace()))?;
+    if value >= 0 {
+        u64::try_from(value).ok()
+    } else {
+        u64::try_from(-value).ok().map(u64::wrapping_neg)
     }
 }
 
@@ -128,8 +191,7 @@ impl LogFile {
         reopen_interval: Duration,
         rolling: Option<(u64, u64)>,
     ) -> Result<Self, String> {
-        let file = open_append(&path)
-            .map_err(|_| format!("Cannot create log file: {}", path.display()))?;
+        let file = open_append(&path)?;
         Ok(Self {
             path,
             file,
@@ -177,18 +239,112 @@ impl LogFile {
     }
 
     fn reopen(&mut self) -> io::Result<()> {
-        self.file = open_append(&self.path)?;
+        self.file = open_append(&self.path).map_err(io::Error::other)?;
         self.last_reopen = Instant::now();
         Ok(())
     }
 }
 
-fn open_append(path: &Path) -> io::Result<File> {
+fn open_append(path: &Path) -> Result<File, String> {
     if let Some(parent) = path
         .parent()
         .filter(|parent| !parent.as_os_str().is_empty())
     {
-        fs::create_dir_all(parent)?;
+        fs::create_dir_all(parent)
+            .map_err(|_| format!("Cannot create directory for log file: {}", parent.display()))?;
     }
-    OpenOptions::new().create(true).append(true).open(path)
+    OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|_| format!("Cannot create log file: {}", path.display()))
+}
+
+#[cfg(test)]
+#[expect(clippy::unwrap_used, reason = "tests fail loudly on bad fixtures")]
+mod tests {
+    use super::*;
+
+    fn write_lines(file: &mut LogFile, lines: &[&str]) {
+        for line in lines {
+            file.write_line(format!("{line}\n").as_bytes()).unwrap();
+        }
+    }
+
+    /// Writes "first", moves the log away as logrotate would, then writes "second" and "third".
+    fn rotate_between_lines(reopen_interval: Duration) -> (String, Option<String>) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("build.log");
+        let mut file = LogFile::open(path.clone(), reopen_interval, None).unwrap();
+        write_lines(&mut file, &["first"]);
+        fs::rename(&path, dir.path().join("build.log.old")).unwrap();
+        write_lines(&mut file, &["second", "third"]);
+        let rotated = fs::read_to_string(dir.path().join("build.log.old")).unwrap();
+        (rotated, fs::read_to_string(&path).ok())
+    }
+
+    #[test]
+    fn a_zero_reopen_interval_follows_a_rotated_log_after_one_line() {
+        let expected = ("first\nsecond\n".to_owned(), Some("third\n".to_owned()));
+        assert_eq!(rotate_between_lines(Duration::ZERO), expected);
+    }
+
+    #[test]
+    fn the_default_reopen_interval_keeps_writing_to_the_rotated_log() {
+        let expected = ("first\nsecond\nthird\n".to_owned(), None);
+        assert_eq!(rotate_between_lines(Duration::from_secs(300)), expected);
+    }
+
+    #[test]
+    fn rolling_at_the_archive_limit_drops_the_oldest_archive() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("build.log");
+        let archive = |number: u32| dir.path().join(format!("build.log.{number}"));
+        fs::write(archive(1), "old 1\n").unwrap();
+        fs::write(archive(2), "old 2\n").unwrap();
+        fs::write(&path, "current\n").unwrap();
+        let mut file = LogFile::open(path.clone(), Duration::from_secs(300), Some((1, 2))).unwrap();
+
+        write_lines(&mut file, &["new"]);
+
+        let contents = [path, archive(1), archive(2)].map(|path| fs::read_to_string(path).unwrap());
+        assert_eq!(contents, ["new\n", "current\n", "old 1\n"]);
+    }
+
+    #[test]
+    fn an_uncreatable_log_directory_is_reported_like_the_cpp() {
+        let dir = tempfile::tempdir().unwrap();
+        let blocker = dir.path().join("file");
+        fs::write(&blocker, "").unwrap();
+        let path = blocker.join("logs/build.log");
+        let message = LogFile::open(path, Duration::ZERO, None).err();
+        let expected = format!(
+            "Cannot create directory for log file: {}",
+            blocker.join("logs").display()
+        );
+        assert_eq!(message, Some(expected));
+    }
+
+    #[test]
+    fn stoul_skips_whitespace_and_stops_at_the_first_non_digit() {
+        assert_eq!(
+            [" 30", "300.0", "10MB"].map(strtoul),
+            [Some(30), Some(300), Some(10)]
+        );
+    }
+
+    #[test]
+    fn stoul_wraps_negative_values_around() {
+        assert_eq!(strtoul("-1"), Some(u64::MAX));
+    }
+
+    #[test]
+    fn numbers_without_digits_are_invalid() {
+        assert_eq!(["", "MB", "+-1", " "].map(leading_integer), [None; 4]);
+    }
+
+    #[test]
+    fn from_chars_does_not_skip_whitespace() {
+        assert_eq!(leading_integer(" 3"), None);
+    }
 }

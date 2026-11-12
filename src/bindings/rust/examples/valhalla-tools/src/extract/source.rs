@@ -41,11 +41,16 @@ impl TileSource {
         Ok(tiles)
     }
 
-    pub(crate) fn read_tile(&self, tile: &SourceTile) -> Result<Member<Take<File>>, Error> {
-        let path = match self {
+    /// The file holding the tile's data.
+    pub(crate) fn file_of(&self, tile: &SourceTile) -> PathBuf {
+        match self {
             Self::Dir(dir) => dir.join(&tile.name),
             Self::Tar(tar) => tar.clone(),
-        };
+        }
+    }
+
+    pub(crate) fn read_tile(&self, tile: &SourceTile) -> Result<Member<Take<File>>, Error> {
+        let path = self.file_of(tile);
         let open = || -> io::Result<Take<File>> {
             let mut file = File::open(&path)?;
             file.seek(SeekFrom::Start(tile.data_offset))?;
@@ -108,7 +113,7 @@ fn list_tar(path: &Path) -> Result<Vec<SourceTile>, Error> {
     // A later member replaces an earlier one with the same name, as when extracting.
     let mut by_name = HashMap::new();
     for entry in archive.entries().map_err(Error::io(path))? {
-        let mut entry = entry.map_err(Error::io(path))?;
+        let entry = entry.map_err(Error::io(path))?;
         let name = String::from_utf8_lossy(&entry.path_bytes()).into_owned();
         if !entry.header().entry_type().is_file() || !name.ends_with(".gph") {
             continue;
@@ -117,7 +122,7 @@ fn list_tar(path: &Path) -> Result<Vec<SourceTile>, Error> {
             position: Tile::from_path(&name)?,
             name: name.clone(),
             size: entry.size(),
-            metadata: member_metadata(&mut entry).map_err(Error::io(path))?,
+            metadata: member_metadata(entry.header()).map_err(Error::io(path))?,
             data_offset: entry.raw_file_position(),
         };
         by_name.insert(name, tile);
@@ -125,40 +130,14 @@ fn list_tar(path: &Path) -> Result<Vec<SourceTile>, Error> {
     Ok(by_name.into_values().collect())
 }
 
-/// The member's header fields, with the PAX records that override them (Python writes
-/// fractional mtimes as PAX records).
-fn member_metadata(entry: &mut tar::Entry<'_, File>) -> io::Result<MemberMetadata> {
-    let header = entry.header();
-    let mut metadata = MemberMetadata {
+/// The member's own ustar fields; PAX records are not read.
+fn member_metadata(header: &tar::Header) -> io::Result<MemberMetadata> {
+    Ok(MemberMetadata {
         mode: header.mode()? & 0o7777,
         uid: header.uid()?,
         gid: header.gid()?,
         mtime: header.mtime()?,
-    };
-    if let Some(extensions) = entry.pax_extensions()? {
-        for extension in extensions {
-            let extension = extension?;
-            let (Ok(key), Ok(value)) = (extension.key(), extension.value()) else {
-                continue;
-            };
-            match key {
-                "mtime" => {
-                    if let Ok(seconds) = value.parse::<f64>() {
-                        // Whole seconds, like the ustar field; negative times are not representable.
-                        metadata.mtime = if seconds >= 0.0 {
-                            seconds.trunc() as u64
-                        } else {
-                            0
-                        };
-                    }
-                }
-                "uid" => metadata.uid = value.parse().unwrap_or(0),
-                "gid" => metadata.gid = value.parse().unwrap_or(0),
-                _ => {}
-            }
-        }
-    }
-    Ok(metadata)
+    })
 }
 
 #[cfg(test)]

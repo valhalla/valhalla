@@ -31,6 +31,10 @@ pub enum Error {
     InvalidTilePath { name: String },
     #[error("tile {name} is on a level without a known tile size")]
     UnknownTileLevel { name: String },
+    #[error("{} is the input tile {tile}; write the extract outside the tile directory", .output.display())]
+    OutputIsTile { output: PathBuf, tile: String },
+    #[error("the traffic extract {} would overwrite {}; set 'mjolnir.traffic_extract' to another path", .traffic.display(), .other.display())]
+    TrafficOverwrites { traffic: PathBuf, other: PathBuf },
     #[error("Couldn't find usable tiles in {}", .0.display())]
     NoTiles(PathBuf),
     #[error("tile {name} has {size} bytes, more than index.bin can describe")]

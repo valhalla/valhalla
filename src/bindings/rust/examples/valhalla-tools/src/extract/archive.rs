@@ -67,17 +67,18 @@ impl MemberMetadata {
             mode: metadata.mode() & 0o7777,
             uid: metadata.uid().into(),
             gid: metadata.gid().into(),
-            mtime: u64::try_from(metadata.mtime()).unwrap_or(0),
+            mtime: rounded_seconds(metadata.mtime(), metadata.mtime_nsec()),
         }
     }
 
     #[cfg(not(unix))]
     pub(crate) fn of_file(metadata: &fs::Metadata) -> Self {
-        let mtime = metadata
+        let since_epoch = metadata
             .modified()
             .ok()
             .and_then(|modified| modified.duration_since(UNIX_EPOCH).ok())
-            .map_or(0, |since_epoch| since_epoch.as_secs());
+            .unwrap_or_default();
+        let seconds = i64::try_from(since_epoch.as_secs()).unwrap_or(0);
         Self {
             mode: if metadata.permissions().readonly() {
                 0o444
@@ -86,9 +87,15 @@ impl MemberMetadata {
             },
             uid: 0,
             gid: 0,
-            mtime,
+            mtime: rounded_seconds(seconds, since_epoch.subsec_nanos().into()),
         }
     }
+}
+
+/// Whole seconds as `tarfile` stores a float mtime in its ustar field: `round()`, half to even.
+fn rounded_seconds(seconds: i64, nanos: i64) -> u64 {
+    let round_up = nanos > 500_000_000 || (nanos == 500_000_000 && seconds % 2 != 0);
+    u64::try_from(seconds + i64::from(round_up)).unwrap_or(0)
 }
 
 /// A tile to store: `content` must yield exactly `size` bytes.
@@ -235,11 +242,7 @@ fn append(
     let mut header = tar::Header::new_ustar();
     header.set_path(name)?;
     header.set_size(size);
-    header.set_mode(
-        fit_octal_field(metadata.mode.into(), 8)
-            .try_into()
-            .unwrap_or(0),
-    );
+    header.set_mode(metadata.mode);
     header.set_uid(fit_octal_field(metadata.uid, 8));
     header.set_gid(fit_octal_field(metadata.gid, 8));
     header.set_mtime(fit_octal_field(metadata.mtime, 12));
@@ -329,6 +332,18 @@ mod tests {
         expected.extend_from_slice(&6_549_282_u32.to_le_bytes());
         expected.extend_from_slice(&[0x0d, 0x0c, 0x0b, 0x0a]);
         assert_eq!(entry.to_bytes().as_slice(), expected.as_slice());
+    }
+
+    #[test]
+    fn mtimes_are_rounded_half_to_even_like_python() {
+        let rounded = [
+            (10, 499_999_999),
+            (10, 500_000_000),
+            (11, 500_000_000),
+            (10, 500_000_001),
+        ]
+        .map(|(seconds, nanos)| rounded_seconds(seconds, nanos));
+        assert_eq!(rounded, [10, 10, 12, 11]);
     }
 
     #[test]

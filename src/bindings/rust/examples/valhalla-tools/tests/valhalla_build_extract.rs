@@ -870,23 +870,15 @@ fn an_input_tar_behind_a_hard_link_is_read_whole_before_being_replaced() {
     let alias = workspace.path("alias.tar");
     fs::hard_link(workspace.path("tiles.tar"), &alias).unwrap();
 
-    let output = workspace.build_extract(&["-v", "-O", "-e", alias.to_str().unwrap()]);
-    assert_success(&output);
+    assert_success(&workspace.build_extract(&["-O", "-e", alias.to_str().unwrap()]));
 
-    let stderr = String::from_utf8_lossy(&output.stderr);
     let stored: Vec<_> = read_tar(&alias)
         .into_iter()
         .skip(1)
         .map(|member| member.data)
         .collect();
     let sources: Vec<_> = UTRECHT.iter().map(tile_bytes).collect();
-    assert_eq!(
-        (
-            stderr.contains("is also the input, writing it through a temporary file"),
-            stored
-        ),
-        (true, sources)
-    );
+    assert_eq!(stored, sources);
 }
 
 #[cfg(unix)]
@@ -946,7 +938,7 @@ fn the_permissions_of_an_existing_output_are_kept_by_default() {
 
 #[cfg(unix)]
 #[test]
-fn tile_members_carry_the_mode_owner_and_whole_second_mtime_of_their_file() {
+fn tile_members_carry_the_mode_owner_and_rounded_mtime_of_their_file() {
     use std::os::unix::fs::{MetadataExt, PermissionsExt};
     use std::time::UNIX_EPOCH;
 
@@ -971,7 +963,7 @@ fn tile_members_carry_the_mode_owner_and_whole_second_mtime_of_their_file() {
             0o640,
             u64::from(file.uid()),
             u64::from(file.gid()),
-            1_700_000_000
+            1_700_000_001
         )
     );
 }
@@ -1216,4 +1208,195 @@ fn the_python_format_ignores_the_logging_section() {
         (log.exists(), has_finished_line(&output.stderr)),
         (false, true)
     );
+}
+
+#[test]
+fn an_output_that_is_one_of_the_tiles_is_refused_before_anything_is_written() {
+    let workspace = Workspace::utrecht();
+    let tile = workspace.tile_dir().join(UTRECHT[0].name);
+    let mut config = workspace.config();
+    config["mjolnir"]["tile_extract"] = json!(tile);
+
+    let output = build_extract(&config).arg("-O").output().unwrap();
+
+    assert_eq!(
+        (output.status.code(), fs::read(&tile).unwrap()),
+        (Some(1), tile_bytes(&UTRECHT[0]))
+    );
+}
+
+#[test]
+fn a_traffic_output_that_is_one_of_the_tiles_is_refused_before_anything_is_written() {
+    let workspace = Workspace::utrecht();
+    let tile = workspace.tile_dir().join(UTRECHT[1].name);
+    let mut config = workspace.config();
+    config["mjolnir"]["traffic_extract"] = json!(tile);
+
+    let output = build_extract(&config).arg("-t").output().unwrap();
+
+    assert_eq!(
+        (
+            output.status.code(),
+            fs::read(&tile).unwrap(),
+            workspace.path("tiles.tar").exists()
+        ),
+        (Some(1), tile_bytes(&UTRECHT[1]), false)
+    );
+}
+
+#[test]
+fn a_traffic_output_equal_to_the_tile_output_is_refused() {
+    let workspace = Workspace::utrecht();
+    let mut config = workspace.config();
+    config["mjolnir"]["tile_extract"] = json!(workspace.path("traffic.tar"));
+
+    let output = build_extract(&config).arg("-t").output().unwrap();
+
+    assert_eq!(
+        (output.status.code(), workspace.path("traffic.tar").exists()),
+        (Some(1), false)
+    );
+}
+
+#[test]
+fn a_traffic_output_equal_to_the_input_tar_is_refused() {
+    let workspace = Workspace::utrecht();
+    assert_success(&workspace.build_extract(&[]));
+    let before = fs::read(workspace.path("tiles.tar")).unwrap();
+    let mut config = workspace.config();
+    config["mjolnir"]["traffic_extract"] = json!(workspace.path("tiles.tar"));
+    let copy = workspace.path("copy.tar");
+
+    let output = build_extract(&config)
+        .args(["-t", "-e", copy.to_str().unwrap()])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        (
+            output.status.code(),
+            fs::read(workspace.path("tiles.tar")).unwrap(),
+            copy.exists()
+        ),
+        (Some(1), before, false)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn an_input_tar_named_through_a_symlink_is_rewritten_through_it() {
+    let workspace = Workspace::utrecht();
+    assert_success(&workspace.build_extract(&[]));
+    let link = workspace.path("link.tar");
+    std::os::unix::fs::symlink(workspace.path("tiles.tar"), &link).unwrap();
+    let mut config = workspace.config();
+    config["mjolnir"]["tile_extract"] = json!(link);
+
+    let run = build_extract(&config)
+        .args(["-O", "-e", link.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_success(&run);
+
+    let link_kept = fs::symlink_metadata(&link).unwrap().is_symlink();
+    assert_eq!(
+        (link_kept, member_names(&workspace.path("tiles.tar")).len()),
+        (true, 1 + UTRECHT.len())
+    );
+}
+
+#[test]
+fn the_missing_logging_section_warning_is_shown_without_v() {
+    let workspace = Workspace::utrecht();
+
+    let output = build_extract(&workspace.config())
+        .args(["--log-format", "valhalla"])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("No top-level 'logging' section in config, using default logger."),
+        "stdout: {stdout:?}"
+    );
+}
+
+#[test]
+fn an_unreadable_config_gets_no_missing_logging_section_warning() {
+    let workspace = Workspace::utrecht();
+    let missing = workspace.path("missing.json");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_valhalla_build_extract"))
+        .args([
+            "--log-format",
+            "valhalla",
+            "-v",
+            "-c",
+            missing.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.code() == Some(1) && !stdout.contains("No top-level 'logging' section"),
+        "stdout: {stdout:?}"
+    );
+}
+
+/// Seconds since the epoch of a printed `YYYY-MM-DD HH:MM:SS`, read as if it were UTC.
+fn printed_seconds(line: &str) -> i64 {
+    let number = |range: std::ops::Range<usize>| line[range].parse::<i64>().unwrap();
+    let (year, month, day) = (number(0..4), number(5..7), number(8..10));
+    // Days from 1970-01-01 to the civil date, after Howard Hinnant's `days_from_civil`.
+    let year = if month <= 2 { year - 1 } else { year };
+    let era = year.div_euclid(400);
+    let year_of_era = year - era * 400;
+    let day_of_year = (153 * ((month + 9) % 12) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    let days = era * 146_097 + day_of_era - 719_468;
+    days * 86_400 + number(11..13) * 3600 + number(14..16) * 60 + number(17..19)
+}
+
+fn now_seconds() -> i64 {
+    let since_epoch = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap();
+    i64::try_from(since_epoch.as_secs()).unwrap()
+}
+
+/// Checks that the "Finished tarring" line shows the current time `offset` seconds ahead of UTC.
+fn assert_printed_offset(log_format: &str, time_zone: &str, offset: i64) {
+    let workspace = Workspace::utrecht();
+    let mut config = workspace.config();
+    config["logging"] = json!({"type": "std_err"});
+    let before = now_seconds();
+    let output = build_extract(&config)
+        .env("TZ", time_zone)
+        .args(["-v", "--log-format", log_format])
+        .output()
+        .unwrap();
+    let after = now_seconds();
+
+    let line = finished_line(&output.stderr);
+    let instant = printed_seconds(&line) - offset;
+    assert!(
+        before <= instant && instant <= after,
+        "{line:?} is not between {before} and {after} at offset {offset}"
+    );
+}
+
+#[test]
+fn the_python_format_prints_local_time_in_tokyo() {
+    assert_printed_offset("python", "Asia/Tokyo", 9 * 3600);
+}
+
+#[test]
+fn the_python_format_prints_local_time_in_utc() {
+    assert_printed_offset("python", "UTC", 0);
+}
+
+#[test]
+fn the_valhalla_format_prints_utc_whatever_the_time_zone() {
+    assert_printed_offset("valhalla", "Asia/Tokyo", 0);
 }

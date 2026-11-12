@@ -77,21 +77,36 @@ pub fn run(options: &Options) -> Result<(), Error> {
         });
     };
 
-    let tiles = select_tiles(
-        source.list_tiles()?,
-        &options.filter,
-        &options.geofabrik_index_url,
-    )?;
+    let traffic_output = options.with_traffic.then(|| {
+        mjolnir
+            .traffic_extract
+            .clone()
+            .unwrap_or_else(|| output.with_file_name("traffic.tar"))
+    });
+    let listed = source.list_tiles()?;
+    refuse_overwriting_inputs(&source, &listed, &output, traffic_output.as_deref())?;
+    let tiles = select_tiles(listed, &options.filter, &options.geofabrik_index_url)?;
     if tiles.is_empty() {
         return Err(Error::NoTiles(resolved(source.path())));
     }
 
-    let mode = options.write_mode;
-    let extract_mode = match &source {
-        TileSource::Tar(input) => mode_for(mode, input, &output),
-        TileSource::Dir(_) => mode,
+    // Truncating the input tar would destroy the tiles still to be read, so it is replaced
+    // instead; through its canonical path, so that a symlink to it is still written through.
+    let (extract_path, extract_mode) = match &source {
+        TileSource::Tar(input)
+            if options.write_mode == WriteMode::InPlace
+                && archive::is_same_file(input, &output) =>
+        {
+            info!(
+                "{} is also the input, writing it through a temporary file",
+                output.display()
+            );
+            let canonical = fs::canonicalize(&output).map_err(Error::io(&output))?;
+            (canonical, WriteMode::Atomic)
+        }
+        _ => (output.clone(), options.write_mode),
     };
-    let archived = archive::write_indexed_tar(&output, extract_mode, &tiles, |tile| {
+    let archived = archive::write_indexed_tar(&extract_path, extract_mode, &tiles, |tile| {
         debug!("Adding tile {} to the tar file", tile.name);
         source.read_tile(tile)
     })?;
@@ -101,13 +116,9 @@ pub fn run(options: &Options) -> Result<(), Error> {
         output.display()
     );
 
-    if options.with_traffic {
+    if let Some(traffic_output) = traffic_output {
         info!("Start creating traffic extract...");
-        let traffic_output = mjolnir
-            .traffic_extract
-            .unwrap_or_else(|| output.with_file_name("traffic.tar"));
-        let traffic_mode = mode_for(mode, &output, &traffic_output);
-        traffic::write_extract(&output, &archived, &traffic_output, traffic_mode)?;
+        traffic::write_extract(&output, &archived, &traffic_output, options.write_mode)?;
         info!(
             "Finished creating the traffic extract at {}",
             traffic_output.display()
@@ -116,16 +127,47 @@ pub fn run(options: &Options) -> Result<(), Error> {
     Ok(())
 }
 
-/// Truncating the file being read would destroy it, so that output goes through a temporary file.
-fn mode_for(mode: WriteMode, input: &Path, output: &Path) -> WriteMode {
-    if mode == WriteMode::InPlace && archive::is_same_file(input, output) {
-        info!(
-            "{} is also the input, writing it through a temporary file",
-            output.display()
-        );
-        return WriteMode::Atomic;
+/// Refuses, before anything is written, outputs that would replace a tile still to be read or
+/// the tile extract the traffic extract is built from.
+fn refuse_overwriting_inputs(
+    source: &TileSource,
+    tiles: &[SourceTile],
+    output: &Path,
+    traffic_output: Option<&Path>,
+) -> Result<(), Error> {
+    if let TileSource::Dir(_) = source {
+        for path in std::iter::once(output).chain(traffic_output) {
+            // An output that does not exist yet cannot be one of the tiles.
+            if !path.exists() {
+                continue;
+            }
+            if let Some(tile) = tiles
+                .iter()
+                .find(|tile| archive::is_same_file(&source.file_of(tile), path))
+            {
+                return Err(Error::OutputIsTile {
+                    output: path.to_path_buf(),
+                    tile: tile.name.clone(),
+                });
+            }
+        }
     }
-    mode
+    let Some(traffic) = traffic_output else {
+        return Ok(());
+    };
+    let input_tar = match source {
+        TileSource::Tar(input) => Some(input.as_path()),
+        TileSource::Dir(_) => None,
+    };
+    for other in std::iter::once(output).chain(input_tar) {
+        if archive::is_same_file(traffic, other) || resolved(traffic) == resolved(other) {
+            return Err(Error::TrafficOverwrites {
+                traffic: traffic.to_path_buf(),
+                other: other.to_path_buf(),
+            });
+        }
+    }
+    Ok(())
 }
 
 /// The absolute path, with symlinks resolved when it exists, like Python's `Path.resolve()`.
