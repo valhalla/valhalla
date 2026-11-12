@@ -3,6 +3,8 @@
 #include "baldr/time_info.h"
 #include "gurka.h"
 #include "loki/search.h"
+#include "loki/tiles.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "proto/api.pb.h"
 #include "sif/costfactory.h"
 
@@ -260,4 +262,61 @@ TEST(TimeTracking, dst) {
   int tz_idx = dt::get_tz_db().to_index("Europe/London");
   EXPECT_NO_THROW(baldr::TimeInfo::make(date_time, tz_idx))
       << " could not apply timezone to local time";
+}
+
+TEST(TimeTracking, UnresolvableTimezone) {
+  const std::string ascii_map = R"(A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "trunk"}}}, {"BC", {{"highway", "trunk"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_unresolvable_tz");
+
+  // e.g. tiles from a newer valhalla or an OS tzdb lacking the zone
+  constexpr uint32_t kUnresolvableTzIdx = 500;
+  ASSERT_EQ(dt::get_tz_db().from_index(kUnresolvableTzIdx), nullptr);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  const auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+  for (const auto& tile_id : reader.GetTileSet()) {
+    mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
+    std::vector<baldr::NodeInfo> nodes;
+    for (const auto& node : tile.GetNodes()) {
+      nodes.push_back(node);
+      nodes.back().set_timezone(kUnresolvableTzIdx);
+    }
+    std::vector<baldr::DirectedEdge> edges;
+    for (size_t i = 0; i < tile.header()->directededgecount(); ++i) {
+      edges.push_back(tile.directededge(i));
+    }
+    tile.Update(nodes, edges);
+  }
+
+  // time tracking falls back to UTC
+  std::string date_time = "2020-04-01T12:34";
+  const auto utc_idx = dt::get_tz_db().to_index("Etc/UTC");
+  const auto ti = baldr::TimeInfo::make(date_time, kUnresolvableTzIdx);
+  EXPECT_TRUE(ti.valid);
+  EXPECT_EQ(ti.timezone_index, utc_idx);
+
+  // time dependent route over those nodes
+  const auto result = gurka::do_action(Options::route, map, {"A", "C"}, "auto",
+                                       {{"/date_time/type", "1"}, {"/date_time/value", date_time}});
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+  for (const auto& node : result.trip().routes(0).legs(0).node()) {
+    EXPECT_TRUE(node.time_zone().empty());
+  }
+
+  // vector tile node layer leaves the time zone empty
+  std::string tile_data;
+  gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
+  vtzero::vector_tile vt{tile_data};
+  auto nodes_layer = vt.get_layer_by_name("nodes");
+  ASSERT_TRUE(nodes_layer);
+  size_t tz_props = 0;
+  while (auto feature = nodes_layer.next_feature()) {
+    while (auto prop = feature.next_property()) {
+      if (prop.key() == "timezone" && !prop.value().string_value().empty()) {
+        FAIL() << "tile node shouldn't have a valid timezone";
+      }
+    }
+  }
 }
