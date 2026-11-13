@@ -987,7 +987,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseCostingOptions'
         - type: object
-          description: Options for auto, bus, and taxi costings. Parsed in src/sif/autocost.cc.
+          description: Options for auto, bus, taxi and emergency costings. Parsed in src/sif/autocost.cc.
           properties:
             alley_factor:
               type: number
@@ -1063,37 +1063,6 @@ components:
               type: number
               default: 0.8
               description: Vehicle weight in metric tons for access restriction matching.
-
-    EmergencyCostingOptions:
-      allOf:
-        - $ref: '#/components/schemas/AutoCostingOptions'
-        - type: object
-          description: Options for emergency costing. Parsed in src/sif/autocost.cc.
-          properties:
-            motorway_speed_factor:
-              type: number
-              minimum: 0.5
-              maximum: 2
-              default: 1
-              description: Factor applied to the speed on motorways and trunk roads. The resulting speed is capped by top_speed.
-            rural_speed_factor:
-              type: number
-              minimum: 0.5
-              maximum: 2
-              default: 1
-              description: Factor applied to the speed on primary, secondary and tertiary roads outside built-up areas. The resulting speed is capped by top_speed.
-            urban_speed_factor:
-              type: number
-              minimum: 0.5
-              maximum: 2
-              default: 1
-              description: Factor applied to the speed on primary, secondary and tertiary roads in built-up areas. The resulting speed is capped by top_speed.
-            minor_road_speed_factor:
-              type: number
-              minimum: 0.5
-              maximum: 2
-              default: 1
-              description: Factor applied to the speed on unclassified, residential and service roads. The resulting speed is capped by top_speed.
 
     BicycleCostingOptions:
       allOf:
@@ -1603,7 +1572,7 @@ components:
         taxi:
           $ref: '#/components/schemas/AutoCostingOptions'
         emergency:
-          $ref: '#/components/schemas/EmergencyCostingOptions'
+          $ref: '#/components/schemas/AutoCostingOptions'
         bicycle:
           $ref: '#/components/schemas/BicycleCostingOptions'
         pedestrian:

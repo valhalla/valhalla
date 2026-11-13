@@ -1,5 +1,4 @@
 #include "gurka.h"
-#include "test.h"
 
 #include <gtest/gtest.h>
 
@@ -70,74 +69,6 @@ TEST(EmergencyAccess, EmergencyOnlyWayAndBarrier) {
   gurka::assert::raw::expect_path(result, {"GJ", "JK", "KI"});
   result = gurka::do_action(Options::route, map, {"G", "I"}, "emergency");
   gurka::assert::raw::expect_path(result, {"GHI", "GHI"});
-}
-
-/*************************************************************/
-// speed factors per road class
-
-class EmergencySpeedFactorTest : public ::testing::Test {
-protected:
-  static gurka::map map;
-
-  static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
-
-    const std::string ascii_map = R"(
-      A------B------C------D
-    )";
-
-    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", "50"}}},
-                              {"BC", {{"highway", "residential"}, {"maxspeed", "30"}}},
-                              {"CD", {{"highway", "motorway"}, {"maxspeed", "100"}}}};
-
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/emergency_speed_factor");
-  }
-
-  static float duration(const std::vector<std::string>& waypoints,
-                        const std::string& costing,
-                        const options_t& options = {}) {
-    auto route = gurka::do_action(Options::route, map, waypoints, costing, options);
-    return route.directions().routes(0).legs(0).summary().time();
-  }
-};
-
-gurka::map EmergencySpeedFactorTest::map = {};
-
-TEST_F(EmergencySpeedFactorTest, DefaultsToAutoSpeeds) {
-  EXPECT_FLOAT_EQ(duration({"A", "B"}, "emergency"), duration({"A", "B"}, "auto"));
-  EXPECT_FLOAT_EQ(duration({"B", "C"}, "emergency"), duration({"B", "C"}, "auto"));
-  EXPECT_FLOAT_EQ(duration({"C", "D"}, "emergency"), duration({"C", "D"}, "auto"));
-}
-
-TEST_F(EmergencySpeedFactorTest, FactorPerRoadClass) {
-  const options_t options = {{"/costing_options/emergency/rural_speed_factor", "1.5"},
-                             {"/costing_options/emergency/minor_road_speed_factor", "1.2"}};
-
-  // 50 -> 75 km/h on the rural primary road, 30 -> 36 km/h on the residential road
-  EXPECT_NEAR(duration({"A", "B"}, "emergency", options), duration({"A", "B"}, "auto") / 1.5f, 0.1f);
-  EXPECT_NEAR(duration({"B", "C"}, "emergency", options), duration({"B", "C"}, "auto") / 1.2f, 0.1f);
-  // the urban factor does not apply on rural roads
-  EXPECT_FLOAT_EQ(duration({"A", "B"}, "emergency",
-                           {{"/costing_options/emergency/urban_speed_factor", "1.5"}}),
-                  duration({"A", "B"}, "auto"));
-}
-
-TEST_F(EmergencySpeedFactorTest, CappedByTopSpeed) {
-  const options_t options = {{"/costing_options/emergency/motorway_speed_factor", "1.5"},
-                             {"/costing_options/emergency/top_speed", "120"}};
-
-  // 100 -> 150 km/h on the motorway, capped at 120 km/h
-  EXPECT_NEAR(duration({"C", "D"}, "emergency", options), duration({"C", "D"}, "auto") / 1.2f, 0.1f);
-}
-
-TEST_F(EmergencySpeedFactorTest, OutOfRangeFallsBackToDefault) {
-  auto route = gurka::do_action(Options::route, map, {"A", "B"}, "emergency",
-                                {{"/costing_options/emergency/rural_speed_factor", "5"}});
-  EXPECT_FLOAT_EQ(route.directions().routes(0).legs(0).summary().time(),
-                  duration({"A", "B"}, "auto"));
-  ASSERT_EQ(route.info().warnings_size(), 1);
-  EXPECT_THAT(route.info().warnings(0).description(), testing::HasSubstr("rural_speed_factor"));
 }
 
 /*************************************************************/

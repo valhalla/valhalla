@@ -372,18 +372,6 @@ message Costing {
     oneof has_use_curvature {
       float use_curvature = 100;
     }
-    oneof has_motorway_speed_factor {
-      float motorway_speed_factor = 101;
-    }
-    oneof has_rural_speed_factor {
-      float rural_speed_factor = 102;
-    }
-    oneof has_urban_speed_factor {
-      float urban_speed_factor = 103;
-    }
-    oneof has_minor_road_speed_factor {
-      float minor_road_speed_factor = 104;
-    }
   }
 
   oneof has_options {

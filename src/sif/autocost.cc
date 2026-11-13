@@ -10,8 +10,6 @@
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
 
-#include <array>
-
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
@@ -59,9 +57,6 @@ constexpr float kDefaultAlleyFactor = 1.0f;
 // How much to favor turn channels
 constexpr float kTurnChannelFactor = 0.6f;
 
-// Same switch between rural and urban density as used for the default speeds in mjolnir
-constexpr uint32_t kMaxRuralDensity = 8;
-
 // Longest edge (meters) an emergency vehicle drives against its direction with ignore_oneways
 constexpr uint32_t kEmergencyWrongWayMaxLength = 100;
 
@@ -78,7 +73,6 @@ constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFac
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
-constexpr ranged_default_t<float> kEmergencySpeedFactorRange{0.5f, 1.0f, 2.0f};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
 
@@ -1120,7 +1114,6 @@ cost_ptr_t CreateTaxiCost(const Costing& costing_options) {
  * Derived class providing costing for emergency vehicles on an urgent run. Uses the auto rules
  * and additionally
  *  - allows ways and barriers that are only open to emergency vehicles,
- *  - drives faster than the edge speed by a factor per road class,
  *  - with ignore_oneways, uses only short edges against their direction and never motorways,
  *    trunk roads, ramps or shortcuts.
  */
@@ -1132,22 +1125,8 @@ public:
    * @param  costing_options  pbf with costing_options.
    */
   EmergencyCost(const Costing& costing_options)
+      // emergency access is only set on ways tagged for it, so the mask includes auto and hov
       : AutoCost(costing_options, kAutoAccess | kHOVAccess | kEmergencyAccess) {
-    // emergency access is only set on ways tagged for it, so the mask includes auto and hov
-    const auto& co = costing_options.options();
-    const float motorway = co.has_motorway_speed_factor_case() ? co.motorway_speed_factor() : 1.0f;
-    const float rural = co.has_rural_speed_factor_case() ? co.rural_speed_factor() : 1.0f;
-    const float urban = co.has_urban_speed_factor_case() ? co.urban_speed_factor() : 1.0f;
-    const float minor = co.has_minor_road_speed_factor_case() ? co.minor_road_speed_factor() : 1.0f;
-    const std::array<float, 2> main_road{rural, urban};
-    speed_factor_ = {{{motorway, motorway},
-                      {motorway, motorway},
-                      main_road,
-                      main_road,
-                      main_road,
-                      {minor, minor},
-                      {minor, minor},
-                      {minor, minor}}};
   }
 
   virtual ~EmergencyCost() {
@@ -1166,94 +1145,7 @@ public:
            (ignore_construction_ && edge->use() == baldr::Use::kConstruction);
   }
 
-  /**
-   * Returns the cost to traverse the edge and an estimate of the actual time
-   * (in seconds) to traverse the edge. Same as auto, but with the speed factor per road class.
-   * @param  edge      Pointer to a directed edge.
-   * @param  tile      Current tile.
-   * @param  time_info Time info about edge passing.
-   * @return  Returns the cost to traverse the edge.
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphId& edgeid,
-                        const graph_tile_ptr& tile,
-                        const baldr::TimeInfo& time_info,
-                        uint8_t& flow_sources) const override {
-    auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
-                          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
-                                           &flow_sources, time_info.seconds_from_now)
-                          : fixed_speed_;
-
-    // capped by top_speed so the A* heuristic stays a lower bound
-    auto final_speed = std::min(FactoredSpeed(edge, edge_speed), top_speed_);
-
-    float sec = edge->length() * kSpeedFactor[final_speed];
-
-    if (shortest_) {
-      return Cost(edge->length(), sec);
-    }
-
-    float factor = 1;
-    switch (edge->use()) {
-      case Use::kFerry:
-        factor = ferry_factor_;
-        break;
-      case Use::kRailFerry:
-        factor = rail_ferry_factor_;
-        break;
-      default:
-        factor = kDensityFactor[edge->density()];
-        break;
-    }
-
-    factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-              surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-              SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-              edge->toll() * toll_factor_;
-
-    switch (edge->use()) {
-      case Use::kAlley:
-        factor *= alley_factor_;
-        break;
-      case Use::kTrack:
-        factor *= track_factor_;
-        break;
-      case Use::kLivingStreet:
-        factor *= living_street_factor_;
-        break;
-      case Use::kServiceRoad:
-        factor *= service_factor_;
-        break;
-      case Use::kTurnChannel:
-        if (flow_sources & kDefaultFlowMask) {
-          // boost only historic & live speeds
-          factor *= kTurnChannelFactor;
-        }
-        break;
-      default:
-        break;
-    }
-
-    factor *= EdgeFactor(edgeid);
-
-    if (IsClosed(edge, tile)) {
-      // Add a penalty for traversing a closed edge
-      factor *= closure_factor_;
-    }
-
-    return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
-  }
-
 private:
-  // Speed factor per road class, for rural [0] and urban [1] edges
-  std::array<std::array<float, 2>, 8> speed_factor_;
-
-  uint32_t FactoredSpeed(const baldr::DirectedEdge* edge, const uint32_t speed) const {
-    const auto& f = speed_factor_[static_cast<uint32_t>(edge->classification())];
-    const float factored = speed * f[edge->density() > kMaxRuralDensity];
-    return std::min(static_cast<uint32_t>(factored + 0.5f), baldr::kMaxSpeedKph);
-  }
-
   // Only short stretches against the direction of travel, and never where oncoming traffic is
   // fast and cannot get out of the way
   bool IsWrongWayAllowed(const baldr::DirectedEdge* edge) const {
@@ -1269,18 +1161,6 @@ void ParseEmergencyCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, c, warnings);
   c->set_type(Costing::emergency);
   c->set_name(Costing_Enum_Name(c->type()));
-
-  auto* co = c->mutable_options();
-  rapidjson::Value dummy;
-  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
-  JSON_PBF_RANGED_DEFAULT(co, kEmergencySpeedFactorRange, json, "/motorway_speed_factor",
-                          motorway_speed_factor, warnings);
-  JSON_PBF_RANGED_DEFAULT(co, kEmergencySpeedFactorRange, json, "/rural_speed_factor",
-                          rural_speed_factor, warnings);
-  JSON_PBF_RANGED_DEFAULT(co, kEmergencySpeedFactorRange, json, "/urban_speed_factor",
-                          urban_speed_factor, warnings);
-  JSON_PBF_RANGED_DEFAULT(co, kEmergencySpeedFactorRange, json, "/minor_road_speed_factor",
-                          minor_road_speed_factor, warnings);
 }
 
 cost_ptr_t CreateEmergencyCost(const Costing& costing_options) {
