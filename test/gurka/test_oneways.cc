@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "midgard/pointll.h"
 #include "proto/options.pb.h"
@@ -333,3 +334,107 @@ INSTANTIATE_TEST_SUITE_P(
                                       std::map<std::string, std::string>{{"highway", "unclassified"},
                                                                          {"oneway", "yes"},
                                                                          {"oneway:foot", "yes"}})));
+
+/*************************************************************/
+// ignore_oneways has to work the same in all searches, also in those that expand the graph in
+// reverse (bidirectional A*, reverse A*, CostMatrix, reverse isochrones)
+
+class IgnoreOnewaysSearchTest : public ::testing::TestWithParam<std::string> {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    // CB is a oneway from C to B, so A -> D has to take the detour BE, EF, FD
+    const std::string ascii_map = R"(
+        A----------B--C--D
+                   |     |
+                   E-----F
+    )";
+
+    const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                              {"CB", {{"highway", "residential"}, {"oneway", "yes"}}},
+                              {"CD", {{"highway", "residential"}}},
+                              {"BE", {{"highway", "residential"}}},
+                              {"EF", {{"highway", "residential"}}},
+                              {"FD", {{"highway", "residential"}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_oneways_search");
+  }
+
+  std::unordered_map<std::string, std::string>
+  options(const std::unordered_map<std::string, std::string>& more = {}) const {
+    std::unordered_map<std::string, std::string> result = {
+        {"/costing_options/" + GetParam() + "/ignore_oneways", "1"}};
+    result.insert(more.begin(), more.end());
+    return result;
+  }
+
+  size_t isochrone_edges(const bool reverse, const bool ignore_oneways) const {
+    std::unordered_map<std::string, std::string> opts = {{"/action", "isochrone"},
+                                                         {"/contours/0/time", "10"},
+                                                         {"/reverse", reverse ? "1" : "0"}};
+    if (ignore_oneways) {
+      opts = options(opts);
+    }
+    std::string response;
+    gurka::do_action(Options::expansion, map, {reverse ? "D" : "A"}, GetParam(), opts, {}, &response);
+    rapidjson::Document doc;
+    doc.Parse(response.c_str());
+    return doc["features"].GetArray().Size();
+  }
+};
+
+gurka::map IgnoreOnewaysSearchTest::map = {};
+
+const std::vector<std::string> kWrongWayPath = {"AB", "CB", "CD"};
+const std::vector<std::string> kDetourPath = {"AB", "BE", "EF", "FD"};
+constexpr double kWrongWayLength = 1700; // AB 1100 m, CB 300 m, CD 300 m
+
+TEST_P(IgnoreOnewaysSearchTest, ObeyedByDefault) {
+  auto result = gurka::do_action(Options::route, map, {"A", "D"}, GetParam());
+  gurka::assert::raw::expect_path(result, kDetourPath);
+}
+
+TEST_P(IgnoreOnewaysSearchTest, BidirectionalAStar) {
+  auto result = gurka::do_action(Options::route, map, {"A", "D"}, GetParam(), options());
+  gurka::assert::raw::expect_path(result, kWrongWayPath);
+}
+
+TEST_P(IgnoreOnewaysSearchTest, ForwardAStar) {
+  auto result =
+      gurka::do_action(Options::route, map, {"A", "D"}, GetParam(),
+                       options({{"/date_time/type", "1"}, {"/date_time/value", "2026-11-10T08:00"}}));
+  gurka::assert::raw::expect_path(result, kWrongWayPath);
+}
+
+TEST_P(IgnoreOnewaysSearchTest, ReverseAStar) {
+  auto result =
+      gurka::do_action(Options::route, map, {"A", "D"}, GetParam(),
+                       options({{"/date_time/type", "2"}, {"/date_time/value", "2026-11-10T08:00"}}));
+  gurka::assert::raw::expect_path(result, kWrongWayPath);
+}
+
+TEST_P(IgnoreOnewaysSearchTest, Matrix) {
+  // depending on costing and date_time this is CostMatrix or TimeDistanceMatrix
+  for (const auto& date_time :
+       std::vector<std::unordered_map<std::string, std::string>>{{},
+                                                                 {{"/date_time/type", "1"},
+                                                                  {"/date_time/value",
+                                                                   "2026-11-10T08:00"}}}) {
+    auto result = gurka::do_action(Options::sources_to_targets, map, {"A"}, {"D"}, GetParam(),
+                                   options(date_time));
+    EXPECT_NEAR(result.matrix().distances(0), kWrongWayLength, 10)
+        << Matrix::Algorithm_Name(result.matrix().algorithm());
+  }
+}
+
+TEST_P(IgnoreOnewaysSearchTest, Isochrone) {
+  // with ignore_oneways the isochrone also expands the oneway against its direction
+  EXPECT_GT(isochrone_edges(false, true), isochrone_edges(false, false));
+  EXPECT_GT(isochrone_edges(true, true), isochrone_edges(true, false));
+}
+
+INSTANTIATE_TEST_SUITE_P(IgnoreOneways,
+                         IgnoreOnewaysSearchTest,
+                         ::testing::Values("auto", "truck", "bicycle"));

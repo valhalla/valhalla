@@ -129,9 +129,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // (based on the costing method) or if a complex restriction exists for
     // this path.
     if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        (!((FORWARD ? directededge->forwardaccess() : directededge->reverseaccess()) &
-           access_mode_) &&
-         !costing_->has_allowed_linear_edges())) {
+        !costing_->MayAccess(directededge, FORWARD, access_mode_)) {
       continue;
     }
 
@@ -159,14 +157,14 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       // With date time we check time dependent restrictions and access
       const bool allowed =
           FORWARD
-              ? costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
+              ? costing_->Allowed(directededge, pred, tile, edgeid, offset_time.unix_time,
                                   nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
                                   &edge_destonly)
               : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
-                                         offset_time.local_time, nodeinfo->timezone(),
-                                         restriction_idx, destonly_restriction_mask, &edge_destonly);
+                                         offset_time.unix_time, nodeinfo->timezone(), restriction_idx,
+                                         destonly_restriction_mask, &edge_destonly);
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true,
-                                           todo, offset_time.local_time, nodeinfo->timezone())) {
+                                           todo, offset_time.unix_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
@@ -814,7 +812,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       bool edge_destonly = false;
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.valid ? time_info.unix_time : 0,
                                                   time_info.timezone_index, &edge_destonly);
 
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
@@ -917,7 +915,7 @@ void Dijkstras::SetDestinationLocations(
       bool edge_destonly = false;
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.valid ? time_info.unix_time : 0,
                                                   time_info.timezone_index, &edge_destonly);
 
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,

@@ -113,7 +113,8 @@ protected:
   size_t max_elevation_shape;
   float min_resample;
   unsigned int max_alternates;
-  bool allow_verbose;
+  bool allow_status_verbose;
+  bool allow_tile_verbose;
   bool allow_hard_exclusions;
   float max_distance_disable_hierarchy_culling;
   double min_linear_cost_factor;
