@@ -40,6 +40,7 @@
    * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452)
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
    * ADDED: detailed documentation for `/locate` [#6471](https://github.com/valhalla/valhalla/pull/6471)
+   * FIXED: Apply `walkway_factor` to more pedestrian specific uses [#6324](https://github.com/valhalla/valhalla/pull/6324)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
