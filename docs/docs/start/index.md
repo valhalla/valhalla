@@ -39,7 +39,7 @@ We assume basic familiarity with the command line and the installation method of
 
     ```bash
     apt update
-    apt install jq less tree wget
+    apt install file jq less tree wget
     ```
 
 === "Python"
