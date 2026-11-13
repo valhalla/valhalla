@@ -13,6 +13,11 @@ set(INSTALL_GTEST ${INSTALL_TEST_LIB})
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
+# utrecht_tiles and run-scripts run the Python scripts, with or without the bindings
+if(NOT Python_FOUND)
+  find_package(Python COMPONENTS Interpreter)
+endif()
+
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
 set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
@@ -454,7 +459,9 @@ if(ENABLE_DATA_TOOLS)
   if(ENABLE_HTTP AND ENABLE_SERVICES)
     # http_tiles needs the proper .tar file with index.bin; run-scripts is a run-time setup step
     add_dependencies(http_tiles utrecht_tiles)
-    add_dependencies(run-http_tiles run-scripts)
+    if(Python_FOUND)
+      add_dependencies(run-http_tiles run-scripts)
+    endif()
   endif()
 endif()
 
