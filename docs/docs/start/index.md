@@ -62,7 +62,7 @@ We assume basic familiarity with the command line and the installation method of
     valhalla_build_tiles --version
     ```
 
-    We'll use the second form in this guide to keep it short. If you have any problems, take a look at [Python bindings](installation/python.md) page.
+    We'll use the second form in this guide to keep it short. If you have any problems, take a look at [Python bindings](../bindings/python/index.md) page.
 
 ---
 
@@ -70,21 +70,18 @@ Let's make sure that everything is okay - the following command should return th
 
 ```console
 $ valhalla_build_tiles --version
-3.6.3
+3.9.1
 ```
 
 Tools are helper programs to generate and inspect data, run the HTTP server and so on. All Valhalla tools support `--help` option to show the usage.
 
 ## Configuration file
 
-All Valhalla tools use a common JSON configuration file. It contains settings for data generation, location search, service process and so on.
+All Valhalla tools use a common JSON configuration file. It contains settings for data generation, location search, service process and other tasks.
 
 Let's create it:
 
 ```bash
-# For Python, use the following command instead (same options)
-# python -m valhalla.valhalla_build_config
-
 valhalla_build_config \
     --mjolnir-admin "${PWD}"/admin.sqlite \
     --mjolnir-timezone "${PWD}"/timezones.sqlite \
@@ -101,11 +98,15 @@ The command generates a configuration with reasonable defaults. Take a look:
 less valhalla.json
 ```
 
+For more information about what the options mean, run:
+
+```bash
+valhalla_build_config --help
+```
+
 ## Prepare the data
 
-Valhalla needs some data in order to work.
-
-The fundamental component is a set of [**routing tiles**](tiles.md) - a directory of files in a specific format with information about the roads, restrictions and so on.
+In order to work, Valhalla needs a set of [**routing tiles**](../concepts/tiles.md) - a collection of files in a specific format with information about the roads, crossings, restrictions and so on.
 
 The main data source for this is [OpenStreetMap](https://www.openstreetmap.org/) (OSM): Valhalla takes OSM map data in [PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format) and uses it to create a set of tiles.
 
@@ -120,20 +121,26 @@ Here's what we need to do:
 
 ### Download OpenStreetMap data extract
 
-We can use [Geofabrik's free server](https://download.geofabrik.de/) to download a regional data extract to `osm/` directory:
+We can use [Geofabrik's free server](https://download.geofabrik.de/) to download a regional data extract to working directory:
 
 ```bash
-wget --directory-prefix osm/ \
-    https://download.geofabrik.de/europe/andorra-latest.osm.pbf
+wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf
 ```
 
 !!! warning
 
     Valhalla can work with multiple data extracts, but this is discouraged. See [Issue 3925](https://github.com/valhalla/valhalla/issues/3925).
 
+Check what's inside:
+
+```console
+$ file andorra-latest.osm.pbf
+andorra-latest.osm.pbf: OpenStreetMap Protocolbuffer Binary Format
+```
+
 ### Build admins database
 
-Admins database has information about administrative boundaries: country borders and so on. Valhalla uses this to flag country crossings and figure out on which side of the road to drive - left or right.
+Admins database has information about administrative boundaries. Valhalla uses this to flag country crossings and figure out on which side of the road to drive - left or right.
 
 ```bash
 valhalla_build_admins -c valhalla.json andorra-latest.osm.pbf
@@ -156,18 +163,28 @@ It's safe to ignore them for now as we use a regional PBF extract, not the whole
 
     For production, use the **whole planet** to build admins database. Otherwise, topological relations may be broken.
 
+```console
+$ file admin.sqlite
+admin.sqlite: SQLite 3.x database, last written using SQLite version 3049002, file counter 1, database pages 1720, cookie 0x1, schema 4, UTF-8, version-valid-for 1
+```
+
 ### Download time zones database
 
 Valhalla uses time zones to enable proper arrival and departure times and time zone metadata in route results.
 
 There's a [GitHub workflow](https://github.com/valhalla/valhalla/actions/workflows/publish_tz_db.yml) which builds time zones database for the whole planet and publishes it as an artifact available for download. To get the latest file, follow the link, select the latest run and download the SQLite database file to the working directory.
 
+```console
+$ file timezones.sqlite
+timezones.sqlite: SQLite 3.x database, last written using SQLite version 3045001, file counter 21, database pages 29040, cookie 0x132, schema 4, UTF-8, version-valid-for 21
+```
+
 ### Build routing tiles
 
 Finally, we are ready to build the tiles:
 
 ```bash
-valhalla_build_tiles -c valhalla.json osm/andorra-latest.osm.pbf
+valhalla_build_tiles -c valhalla.json andorra-latest.osm.pbf
 ```
 
 We'll see a bunch of log messages. If you see the following warnings, make sure that you have correct path in configuration file:
@@ -180,41 +197,47 @@ Once finished, we can see generated data in `tiles/` directory (the one from con
 
 ```console
 $ tree tiles/
-tiles/
-|-- 0
-|   `-- 003
-|       `-- 015.gph
-|-- 1
-|   `-- 047
-|       `-- 701.gph
-`-- 2
-    `-- 000
-        |-- 762
-        |   |-- 485.gph
-        |   `-- 486.gph
-        `-- 763
-            |-- 925.gph
-            |-- 926.gph
-            `-- 927.gph
+tiles
+├── 0
+│   └── 003
+│       └── 015.gph
+├── 1
+│   └── 047
+│       └── 701.gph
+└── 2
+    └── 000
+        ├── 762
+        │   ├── 485.gph
+        │   └── 486.gph
+        └── 763
+            ├── 925.gph
+            ├── 926.gph
+            └── 927.gph
 
 9 directories, 7 files
 ```
 
 At last, we combine all tiles into a single tar archive file:
 
-=== "Docker"
+```bash
+valhalla_build_extract -c valhalla.json
+```
 
-    ```bash
-    valhalla_build_extract -c valhalla.json
-    ```
+Take a look inside:
 
-=== "Python"
+```console
+$ tar --list --file tiles.tar
+index.bin
+0/003/015.gph
+1/047/701.gph
+2/000/762/485.gph
+2/000/762/486.gph
+2/000/763/925.gph
+2/000/763/926.gph
+2/000/763/927.gph
+```
 
-    ```bash
-    find tiles/ | sort -n | tar --create --file tiles.tar --no-recursion --files-from=-
-    ```
-
-Valhalla can [memory-map](https://en.wikipedia.org/wiki/Memory-mapped_file) this archive file to efficiently cache it and share between multiple processes.
+Valhalla can [memory-map](https://en.wikipedia.org/wiki/Memory-mapped_file) this archive file to efficiently share it between multiple processes and improve data access performance.
 
 ## Start the service
 
@@ -257,11 +280,11 @@ Public API has a number of paths (`/status`, `/route`, etc) for different operat
 
 !!! tip
 
-    Use our [demo web application](https://valhalla.openstreetmap.de) to explore the service or try the web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
+    Use our [**demo web application**](https://valhalla.openstreetmap.de) to explore the service or try the web server at [valhalla1.openstreetmap.de](https://valhalla1.openstreetmap.de).
 
 Say, we are on a tourist trip in the city of [Andorra La Vella](https://en.wikipedia.org/wiki/Andorra_la_Vella), and we happen to be at [Casa de la Vall](https://en.wikipedia.org/wiki/Casa_de_la_Vall). Our friend read about [La Noblesse du Temps](https://www.openstreetmap.org/node/4780988321) - a sculpture by Salvador Dalí. We love art, and the weather is nice, so we want to take walk.
 
-Let's use [Route API](api/turn-by-turn/api-reference.md) to find a pedestrian route between these locations. Here's the request:
+Let's use the [Route API](../api/route/api-reference.md) to find a pedestrian route between these locations. Here's the JSON body for a POST request:
 
 ```json
 {
@@ -299,11 +322,11 @@ Here's the response with some fields excluded to keep it short:
 - `maneuvers` are the operations to perform when navigating (e.g. turns, exits) with textual instructions and additional information.
 - `shape` is the [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path with 6 digits of decimal precision.
 
-We can visualize response polyline with [polyline visualization tool](https://valhalla.github.io/demos/polyline/).
+We can visualize response polyline with the [polyline visualization tool](https://valhalla.github.io/demos/polyline/).
 
 > Try the same request in [Valhalla FOSSGIS Demo App](https://valhalla.openstreetmap.de) and see what you get!
 
 ## Continue reading
 
-- Check out [API reference](api/index.md) for a complete overview of all features - routing, map matching, isochrones, etc.
-- _Installation_ section has different ways about how to install Valhalla.
+- Check out [API reference](../api/index.md) for a complete overview of all features - routing, map matching, isochrones, etc.
+- [Installation](installation.md) section has different ways about how to install Valhalla.
