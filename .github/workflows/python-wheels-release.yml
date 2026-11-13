@@ -179,12 +179,6 @@ jobs:
         with:
           name: wheels-linux-${{  matrix.arch  }}
           path: wheelhouse/*.whl
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
   
   build_osx:
     # this is the arm64 image for macos-13
@@ -257,13 +251,6 @@ jobs:
         with:
           name: wheels-osx-arm64
           path: wheelhouse/*.whl
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
   
   build_win:
     name: windows
@@ -371,13 +358,6 @@ jobs:
         with:
           name: wheels-win-amd64
           path: wheelhouse/*.whl
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
 
   verify_wheels_linux:
     name: verify-linux
