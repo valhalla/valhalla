@@ -254,22 +254,22 @@ Let's check the status:
 ```console
 $ curl http://localhost:8002/status | jq '.'
 {
-  "version": "3.6.3",
-  "tileset_last_modified": 1772753449,
+  "version": "3.9.1",
+  "tileset_last_modified": 1794599483,
   "available_actions": [
-    "tile",
-    "status",
-    "centroid",
-    "expansion",
-    "transit_available",
-    "trace_attributes",
-    "trace_route",
-    "isochrone",
-    "optimized_route",
-    "sources_to_targets",
-    "height",
     "route",
-    "locate"
+    "locate",
+    "sources_to_targets",
+    "optimized_route",
+    "isochrone",
+    "trace_route",
+    "trace_attributes",
+    "height",
+    "transit_available",
+    "expansion",
+    "centroid",
+    "status",
+    "tile"
   ]
 }
 ```
