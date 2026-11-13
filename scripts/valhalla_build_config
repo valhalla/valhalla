@@ -370,6 +370,7 @@ config = {
             "max_matrix_location_pairs": 0,
         },
         "status": {"allow_verbose": False},
+        "tile": {"allow_verbose": False},
         "transit": {
             "max_distance": 500000.0,
             "max_locations": 50,
@@ -714,6 +715,9 @@ help_text = {
         },
         "status": {
             "allow_verbose": "Allow verbose output for the /status endpoint, which can be computationally expensive"
+        },
+        "tile": {
+            "allow_verbose": "Allow verbose output for the /tile endpoint, which produces much larger tiles"
         },
         "transit": {
             "max_distance": "Maximum b-line distance between all locations in meters",
