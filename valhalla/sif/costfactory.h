@@ -39,6 +39,7 @@ public:
     Register(Costing::bicycle, CreateBicycleCost);
     Register(Costing::bus, CreateBusCost);
     Register(Costing::taxi, CreateTaxiCost);
+    Register(Costing::emergency, CreateEmergencyCost);
     Register(Costing::motor_scooter, CreateMotorScooterCost);
     Register(Costing::motorcycle, CreateMotorcycleCost);
     Register(Costing::pedestrian, CreatePedestrianCost);

@@ -66,6 +66,25 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
  */
 cost_ptr_t CreateTaxiCost(const Costing& costing);
 
+/**
+ * Parses the emergency cost options from json and stores values in pbf.
+ * @param doc                  The json request represented as a DOM tree.
+ * @param costing_options_key  A string representing the location in the DOM tree where the
+ *                             costing options are stored.
+ * @param pbf_costing          A mutable protocol buffer where the parsed json values will be
+ *                             stored.
+ */
+void ParseEmergencyCostOptions(const rapidjson::Document& doc,
+                               const std::string& costing_options_key,
+                               Costing* pbf_costing,
+                               google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
+
+/**
+ * Create an emergency vehicle cost method. This is derived from auto costing and
+ * additionally allows edges and nodes that are only open to emergency vehicles.
+ */
+cost_ptr_t CreateEmergencyCost(const Costing& costing);
+
 } // namespace sif
 } // namespace valhalla
 
