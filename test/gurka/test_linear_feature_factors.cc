@@ -1002,3 +1002,39 @@ TEST(LinearFeature, allow_in_candidate_search) {
     }
   }
 }
+
+/**
+ * The time dependent A* has the same raw access check in reverse direction (arrive_by)
+ * */
+TEST(LinearFeature, allow_in_unidirectional_astar) {
+  const std::string ascii_map = R"(
+    A----B----C----D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"motor_vehicle", "no"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/linear_feature_allow_unidirectional");
+  const auto shape = encode_shape({"B", "C"}, map.nodes);
+
+  // 1 = depart_at (forward A*), 2 = arrive_by (reverse A*)
+  for (const std::string date_time_type : {"1", "2"}) {
+    SCOPED_TRACE(date_time_type);
+    const std::unordered_map<std::string, std::string> options = {
+        {"/date_time/type", date_time_type},
+        {"/date_time/value", "2026-11-10T08:00"},
+    };
+    EXPECT_THROW(gurka::do_action(Options::route, map, {"A", "D"}, "auto", options),
+                 valhalla_exception_t);
+
+    auto with_allow = options;
+    with_allow["/linear_cost_factors/0/shape"] = shape;
+    with_allow["/linear_cost_factors/0/allow_types/-"] = "all";
+    auto result = gurka::do_action(Options::route, map, {"A", "D"}, "auto", with_allow);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
+  }
+}
