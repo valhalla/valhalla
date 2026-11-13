@@ -526,6 +526,22 @@ public:
   }
 
   /**
+   * Quick check used by the graph searches to skip an edge before it is costed.
+   *
+   * @param  edge         Directed edge expanded by the search
+   * @param  forward      Expansion direction
+   * @param  access_mode  Access mode of the search
+   * @return Returns false if the mode has no access in either direction that may be used.
+   */
+  inline bool
+  MayAccess(const baldr::DirectedEdge* edge, const bool forward, const uint32_t access_mode) const {
+    const uint32_t access = forward ? edge->forwardaccess() : edge->reverseaccess();
+    const uint32_t rev_access = forward ? edge->reverseaccess() : edge->forwardaccess();
+    return (access & access_mode) || (ignore_oneways_ && (rev_access & access_mode)) ||
+           has_allowed_linear_edges_;
+  }
+
+  /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
    * the time (seconds) to traverse the edge.
