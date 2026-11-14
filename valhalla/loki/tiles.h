@@ -4,6 +4,7 @@
 #include "baldr/accessrestriction.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
+#include "baldr/custom_attributes_tile.h"
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
@@ -102,7 +103,8 @@ class EdgesLayerBuilder : vtzero::layer_builder {
 public:
   explicit EdgesLayerBuilder(vtzero::tile_builder& tile,
                              const char* name,
-                             const baldr::AttributesController& controller);
+                             const baldr::AttributesController& controller,
+                             const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs);
 
   void set_attribute_values(const std::span<const EdgeAttributeTile> arr,
                             const baldr::AttributesController& controller,
@@ -132,7 +134,14 @@ public:
                    const baldr::DirectedEdge* reverse_edge,
                    const volatile baldr::TrafficSpeed* forward_traffic,
                    const volatile baldr::TrafficSpeed* reverse_traffic,
-                   const baldr::EdgeInfo& edge_info);
+                   const baldr::EdgeInfo& edge_info,
+                   const baldr::CustomAttributesTile* forward_custom_attributes,
+                   const baldr::CustomAttributesTile* reverse_custom_attributes);
+
+  void add_custom_attributes(vtzero::linestring_feature_builder& feature,
+                             const baldr::CustomAttributesTile* custom_attributes,
+                             uint32_t edge_index,
+                             bool forward);
 
   // Pre-registered keys
   vtzero::index_value key_tile_level_;
@@ -223,10 +232,16 @@ public:
   vtzero::index_value key_live_congestion1_rev_;
   vtzero::index_value key_live_congestion2_rev_;
   vtzero::index_value key_live_congestion3_rev_;
+  // fwd/bwd key per custom attribute, in the order of custom_attribute_defs_
+  std::vector<std::pair<vtzero::index_value, vtzero::index_value>> key_custom_attributes_;
 
 private:
   const baldr::AttributesController& controller_;
+  const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs_;
 };
+
+// edge layer keys of custom attributes are "custom:<name>:fwd" and "custom:<name>:bwd"
+constexpr std::string_view kCustomAttributeKeyPrefix = "custom:";
 
 class NodesLayerBuilder;
 struct NodeAttributeTile {

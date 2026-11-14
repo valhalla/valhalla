@@ -37,6 +37,7 @@
    * ADDED: Rust bindings, moved from [valhalla-rs](https://github.com/kinkard/valhalla-rs) [#6409](https://github.com/valhalla/valhalla/pull/6409)
    * ADDED: support linear_cost_factors `allow_all` flag in loki [#6456](https://github.com/valhalla/valhalla/pull/6456)
    * ADDED: `exclude_restricted` location search filter to drop candidate edges whose access restrictions the vehicle exceeds [#5557](https://github.com/valhalla/valhalla/issues/5557)
+   * ADDED: custom attributes [#6474](https://github.com/valhalla/valhalla/pull/6474)
    * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452)
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
    * ADDED: detailed documentation for `/locate` [#6471](https://github.com/valhalla/valhalla/pull/6471)

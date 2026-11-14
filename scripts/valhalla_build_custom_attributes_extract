@@ -1,0 +1,267 @@
+#!/usr/bin/env python3
+"""
+Build a custom_attributes.tar from an existing valhalla_tiles.tar.
+"""
+
+import argparse
+import io
+import json
+import math
+import struct
+import sys
+import tarfile
+import time
+
+
+# offset in bits from start of GraphTileHeader to nodecount_
+HEADER_COUNTS_OFFSET = 40
+NODECOUNT_BITS = 21
+DIRECTEDGE_BITS = 21
+
+GRAPHID_BITS = 46
+
+# must match CUSTOM_ATTRIBUTES_TILE_VERSION in valhalla/baldr/custom_attributes_tile.h
+CUSTOM_ATTRIBUTES_TILE_VERSION = 1
+
+# must match CustomAttributeType in valhalla/baldr/custom_attributes_tile.h: struct format code, min, max
+ATTRIBUTE_TYPES = {"uint8": ("B", 0, 255)}
+
+# same index layout as valhalla_build_extract: offset, tile id, size
+INDEX_BIN_FORMAT = "<QLL"
+INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
+INDEX_FILE = "index.bin"
+
+
+def _directed_edge_count(tile_bytes: bytes) -> int:
+    """Extract directededgecount_ from raw GraphTileHeader bytes."""
+    if len(tile_bytes) < HEADER_COUNTS_OFFSET + 8:
+        raise ValueError(
+            f"Tile too small to contain GraphTileHeader counts word ({len(tile_bytes)} bytes)"
+        )
+    (counts_word,) = struct.unpack_from("<Q", tile_bytes, HEADER_COUNTS_OFFSET)
+    return (counts_word >> NODECOUNT_BITS) & ((1 << DIRECTEDGE_BITS) - 1)
+
+
+def _tile_id(tile_bytes: bytes) -> int:
+    """Extract graphid_ (tile id and level) from raw GraphTileHeader bytes."""
+    (graphid_word,) = struct.unpack_from("<Q", tile_bytes, 0)
+    return graphid_word & ((1 << GRAPHID_BITS) - 1)
+
+
+def _parse_attribute_defs(raw: str) -> list[dict]:
+    """Parse and validate the attributes.json array, filling in the default scale."""
+    defs = json.loads(raw)
+    if not isinstance(defs, list) or not defs:
+        raise ValueError("must be a non-empty JSON array")
+
+    names = set()
+    row_size = 0
+    for d in defs:
+        if not isinstance(d, dict) or not isinstance(d.get("name"), str) or not d["name"]:
+            raise ValueError(f"each attribute needs a non-empty string name: {d!r}")
+        if d["name"] in names:
+            raise ValueError(f"attribute name {d['name']!r} is used twice")
+        names.add(d["name"])
+        if d.get("type") not in ATTRIBUTE_TYPES:
+            raise ValueError(f"attribute {d['name']!r} needs a type out of {sorted(ATTRIBUTE_TYPES)}")
+        scale = d.setdefault("scale", 1.0)
+        if (
+            isinstance(scale, bool)
+            or not isinstance(scale, (int, float))
+            or not math.isfinite(scale)
+            or scale == 0
+        ):
+            raise ValueError(f"attribute {d['name']!r} needs a finite, non-zero scale")
+        row_size += struct.calcsize("<" + ATTRIBUTE_TYPES[d["type"]][0])
+
+    # CustomAttributesTileHeader::row_size is 16 bits wide
+    if row_size > 0xFFFF:
+        raise ValueError(f"attributes take {row_size} bytes per edge, at most 65535 are supported")
+    return defs
+
+
+def _encode_row(defs: list[dict], values: list[float]) -> bytes:
+    """Encode one edge's values as round(value / scale) in each attribute's type."""
+    row = b""
+    for d, value in zip(defs, values):
+        fmt, lo, hi = ATTRIBUTE_TYPES[d["type"]]
+        raw = round(value / d["scale"])
+        if not lo <= raw <= hi:
+            raise ValueError(
+                f"default value {value} of {d['name']!r} is {raw} after scaling, "
+                f"outside the {d['type']} range [{lo}, {hi}]"
+            )
+        row += struct.pack("<" + fmt, raw)
+    return row
+
+
+def _build_custom_attributes_tile(
+    tile_id: int,
+    edge_count: int,
+    num_attributes: int,
+    row: bytes,
+) -> bytes:
+    """Build binary custom attributes tile for one graph tile, every edge set to row."""
+    # tile_id, last_update, num_attributes:16 | row_size:16 | spare:32, directed_edge_count, version
+    header = struct.pack(
+        "<QQQII",
+        tile_id,
+        int(time.time()),
+        num_attributes | (len(row) << 16),
+        edge_count,
+        CUSTOM_ATTRIBUTES_TILE_VERSION,
+    )
+    return header + row * edge_count
+
+
+def _add_bytes_to_tar(tf: tarfile.TarFile, name: str, data: bytes) -> None:
+    info = tarfile.TarInfo(name=name)
+    info.size = len(data)
+    tf.addfile(info, io.BytesIO(data))
+
+
+def _write_index_to_tar(output_tar: str, tile_ids: dict[str, int]) -> None:
+    """Fill the index.bin placeholder, which must be the first file in the tar."""
+    index = []
+    with tarfile.open(output_tar, "r|") as tf:
+        for member in tf:
+            if member.name in tile_ids:
+                index.append((member.offset_data, tile_ids[member.name], member.size))
+
+    with open(output_tar, "r+b") as f:
+        f.seek(tarfile.BLOCKSIZE)
+        for entry in index:
+            f.write(struct.pack(INDEX_BIN_FORMAT, *entry))
+
+
+def build(
+    valhalla_tar: str,
+    output_tar: str,
+    attribute_defs: list[dict],
+    row: bytes,
+) -> None:
+    tiles_skipped = 0
+    # (output path, tile id, edge count) for every usable tile
+    tiles: list[tuple[str, int, int]] = []
+    with tarfile.open(valhalla_tar, "r:*") as src_tf:
+        for member in src_tf.getmembers():
+            name = member.name.replace("\\", "/")
+            if not name.endswith(".gph"):
+                continue
+
+            f = src_tf.extractfile(member)
+            if f is None:
+                tiles_skipped += 1
+                continue
+            header_bytes = f.read(HEADER_COUNTS_OFFSET + 8)
+
+            try:
+                edge_count = _directed_edge_count(header_bytes)
+                tile_id = _tile_id(header_bytes)
+            except ValueError as exc:
+                print(f"  WARNING: skipping {name}: {exc}", file=sys.stderr)
+                tiles_skipped += 1
+                continue
+
+            tiles.append((name, tile_id, edge_count))
+
+    with tarfile.open(output_tar, "w:") as dst_tf:
+        _add_bytes_to_tar(dst_tf, INDEX_FILE, bytes(INDEX_BIN_SIZE * len(tiles)))
+        manifest = json.dumps(attribute_defs, ensure_ascii=False).encode()
+        _add_bytes_to_tar(dst_tf, "attributes.json", manifest)
+
+        for tiles_processed, (out_path, tile_id, edge_count) in enumerate(tiles, 1):
+            out_bytes = _build_custom_attributes_tile(tile_id, edge_count, len(attribute_defs), row)
+            _add_bytes_to_tar(dst_tf, out_path, out_bytes)
+
+            if tiles_processed % 500 == 0:
+                print(f"  {tiles_processed} tiles written ...", file=sys.stderr)
+
+    _write_index_to_tar(output_tar, {path: tile_id for path, tile_id, _ in tiles})
+
+    print(
+        f"Done: {len(tiles)} tiles written, {tiles_skipped} skipped -> {output_tar}",
+        file=sys.stderr,
+    )
+
+
+def _parse_default_values(raw: str, num_attributes: int) -> list[float]:
+    """Parse a comma-separated list of floats; pad/truncate to num_attributes."""
+    parts = [float(x.strip()) for x in raw.split(",") if x.strip()]
+    if not parts:
+        parts = [0.0]
+    # Pad with the last value if fewer entries than num_attributes
+    while len(parts) < num_attributes:
+        parts.append(parts[-1])
+    return parts[:num_attributes]
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Build a custom_attributes.tar sidecar from an existing valhalla_tiles.tar."
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        help="Path to the Valhalla config JSON. Tiles are read from mjolnir.tile_extract, "
+        "the custom attributes extract is written to mjolnir.custom_attributes_extract.",
+    )
+    parser.add_argument(
+        "-i",
+        "--inline-config",
+        default="{}",
+        help="Inline JSON config, will override --config JSON if present",
+    )
+    parser.add_argument(
+        "--attribute-defs",
+        type=str,
+        required=True,
+        help="JSON array of attribute definitions written to attributes.json inside the tar, e.g. "
+        '\'[{"name": "scenic", "type": "uint8", "scale": 0.01}]\'. '
+        "Supported types: uint8. Values are stored as round(value / scale), scale defaults to 1.",
+    )
+    parser.add_argument(
+        "--default-values",
+        type=str,
+        default="0.0",
+        help="Comma-separated default values before scaling, one per attribute (default: 0).",
+    )
+    args = parser.parse_args()
+
+    if not args.config and args.inline_config == "{}":
+        parser.error("one of --config or --inline-config is required")
+
+    config = {}
+    if args.config:
+        with open(args.config) as f:
+            config = json.load(f)
+    config.update(**json.loads(args.inline_config))
+
+    mjolnir = config.get("mjolnir", {})
+    tiles_tar = mjolnir.get("tile_extract")
+    output_tar = mjolnir.get("custom_attributes_extract")
+    if not tiles_tar or not output_tar:
+        parser.error("config must set both mjolnir.tile_extract and mjolnir.custom_attributes_extract")
+
+    try:
+        defs = _parse_attribute_defs(args.attribute_defs)
+    except ValueError as e:
+        parser.error(f"--attribute-defs: {e}")
+
+    default_values = _parse_default_values(args.default_values, len(defs))
+    try:
+        row = _encode_row(defs, default_values)
+    except ValueError as e:
+        parser.error(f"--default-values: {e}")
+
+    print(f"Reading tiles from : {tiles_tar}", file=sys.stderr)
+    print(f"Writing output to  : {output_tar}", file=sys.stderr)
+    print(f"Attributes         : {defs}", file=sys.stderr)
+    print(f"Bytes per edge     : {len(row)}", file=sys.stderr)
+    print(f"Edge values        : {default_values}", file=sys.stderr)
+
+    build(tiles_tar, output_tar, defs, row)
+
+
+if __name__ == "__main__":
+    main()

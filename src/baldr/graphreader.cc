@@ -1,5 +1,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/curl_tilegetter.h"
+#include "baldr/rapidjson_utils.h"
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -148,6 +149,43 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     } catch (const std::exception& e) {
       LOG_WARN(e.what());
       LOG_WARN("Traffic tile extract could not be loaded");
+    }
+  }
+
+  if (pt.get_optional<std::string>("custom_attributes_extract")) {
+    try {
+      custom_attributes_archive =
+          std::make_shared<midgard::tar>(pt.get<std::string>("custom_attributes_extract"), true);
+      auto corrupt_blocks = load_tiles(*custom_attributes_archive, custom_attributes_tiles);
+      if (custom_attributes_tiles.empty()) {
+        LOG_WARN("Custom attributes extract contained no usable tiles");
+        custom_attributes_archive.reset();
+      } else {
+        LOG_INFO("Custom attributes extract loaded with tile count: {}",
+                 custom_attributes_tiles.size());
+        if (corrupt_blocks) {
+          LOG_WARN("Custom attributes extract had {} corrupt blocks", corrupt_blocks);
+        }
+        // Read attribute definitions from the descriptor embedded in the tar.
+        custom_attributes_archive->for_each(
+            [this](const std::string& name, const char* data, size_t size) -> bool {
+              std::filesystem::path p{name};
+              p.make_preferred();
+              if (p.filename() != "attributes.json")
+                return true;
+              try {
+                custom_attribute_defs = baldr::ParseCustomAttributeDefs(std::string_view(data, size));
+              } catch (const std::exception& e) {
+                LOG_ERROR("Could not parse custom attributes descriptor: {}", e.what());
+              }
+              return false; // stop after first match
+            });
+        if (!custom_attribute_defs.empty()) {
+          LOG_INFO("Custom attributes: {} attribute(s) loaded", custom_attribute_defs.size());
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_WARN("Custom attributes extract could not be loaded: {}", e.what());
     }
   }
 }
@@ -623,8 +661,19 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
                                                                      traffic_ptr->second)
                               : nullptr;
 
+    std::unique_ptr<TarballGraphMemory> custom_attributes_memory;
+    if (!tile_extract_->custom_attributes_tiles.empty()) {
+      auto ca_ptr = tile_extract_->custom_attributes_tiles.find(base);
+      if (ca_ptr != tile_extract_->custom_attributes_tiles.end()) {
+        custom_attributes_memory =
+            std::make_unique<TarballGraphMemory>(tile_extract_->custom_attributes_archive,
+                                                 ca_ptr->second);
+      }
+    }
+
     // This initializes the tile from mmap
-    auto tile = GraphTile::Create(base, std::move(memory), std::move(traffic_memory));
+    auto tile = GraphTile::Create(base, std::move(memory), std::move(traffic_memory),
+                                  std::move(custom_attributes_memory));
     if (!tile) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
@@ -642,8 +691,21 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
           ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive, traffic_ptr->second)
           : nullptr;
 
+  // Build custom_attributes_memory for a given tile base id; cheap — just a span into a mmap'd tar.
+  auto make_custom_attributes_memory = [this, &base]() -> std::unique_ptr<TarballGraphMemory> {
+    if (!tile_extract_->custom_attributes_tiles.empty()) {
+      auto ca_ptr = tile_extract_->custom_attributes_tiles.find(base);
+      if (ca_ptr != tile_extract_->custom_attributes_tiles.end()) {
+        return std::make_unique<TarballGraphMemory>(tile_extract_->custom_attributes_archive,
+                                                    ca_ptr->second);
+      }
+    }
+    return nullptr;
+  };
+
   // Try to get it from tile_dir and if we cant, try URL
-  graph_tile_ptr tile = GraphTile::Create(tile_dir_, base, std::move(traffic_memory));
+  graph_tile_ptr tile =
+      GraphTile::Create(tile_dir_, base, std::move(traffic_memory), make_custom_attributes_memory());
   if (!tile || !tile->header()) {
     if (!tile_getter_) {
       return nullptr;
@@ -668,7 +730,8 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     // either we find its tar offset or it's a plain tiles URL
     if (tar_has_tile || !is_tar_url_) {
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, tar_offset,
-                                     tar_size, url_id_txt_path_, url_id_txt_checksum_, &http_code);
+                                     tar_size, url_id_txt_path_, url_id_txt_checksum_, &http_code,
+                                     make_custom_attributes_memory());
     }
 
     if (!tile) {

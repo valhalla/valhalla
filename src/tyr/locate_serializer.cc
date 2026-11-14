@@ -149,6 +149,16 @@ void serialize_edges(const Location& location,
         serialize_traffic_speed(traffic, writer);
         writer.end_object();
 
+        const auto& custom_attribute_defs = reader.GetCustomAttributeDefs();
+        if (const auto* custom_attributes = tile->custom_attributes_tile();
+            custom_attributes && !custom_attribute_defs.empty()) {
+          writer.start_object("custom_attributes");
+          for (const auto& def : custom_attribute_defs) {
+            writer(def.name, custom_attributes->value(GraphId(edge.graph_id()).id(), def));
+          }
+          writer.end_object();
+        }
+
         // basic rest of it plus edge metadata
         writer.set_precision(tyr::kCoordinatePrecision);
         writer("correlated_lat", edge.ll().lat());
