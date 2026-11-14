@@ -52,7 +52,7 @@ void loki_worker_t::status(Api& request) const {
           Options_Action_Enum_Name(static_cast<Options::Action>(i));
 
   // only return more info if explicitly asked for (can be very expensive)
-  if (!request.options().verbose() || !allow_verbose)
+  if (!request.options().verbose() || !allow_status_verbose)
     return;
 
   // get _some_ tile
