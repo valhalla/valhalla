@@ -346,13 +346,14 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   const std::array<double, 3> pixel_scale = {static_cast<double>(isogrid->TileSize()), // X scale
                                              static_cast<double>(isogrid->TileSize()), // Y scale
                                              0.0};
-  const std::array<double, 6> tiepoints =
-      {0.0,
-       0.0,
-       0.0, // upper-left anchor
-       static_cast<double>(isogrid->TileBounds(isogrid->TileId(box[0], box[1])).minx()),
-       static_cast<double>(isogrid->TileBounds(isogrid->TileId(box[0], box[3])).maxy()),
-       0.0};
+  const auto last_row = box[3] - 1;
+  const auto upper_left_tile = isogrid->TileBounds(isogrid->TileId(box[0], last_row));
+  const std::array<double, 6> tiepoints = {0.0,
+                                           0.0,
+                                           0.0, // upper-left anchor
+                                           static_cast<double>(upper_left_tile.minx()),
+                                           static_cast<double>(upper_left_tile.maxy()),
+                                           0.0};
   TIFFSetField(tif, TIFFTAG_GEOPIXELSCALE, 3, pixel_scale.data());
   TIFFSetField(tif, TIFFTAG_GEOTIEPOINTS, 6, tiepoints.data());
 
