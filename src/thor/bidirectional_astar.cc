@@ -66,6 +66,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  allow_shortcuts_ = true;
   threshold_delta_ = config.get<float>("bidirectional_astar.threshold_delta", kThresholdDelta);
   alternative_cost_extend_ =
       config.get<float>("bidirectional_astar.alternative_cost_extend", kAlternativeCostExtend);
@@ -201,7 +202,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // that level. If using a shortcut, set the shortcuts mask.
   if (meta.edge->is_shortcut()) {
     // Skip shortcuts if hierarchy limits are disabled
-    if (ignore_hierarchy_limits_ || !get_opp_edge_data())
+    if (ignore_hierarchy_limits_ || !allow_shortcuts_ || !get_opp_edge_data())
       return false;
 
     const auto& opp_edgestatus = FORWARD ? edgestatus_reverse_ : edgestatus_forward_;

@@ -1,19 +1,17 @@
+#include "baldr/complexrestriction.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "sif/recost.h"
-#include "thor/costmatrix.h"
+#include "thor/bidirectional_astar.h"
 #include "thor/dijkstras.h"
 #include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <limits>
 #include <map>
-#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -27,24 +25,15 @@ using namespace valhalla::thor;
 namespace {
 
 // A round trip is a triangle: start -> a -> b -> start. The first leg comes from a forward expansion
-// from the start, the last leg from a reverse expansion into the start, and only the middle leg
-// a -> b needs a matrix.
+// from the start, which also finds the turning points a. A reverse expansion into the start finds
+// the turning points b. The middle leg a -> b is routed with the first leg penalized, the last leg
+// b -> start with the first and the middle leg penalized, so that each leg only reuses or crosses the
+// roads of the earlier ones if there is no other way.
 
-// round trip candidates are weighted on distance deviation (implicit weight of 1), cost per distance,
-// overlap and how well the triangle points into the requested heading
-constexpr double kCostPerDistanceWeight = 0.25;
-constexpr double kShapeWeight = 0.02;
-
-// candidates retracing more than this fraction of their length are only used if nothing else is
-// left
-constexpr double kMaxOverlap = 0.3;
-
-// each leg is about a third of the round trip. The expansions record turning points over a wider
-// band of network distance, so that a second pass can pick shorter or longer legs if the first one
-// misses the requested length
+// each leg is about a third of the round trip, the expansions record turning points over a wider
+// band of network distance so that pairs of them cover a range of round trip lengths
 constexpr double kMinLegFraction = 0.1;
 constexpr double kMaxLegFraction = 0.47;
-constexpr double kTargetLegFraction = 1. / 3.;
 
 // near the start the bearing of a node says little about where the path goes, so the expansions are
 // only kept inside their cone beyond this distance, and with some slack so paths can bend around
@@ -53,33 +42,60 @@ constexpr double kConeStartDistance = 3000.;
 constexpr double kConeMargin = 25.;
 
 // turning points are recorded on a grid of distance and bearing, keeping the first junction in each
-// cell. Each pass takes a few around its target distance from every bearing cell. The middle leg
-// matrix is the square of that, so it has to stay small
+// cell
 constexpr int kDistanceBins = 10;
 constexpr int kBearingBins = 4;
-constexpr int kCoarseBearingBins = 3;
 
 // the inner angle of an equilateral triangle, the ideal opening at the start
 constexpr double kIdealOpening = 60.;
+// how much the shape of the triangle counts when ranking pairs of turning points, next to the
+// expected deviation from the requested distance
+constexpr double kShapeWeight = 0.02;
 
-// a turning point is cut out of the round trip if the road it is driven in on comes back within this
-// distance around it
-constexpr double kMaxSpurDetour = 3000.;
-// nodes this close count as the same road, e.g. on the two carriageways of a divided road
-constexpr double kAlongside = 50.;
-// the way out of a spur may leave the way in for this distance, e.g. around a roundabout
-constexpr double kMaxSpurGap = 300.;
+// a middle leg is expected to be the beeline between its turning points times this factor, until
+// the first middle legs tell how much the network detours in this area
+constexpr double kInitialDetourFactor = 1.3;
+
+// a turning point reached on another edge this much later than the node itself was reached drives a
+// detour to come back to it, e.g. around a roundabout
+constexpr double kMaxFirstReachDetour = 500.;
+
+// how many pairs of turning points get routed before the best round trip so far is taken
+constexpr size_t kMaxAttempts = 8;
+
+// cost factor for the edges earlier legs drive, in either direction
+constexpr double kUsedEdgeFactor = 10.;
+
+// a round trip retracing more than this fraction of its middle and last leg isn't acceptable
+constexpr double kMaxOverlap = 0.1;
+
+// Crossing an earlier leg doesn't retrace anything, but the bow tie it draws is confusing. A leg
+// pays this factor on the edges at the junctions of earlier legs, but only for this distance next to
+// the junction, so that a crossing costs about the same wherever it is.
+constexpr double kCrossingEdgeFactor = 4.;
+constexpr double kCrossingPenaltyLength = 100.;
+// how much a crossing counts against a round trip, in terms of relative deviation from the
+// requested distance
+constexpr double kCrossingScore = 0.02;
+// how much the cost per distance counts against a round trip, relative to the cheapest one per
+// distance, so that preferences of the costing like curvy or quiet roads carry through
+constexpr double kCostPerDistanceWeight = 0.25;
+// A round trip whose shape crosses itself isn't used at all, including crossings on bridges that
+// share no junction. Only near the start, where the first and last leg can't avoid each other, it
+// may cross itself, within this fraction of its length from either end.
+constexpr double kCrossingFreeStartFraction = 0.05;
+// cell size of the grid the self intersection test sorts the shape's segments into
+constexpr double kIntersectionCellSize = 100.;
+
+// alternatives to the middle and last leg widen the range of lengths each pair of turning points
+// offers
+constexpr uint32_t kLegAlternates = 4;
+constexpr float kAlternativeCostExtend = 1.5f;
+constexpr uint32_t kAlternativeIterationsDelta = 200000;
+
 // leaving a node at less than this angle to the road it was arrived on doubles back on that road,
 // e.g. onto the other carriageway of a divided road
 constexpr double kMaxDoubleBackAngle = 35.;
-
-// the more the length may deviate, the fewer turning points a pass needs to find a fitting round
-// trip. Without hierarchy limits every matrix search covers the whole local network, so those
-// costings take one fewer
-int turns_per_bearing(double distance_tolerance, bool coarse) {
-  const int turns = distance_tolerance < 0.15 ? 3 : distance_tolerance < 0.3 ? 2 : 1;
-  return std::max(1, coarse ? turns - 1 : turns);
-}
 
 double angle_diff(double a, double b) {
   const double d = std::fmod(std::abs(a - b), 360.);
@@ -106,6 +122,26 @@ constexpr uint64_t kTurnExcludeUses = [] {
   return mask;
 }();
 
+// the same node on the local level, so a node compares equal on whichever level a path passes it
+GraphId local_node(const GraphId& node, GraphReader& reader) {
+  const auto local_level = TileHierarchy::levels().back().level;
+  if (node.level() == local_level) {
+    return node;
+  }
+  graph_tile_ptr tile;
+  const auto* info = reader.nodeinfo(node, tile);
+  if (!info) {
+    return node;
+  }
+  for (uint32_t i = 0; i < info->transition_count(); ++i) {
+    const auto end = tile->transition(info->transition_index() + i)->endnode();
+    if (end.level() == local_level) {
+      return end;
+    }
+  }
+  return node;
+}
+
 // a node where the round trip can turn towards its next leg
 struct Turn {
   uint32_t label;
@@ -115,12 +151,11 @@ struct Turn {
   double bearing;
   // whether more than one road meets here. Elsewhere the round trip can only continue straight on
   bool junction;
-  int bearing_bin;
 };
 
 // An expansion from or into the start that only grows inside a cone around one corner of the
-// triangle, and only on the higher road classes away from the start. It collects the turning points
-// for that corner on the way.
+// triangle. It collects the turning points for that corner on the way, but only where the
+// expansion's path to the node is about the shortest one to reach it at all.
 class LoopTree : public Dijkstras {
 public:
   struct Params {
@@ -130,8 +165,6 @@ public:
     double cone_center;
     double cone_half_width;
     bool motor_vehicle;
-    int distance_bins;
-    int bearing_bins;
   };
 
   LoopTree(const boost::property_tree::ptree& config, const Params& params)
@@ -144,7 +177,7 @@ public:
            const mode_costing_t& costings,
            travel_mode_t mode) {
     reverse_ = type == ExpansionType::reverse;
-    use_hierarchy_limits_ = true;
+    use_hierarchy_limits_ = costings[static_cast<uint32_t>(mode)]->UseHierarchyLimits();
     google::protobuf::RepeatedPtrField<Location> locations;
     locations.Add()->CopyFrom(start);
     if (reverse_) {
@@ -213,6 +246,10 @@ protected:
     if (!node) {
       return ExpansionRecommendation::continue_expansion;
     }
+    // the expansion settles in cost order, so the first label at a node is the cheapest way there
+    const auto first_reach =
+        first_reach_.try_emplace(local_node(pred.endnode(), reader), distance).first->second;
+
     const PointLL ll = node->latlng(tile->header()->base_ll());
     const double bearing = params_.start.Heading(ll);
     const double off_center = angle_diff(bearing, params_.cone_center);
@@ -221,7 +258,7 @@ protected:
     }
 
     if (distance >= params_.min_distance && off_center <= params_.cone_half_width &&
-        node->edge_count() >= 2) {
+        node->edge_count() >= 2 && distance <= first_reach + kMaxFirstReachDetour) {
       const uint32_t label = edgestatus_.Get(pred.edgeid(), pred.path_id()).index();
       graph_tile_ptr edge_tile;
       const auto* edge = reader.directededge(DrivingEdge(label), edge_tile);
@@ -229,17 +266,15 @@ protected:
         const int distance_bin =
             std::clamp(static_cast<int>((distance - params_.min_distance) /
                                         (params_.max_distance - params_.min_distance) *
-                                        params_.distance_bins),
-                       0, params_.distance_bins - 1);
+                                        kDistanceBins),
+                       0, kDistanceBins - 1);
         const int bearing_bin =
             std::clamp(static_cast<int>(
                            (signed_angle(params_.cone_center, bearing) + params_.cone_half_width) /
-                           (2. * params_.cone_half_width) * params_.bearing_bins),
-                       0, params_.bearing_bins - 1);
-        const Turn turn{label,   pred.endnode(),          ll,         distance,
-                        bearing, node->edge_count() >= 3, bearing_bin};
-        auto [cell, inserted] =
-            turns_.try_emplace(distance_bin * params_.bearing_bins + bearing_bin, turn);
+                           (2. * params_.cone_half_width) * kBearingBins),
+                       0, kBearingBins - 1);
+        const Turn turn{label, pred.endnode(), ll, distance, bearing, node->edge_count() >= 3};
+        auto [cell, inserted] = turns_.try_emplace(distance_bin * kBearingBins + bearing_bin, turn);
         if (!inserted && !cell->second.junction && turn.junction) {
           cell->second = turn;
         }
@@ -262,38 +297,20 @@ private:
   Params params_;
   bool reverse_ = false;
   std::map<int, Turn> turns_;
+  // per node on the local level the distance at which the expansion reached it first
+  std::unordered_map<GraphId, double> first_reach_;
 };
 
-// from every bearing cell turning points spread around the target distance that aren't used yet, so
-// that the pairs cover a range of round trip lengths
-std::vector<size_t> select_turns(const std::vector<Turn>& turns,
-                                 int bearing_bins,
-                                 int per_bearing,
-                                 double target,
-                                 std::vector<bool>& used) {
-  constexpr double kSpread = 0.2;
-  std::vector<size_t> selected;
-  for (int bin = 0; bin < bearing_bins; ++bin) {
-    for (int k = 0; k < per_bearing; ++k) {
-      const double aim =
-          per_bearing == 1
-              ? target
-              : target * (1. - kSpread + 2. * kSpread * k / static_cast<double>(per_bearing - 1));
-      std::optional<size_t> best;
-      for (size_t i = 0; i < turns.size(); ++i) {
-        if (turns[i].bearing_bin == bin && !used[i] &&
-            (!best || std::abs(turns[i].distance - aim) < std::abs(turns[*best].distance - aim))) {
-          best = i;
-        }
-      }
-      if (best) {
-        used[*best] = true;
-        selected.push_back(*best);
-      }
-    }
+// Bidirectional A* for the middle and last leg. Without shortcuts no penalized edge can hide inside
+// one, and the wider search for alternatives offers more lengths per pair of turning points.
+class LegAStar : public BidirectionalAStar {
+public:
+  LegAStar() : BidirectionalAStar() {
+    allow_shortcuts_ = false;
+    alternative_cost_extend_ = kAlternativeCostExtend;
+    alternative_iterations_delta_ = kAlternativeIterationsDelta;
   }
-  return selected;
-}
+};
 
 // whether arriving at a node on the opposing edge of `back` and leaving on `out`, both edges leaving
 // that node, turns around on the road
@@ -305,254 +322,15 @@ bool doubles_back(const NodeInfo* node, const DirectedEdge* back, const Directed
          kMaxDoubleBackAngle;
 }
 
-// a leg of a round trip candidate
-struct Leg {
-  std::vector<GraphId> edges;
-  // parallel to edges: the opposing edge (invalid if there is none) and the length
-  // TODO: this uses a narrow definition of "every edge along a stretch of road" because it leaves out
-  // edges from the opposing part of a doubly digitized way, as well as sidewalks and adjacent cycle
-  // paths mapped separately
-  std::vector<GraphId> opposing;
-  std::vector<float> lengths;
-  // parallel to edges: the end node and its location
-  std::vector<GraphId> nodes;
-  std::vector<PointLL> points;
-  // indices k where edges[k + 1] turns around onto the opposing edge of edges[k]
-  std::vector<size_t> uturns;
-  double distance = 0.;
-  double cost = 0.;
-  bool found = false;
-};
-
-// the same node on the local level, so a node compares equal on whichever level a path passes it
-GraphId local_node(const GraphId& node, GraphReader& reader, graph_tile_ptr& tile) {
-  const auto local_level = TileHierarchy::levels().back().level;
-  if (node.level() == local_level) {
-    return node;
-  }
-  const auto* info = reader.nodeinfo(node, tile);
-  if (!info) {
-    return node;
-  }
-  for (uint32_t t = 0; t < info->transition_count(); ++t) {
-    const auto end = tile->transition(info->transition_index() + t)->endnode();
-    if (end.level() == local_level) {
-      return end;
-    }
-  }
-  return node;
-}
-
-void index_leg(Leg& leg, GraphReader& reader) {
-  graph_tile_ptr tile;
-  graph_tile_ptr node_tile;
-  leg.opposing.resize(leg.edges.size());
-  leg.lengths.resize(leg.edges.size(), 0.f);
-  leg.nodes.resize(leg.edges.size());
-  leg.points.resize(leg.edges.size());
-  for (size_t i = 0; i < leg.edges.size(); ++i) {
-    const auto* edge = reader.directededge(leg.edges[i], tile);
-    if (!edge) {
-      continue;
-    }
-    leg.lengths[i] = static_cast<float>(edge->length());
-    leg.opposing[i] = reader.GetOpposingEdgeId(leg.edges[i], tile);
-    leg.nodes[i] = local_node(edge->endnode(), reader, node_tile);
-    if (reader.GetGraphTile(leg.nodes[i], node_tile)) {
-      leg.points[i] = node_tile->get_node_ll(leg.nodes[i]);
-    }
-    if (i > 0 && leg.edges[i] == leg.opposing[i - 1]) {
-      leg.uturns.push_back(i - 1);
-    }
-  }
-}
-
-// the part [begin, end) of a leg's edges a round trip candidate drives
-struct LegRange {
-  const Leg* leg = nullptr;
-  size_t begin = 0;
-  size_t end = 0;
-};
-
-// A turning point off the natural course of the round trip, at the end of a spur or reached around a
-// block or a roundabout, is driven into and out of along the same road. This is how many edges to
-// drop from the end of the incoming and the start of the outgoing leg, so they join where that detour
-// begins.
-struct Spur {
-  size_t in = 0;
-  size_t out = 0;
-  double length = 0.;
-};
-
-Spur find_spur(const Leg& in, const Leg& out, GraphReader& reader) {
-  if (in.edges.size() < 3 || out.edges.size() < 3) {
-    return {};
-  }
-
-  // The legs are compared by location, not by their edges, so that the two carriageways of a divided
-  // road count as the same road. Each incoming edge is approximated by the segment between its
-  // nodes, and those go on a grid with cells as large as the distance that counts as alongside, so
-  // only the neighbouring cells need a look.
-  const double lng_scale = DistanceApproximator<PointLL>::LngScalePerLat(in.points.back().lat());
-  const double cell_lat = kAlongside / kMetersPerDegreeLat;
-  const double cell_lng = cell_lat / lng_scale;
-  const auto cell = [&](double lng, double lat, int dx, int dy) {
-    const auto x = static_cast<int64_t>(std::floor(lng / cell_lng)) + dx;
-    const auto y = static_cast<int64_t>(std::floor(lat / cell_lat)) + dy;
-    return static_cast<uint64_t>(x) << 32 ^ static_cast<uint32_t>(y);
-  };
-  // segment k runs from nodes[k - 1] to nodes[k], nodes[k] ends edges[k] and the last node is the
-  // turning point, where joining cuts nothing
-  std::unordered_multimap<uint64_t, size_t> grid;
-  std::unordered_map<GraphId, size_t> node_index;
-  std::vector<double> before_turn(in.edges.size(), 0.);
-  for (size_t k = in.edges.size() - 1; k-- > 0;) {
-    before_turn[k] = before_turn[k + 1] + in.lengths[k + 1];
-    node_index.emplace(in.nodes[k], k);
-    const auto& a = in.points[k];
-    const auto& b = in.points[k + 1];
-    const auto steps = static_cast<int>(in.lengths[k + 1] / kAlongside) + 1;
-    uint64_t previous = 0;
-    for (int step = 0; step <= steps; ++step) {
-      const double f = static_cast<double>(step) / steps;
-      const auto c = cell(a.lng() + f * (b.lng() - a.lng()), a.lat() + f * (b.lat() - a.lat()), 0, 0);
-      if (step == 0 || c != previous) {
-        grid.emplace(c, k + 1);
-      }
-      previous = c;
-    }
-  }
-  const auto distance_squared = [&](const PointLL& p, const PointLL& a, const PointLL& b) {
-    const double bx = (b.lng() - a.lng()) * lng_scale * kMetersPerDegreeLat;
-    const double by = (b.lat() - a.lat()) * kMetersPerDegreeLat;
-    const double px = (p.lng() - a.lng()) * lng_scale * kMetersPerDegreeLat;
-    const double py = (p.lat() - a.lat()) * kMetersPerDegreeLat;
-    const double len = bx * bx + by * by;
-    const double t = len > 0. ? std::clamp((px * bx + py * by) / len, 0., 1.) : 0.;
-    return (px - t * bx) * (px - t * bx) + (py - t * by) * (py - t * by);
-  };
-  // the incoming segment closest to the turning point, but not past `last`, alongside a point
-  const auto alongside = [&](const PointLL& p, size_t last) -> std::optional<size_t> {
-    std::optional<size_t> found;
-    for (int dx = -1; dx <= 1; ++dx) {
-      for (int dy = -1; dy <= 1; ++dy) {
-        const auto range = grid.equal_range(cell(p.lng(), p.lat(), dx, dy));
-        for (auto it = range.first; it != range.second; ++it) {
-          const size_t k = it->second;
-          if (k <= last && (!found || k > *found) &&
-              distance_squared(p, in.points[k - 1], in.points[k]) < kAlongside * kAlongside) {
-            found = k;
-          }
-        }
-      }
-    }
-    return found;
-  };
-
-  // walk the outgoing leg as long as it runs alongside the incoming one backwards. Wherever both
-  // pass the same node, they could join there
-  std::vector<std::pair<size_t, size_t>> joins;
-  std::optional<size_t> k;
-  double reach = 0.;
-  double gap = 0.;
-  for (size_t j = 0; j + 1 < out.edges.size(); ++j) {
-    const auto m = alongside(out.points[j], k ? *k : in.edges.size() - 1);
-    if (m && (k || before_turn[*m - 1] + reach < kMaxSpurDetour)) {
-      k = m;
-      gap = 0.;
-      const auto node = node_index.find(out.nodes[j]);
-      if (node != node_index.end() && node->second > 0 && node->second <= *m) {
-        joins.emplace_back(node->second, j);
-      }
-    } else if (k) {
-      // a brief touch near the turning point doesn't count, look further for the road back
-      gap += out.lengths[j];
-      if (gap > kMaxSpurGap) {
-        if (!joins.empty()) {
-          break;
-        }
-        k.reset();
-      }
-    }
-    reach += out.lengths[j];
-    if (!k && reach > kMaxSpurDetour) {
-      break;
-    }
-  }
-
-  // the outermost join that allows the turn from in.edges[i] into out.edges[j + 1] without turning
-  // around
-  graph_tile_ptr tile;
-  for (auto join = joins.rbegin(); join != joins.rend(); ++join) {
-    const auto [i, j] = *join;
-    const auto* from = reader.directededge(in.edges[i], tile);
-    const auto* to = reader.directededge(out.edges[j + 1], tile);
-    if (!from || !to || (from->restrictions() & (1 << to->localedgeidx())) ||
-        !in.opposing[i].is_valid()) {
-      continue;
-    }
-    const auto* back = reader.directededge(in.opposing[i], tile);
-    // local edge indices refer to the node on the local level
-    const auto* node = back ? reader.nodeinfo(in.nodes[i], tile) : nullptr;
-    if (!node || doubles_back(node, back, to)) {
-      continue;
-    }
-
-    Spur spur;
-    spur.in = in.edges.size() - i - 1;
-    spur.out = j + 1;
-    for (size_t e = i + 1; e < in.edges.size(); ++e) {
-      spur.length += in.lengths[e];
-    }
-    for (size_t e = 0; e <= j; ++e) {
-      spur.length += out.lengths[e];
-    }
-    return spur;
-  }
-  return {};
-}
-
-// A complete round trip candidate
-struct candidate {
-  size_t a = 0; // index into the turning points of the forward expansion
-  size_t b = 0; // index into the turning points of the reverse expansion
-  std::array<LegRange, 3> legs;
-  double distance = 0.;
-  double cost = 0.;
-  double overlap = 0.; // fraction of the distance that is driven on a road used by an earlier leg
-  double score = 0.;
-  bool uturn = false;
-};
-
-// fraction of the legs' interior length, i.e. without the edges at the joints, that runs on roads an
-// earlier leg already used
-double compute_overlap(const std::array<LegRange, 3>& legs) {
-  std::unordered_set<GraphId> seen;
-  double overlap = 0.;
-  double total = 0.;
-  for (const auto& range : legs) {
-    const auto& leg = *range.leg;
-    for (size_t k = range.begin + 1; k + 1 < range.end; ++k) {
-      total += leg.lengths[k];
-      if (seen.contains(leg.edges[k])) {
-        overlap += leg.lengths[k];
-      }
-    }
-    // only insert after the leg is done, a leg crossing itself isn't what we're after here
-    for (size_t k = range.begin; k < range.end; ++k) {
-      seen.insert(leg.edges[k]);
-      if (leg.opposing[k].is_valid()) {
-        seen.insert(leg.opposing[k]);
-      }
-    }
-  }
-  return total > 0. ? overlap / total : 0.;
-}
-
-// a location at a node: the edges leaving it for a source, the edges arriving at it for a target,
-// except for those that would turn the round trip around at that node. back_edge leaves the node, as
-// the opposing edge of the arrival for a source or as the departure for a target
-Location node_location(const Turn& turn, GraphId back_edge, bool as_source, GraphReader& reader) {
+// A location at a turning point: the edges leaving it as the origin of the next leg, or the edges
+// arriving at it as the destination of a leg. Left out are edges the costing doesn't allow and, at an
+// origin, edges that would turn the round trip around after `arrival` or that a simple turn
+// restriction forbids after it.
+Location turn_location(const Turn& turn,
+                       const GraphId& arrival,
+                       bool origin,
+                       GraphReader& reader,
+                       const DynamicCost& costing) {
   Location location;
   location.mutable_ll()->set_lng(turn.ll.lng());
   location.mutable_ll()->set_lat(turn.ll.lat());
@@ -561,34 +339,414 @@ Location node_location(const Turn& turn, GraphId back_edge, bool as_source, Grap
   if (!node) {
     return location;
   }
-  graph_tile_ptr back_tile = tile;
-  const auto* back = reader.directededge(back_edge, back_tile);
+  graph_tile_ptr arrival_tile;
+  graph_tile_ptr back_tile;
+  const DirectedEdge* arrival_edge = nullptr;
+  const DirectedEdge* back = nullptr;
+  if (origin) {
+    arrival_edge = reader.directededge(arrival, arrival_tile);
+    back = reader.GetOpposingEdge(arrival, back_tile);
+    if (!arrival_edge) {
+      return location;
+    }
+  }
+
   GraphId edge_id(turn.node.tileid(), turn.node.level(), node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); ++i, ++edge_id) {
     const auto* edge = tile->directededge(edge_id);
-    if (edge->is_shortcut() || (back && doubles_back(node, back, edge))) {
+    if (edge->is_shortcut()) {
       continue;
     }
     GraphId id = edge_id;
-    if (!as_source) {
+    if (origin) {
+      if (!costing.Allowed(edge, tile) || (back && doubles_back(node, back, edge)) ||
+          (arrival_edge->restrictions() & (1 << edge->localedgeidx()))) {
+        continue;
+      }
+    } else {
       graph_tile_ptr opp_tile = tile;
       id = reader.GetOpposingEdgeId(edge_id, opp_tile);
-      if (!id.is_valid()) {
+      const auto* inbound = id.is_valid() ? opp_tile->directededge(id) : nullptr;
+      if (!inbound || !costing.Allowed(inbound, opp_tile)) {
         continue;
       }
     }
     auto* path_edge = location.mutable_correlation()->mutable_edges()->Add();
     path_edge->set_graph_id(id);
-    path_edge->set_percent_along(as_source ? 0. : 1.);
+    path_edge->set_percent_along(origin ? 0. : 1.);
     path_edge->mutable_ll()->CopyFrom(location.ll());
     path_edge->set_distance(0.);
-    path_edge->set_begin_node(as_source);
-    path_edge->set_end_node(!as_source);
+    path_edge->set_begin_node(origin);
+    path_edge->set_end_node(!origin);
   }
   return location;
 }
 
-float find_percent_along(const Location& location, GraphId edge_id) {
+// whether a round trip arriving on `arrival` may continue on `departure`, by the same rules as
+// turn_location
+bool turn_allowed(const GraphId& arrival, const GraphId& departure, GraphReader& reader) {
+  graph_tile_ptr arrival_tile;
+  graph_tile_ptr back_tile;
+  graph_tile_ptr departure_tile;
+  graph_tile_ptr node_tile;
+  const auto* arrival_edge = reader.directededge(arrival, arrival_tile);
+  const auto* back = reader.GetOpposingEdge(arrival, back_tile);
+  const auto* departure_edge = reader.directededge(departure, departure_tile);
+  const auto* node = arrival_edge ? reader.nodeinfo(arrival_edge->endnode(), node_tile) : nullptr;
+  if (!arrival_edge || !departure_edge || !node) {
+    return false;
+  }
+  return !(arrival_edge->restrictions() & (1 << departure_edge->localedgeidx())) &&
+         !(back && doubles_back(node, back, departure_edge));
+}
+
+// Whether a complex restriction runs across the joint in front of edges[joint]. Restrictions on
+// either side were respected by the search that found that side. Timed and probable restrictions
+// count as active, a round trip has no time to evaluate them at.
+bool restricted_across(const std::vector<GraphId>& edges,
+                       size_t joint,
+                       uint64_t access_mode,
+                       GraphReader& reader) {
+  graph_tile_ptr tile;
+  const size_t end = std::min(edges.size(), joint + kMaxViasPerRestriction + 1);
+  for (size_t k = joint; k < end; ++k) {
+    const auto* edge = reader.directededge(edges[k], tile);
+    if (!edge || !(edge->end_restriction() & access_mode)) {
+      continue;
+    }
+    for (const auto& cr : tile->GetComplexRestrictions(true, edges[k], access_mode)) {
+      // the vias come in reverse driving order, followed by the edge the restriction starts on
+      size_t i = k;
+      bool match = true;
+      cr.WalkVias([&](const GraphId* via) {
+        if (i == 0 || edges[i - 1] != *via) {
+          match = false;
+          return WalkingVia::StopWalking;
+        }
+        --i;
+        return WalkingVia::KeepWalking;
+      });
+      if (match && i > 0 && i - 1 < joint && edges[i - 1] == cr.from_graphid()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// a leg of a round trip: its edges, their lengths, their end nodes on the local level and its shape
+struct Leg {
+  std::vector<GraphId> edges;
+  std::vector<double> lengths;
+  std::vector<GraphId> nodes;
+  std::vector<PointLL> shape;
+  double distance = 0.;
+  // without the round trip's penalties
+  double cost = 0.;
+};
+
+Leg make_leg(std::vector<GraphId> edges, double distance, GraphReader& reader) {
+  Leg leg;
+  leg.edges = std::move(edges);
+  leg.distance = distance;
+  leg.lengths.reserve(leg.edges.size());
+  leg.nodes.reserve(leg.edges.size());
+  graph_tile_ptr tile;
+  for (const auto& edge_id : leg.edges) {
+    const auto* edge = reader.directededge(edge_id, tile);
+    leg.lengths.push_back(edge ? edge->length() : 0.);
+    leg.nodes.push_back(edge ? local_node(edge->endnode(), reader) : GraphId{});
+    if (!edge) {
+      continue;
+    }
+    std::vector<PointLL> shape = tile->edgeinfo(edge).shape();
+    if (!edge->forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    const bool connected = !leg.shape.empty() && !shape.empty() && leg.shape.back() == shape.front();
+    leg.shape.insert(leg.shape.end(), shape.begin() + (connected ? 1 : 0), shape.end());
+  }
+  return leg;
+}
+
+// Whether a shape crosses itself between `skip` meters from its start and `skip` meters from its
+// end: two of its segments cross, or it passes a point twice and the second pass goes from one side
+// of the first pass to the other. Passing a point twice on the same side, or along the same road,
+// doesn't cross.
+bool crosses_itself(const std::vector<PointLL>& shape, double skip) {
+  if (shape.size() < 4) {
+    return false;
+  }
+  // local planar coordinates in meters
+  const double lng_scale = std::cos(shape.front().lat() * kRadPerDegD) * kMetersPerDegreeLat;
+  std::vector<Point2> points;
+  points.reserve(shape.size());
+  for (const auto& p : shape) {
+    points.emplace_back(p.lng() * lng_scale, p.lat() * kMetersPerDegreeLat);
+  }
+  std::vector<double> along(points.size(), 0.);
+  for (size_t i = 1; i < points.size(); ++i) {
+    along[i] = along[i - 1] + points[i - 1].Distance(points[i]);
+  }
+  const double begin = skip;
+  const double end = along.back() - skip;
+  if (end <= begin) {
+    return false;
+  }
+
+  const auto cross = [](const Point2& o, const Point2& a, const Point2& b) {
+    return (a.x() - o.x()) * (b.y() - o.y()) - (a.y() - o.y()) * (b.x() - o.x());
+  };
+  const auto cell = [](double x, double y) {
+    return static_cast<uint64_t>(static_cast<int64_t>(std::floor(x / kIntersectionCellSize))) << 32 ^
+           static_cast<uint32_t>(static_cast<int64_t>(std::floor(y / kIntersectionCellSize)));
+  };
+
+  // segment i runs from points[i] to points[i + 1], each goes into every cell it passes
+  std::unordered_map<uint64_t, std::vector<size_t>> grid;
+  for (size_t i = 0; i + 1 < points.size(); ++i) {
+    if (along[i + 1] < begin || along[i] > end) {
+      continue;
+    }
+    const auto& a = points[i];
+    const auto& b = points[i + 1];
+    const int steps = static_cast<int>(a.Distance(b) / (kIntersectionCellSize / 2.)) + 1;
+    uint64_t previous = 0;
+    for (int step = 0; step <= steps; ++step) {
+      const double f = static_cast<double>(step) / steps;
+      const auto c = cell(a.x() + f * (b.x() - a.x()), a.y() + f * (b.y() - a.y()));
+      if (step == 0 || c != previous) {
+        auto& segments = grid[c];
+        if (segments.empty() || segments.back() != i) {
+          segments.push_back(i);
+        }
+      }
+      previous = c;
+    }
+  }
+
+  // segments crossing each other, touching ones are left to the point check below
+  for (const auto& [c, segments] : grid) {
+    for (size_t x = 0; x < segments.size(); ++x) {
+      for (size_t y = x + 1; y < segments.size(); ++y) {
+        const size_t i = std::min(segments[x], segments[y]);
+        const size_t j = std::max(segments[x], segments[y]);
+        if (j <= i + 1) {
+          continue;
+        }
+        const auto &a = points[i], &b = points[i + 1], &c1 = points[j], &d = points[j + 1];
+        if (cross(c1, d, a) * cross(c1, d, b) < 0. && cross(a, b, c1) * cross(a, b, d) < 0.) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // points passed twice, compared by the directions in and out of them on both passes
+  std::unordered_map<PointLL, std::vector<size_t>> passes;
+  for (size_t i = 1; i + 1 < shape.size(); ++i) {
+    if (along[i] >= begin && along[i] <= end) {
+      passes[shape[i]].push_back(i);
+    }
+  }
+  const auto direction = [&](size_t at, size_t to) {
+    return std::atan2(points[to].y() - points[at].y(), points[to].x() - points[at].x());
+  };
+  // whether angle t lies strictly between from and to, counter clockwise
+  const auto between = [](double from, double to, double t) {
+    const double span = std::fmod(to - from + 4. * kPiD, 2. * kPiD);
+    const double offset = std::fmod(t - from + 4. * kPiD, 2. * kPiD);
+    return offset > 0. && offset < span;
+  };
+  constexpr double kSameDirection = 1. * kRadPerDegD;
+  for (const auto& [point, indices] : passes) {
+    for (size_t x = 0; x < indices.size(); ++x) {
+      for (size_t y = x + 1; y < indices.size(); ++y) {
+        const size_t i = indices[x];
+        const size_t j = indices[y];
+        if (j <= i + 1) {
+          continue;
+        }
+        const double a1 = direction(i, i - 1), a2 = direction(i, i + 1);
+        const double b1 = direction(j, j - 1), b2 = direction(j, j + 1);
+        // a pass sharing a direction with the other one runs along the same road there
+        bool shared = false;
+        for (double a : {a1, a2}) {
+          for (double b : {b1, b2}) {
+            shared |= std::abs(std::remainder(a - b, 2. * kPiD)) < kSameDirection;
+          }
+        }
+        if (!shared && between(a1, a2, b1) != between(a1, a2, b2)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// the roads a leg drives, i.e. its edges and their opposing edges
+void add_roads(const Leg& leg, std::unordered_set<GraphId>& roads, GraphReader& reader) {
+  graph_tile_ptr tile;
+  for (const auto& edge_id : leg.edges) {
+    roads.insert(edge_id);
+    const auto opp_id = reader.GetOpposingEdgeId(edge_id, tile);
+    if (opp_id.is_valid()) {
+      roads.insert(opp_id);
+    }
+  }
+}
+
+// The junctions a leg passes, without the first and last few where the next legs connect to it
+void add_junctions(const Leg& leg,
+                   size_t skip_front,
+                   size_t skip_back,
+                   std::unordered_set<GraphId>& junctions) {
+  for (size_t i = skip_front; i + skip_back < leg.nodes.size(); ++i) {
+    junctions.insert(leg.nodes[i]);
+  }
+}
+
+// how much of a leg runs on roads of earlier legs, and how many of their junctions it passes
+struct Reuse {
+  double overlap = 0.;
+  uint32_t crossings = 0;
+};
+
+Reuse measure_reuse(const Leg& leg,
+                    const std::unordered_set<GraphId>& roads,
+                    const std::unordered_set<GraphId>& junctions) {
+  Reuse reuse;
+  for (size_t i = 0; i < leg.edges.size(); ++i) {
+    if (roads.contains(leg.edges[i])) {
+      reuse.overlap += leg.lengths[i];
+    }
+    // passing a junction while retracing an earlier leg is overlap, not a crossing
+    if (i + 1 < leg.edges.size() && junctions.contains(leg.nodes[i]) &&
+        !(roads.contains(leg.edges[i]) && roads.contains(leg.edges[i + 1]))) {
+      ++reuse.crossings;
+    }
+  }
+  return reuse;
+}
+
+// Penalizes the edges at the junctions of earlier legs, except those of the legs themselves, over
+// kCrossingPenaltyLength next to the junction: the start of the edges leaving it and the end of the
+// edges arriving at it.
+void add_crossing_penalties(const std::unordered_set<GraphId>& junctions,
+                            const std::unordered_set<GraphId>& used,
+                            GraphReader& reader,
+                            Costing_Options& penalties) {
+  // per edge the fraction penalized from its start and the one penalized up to its end
+  std::unordered_map<GraphId, std::pair<double, double>> ends;
+  graph_tile_ptr tile;
+  const auto add_node = [&](const GraphId& node_id) {
+    const auto* node = reader.nodeinfo(node_id, tile);
+    if (!node) {
+      return;
+    }
+    GraphId edge_id(node_id.tileid(), node_id.level(), node->edge_index());
+    for (uint32_t i = 0; i < node->edge_count(); ++i, ++edge_id) {
+      const auto* edge = tile->directededge(edge_id);
+      if (edge->is_shortcut() || edge->length() == 0) {
+        continue;
+      }
+      const double fraction = std::min(1., kCrossingPenaltyLength / edge->length());
+      if (!used.contains(edge_id)) {
+        auto& end = ends[edge_id];
+        end.first = std::max(end.first, fraction);
+      }
+      graph_tile_ptr opp_tile = tile;
+      const auto opp_id = reader.GetOpposingEdgeId(edge_id, opp_tile);
+      if (opp_id.is_valid() && !used.contains(opp_id)) {
+        auto& end = ends[opp_id];
+        end.second = std::max(end.second, fraction);
+      }
+    }
+  };
+  for (const auto& junction : junctions) {
+    add_node(junction);
+    // the same junction on the other levels, a path might pass it on any of them
+    const auto* node = reader.nodeinfo(junction, tile);
+    if (!node) {
+      continue;
+    }
+    std::vector<GraphId> others;
+    for (uint32_t i = 0; i < node->transition_count(); ++i) {
+      others.push_back(tile->transition(node->transition_index() + i)->endnode());
+    }
+    for (const auto& other : others) {
+      add_node(other);
+    }
+  }
+
+  const auto add_range = [&penalties](const GraphId& edge_id, double start, double end) {
+    auto* factor = penalties.mutable_cost_factor_edges()->Add();
+    factor->set_id(edge_id.value);
+    factor->set_factor(kCrossingEdgeFactor);
+    factor->set_start(start);
+    factor->set_end(end);
+  };
+  for (const auto& [edge_id, end] : ends) {
+    if (end.first + end.second >= 1.) {
+      add_range(edge_id, 0., 1.);
+      continue;
+    }
+    if (end.first > 0.) {
+      add_range(edge_id, 0., end.first);
+    }
+    if (end.second > 0.) {
+      add_range(edge_id, 1. - end.second, 1.);
+    }
+  }
+}
+
+// the cost of driving these edges without any of the round trip's penalties
+double unpenalized_cost(const std::vector<GraphId>& edges,
+                        float source_pct,
+                        float target_pct,
+                        GraphReader& reader,
+                        const DynamicCost& costing) {
+  double cost = 0.;
+  auto edge_itr = edges.begin();
+  const auto edge_cb = [&edge_itr, &edges]() {
+    return edge_itr == edges.end() ? GraphId{} : *edge_itr++;
+  };
+  const auto label_cb = [&cost](const PathEdgeLabel& label) { cost = label.cost().cost; };
+  recost_forward(reader, costing, edge_cb, label_cb, source_pct, target_pct, TimeInfo::invalid(),
+                 false, true);
+  return cost;
+}
+
+// where along an edge a location lies, or `fallback` if the edge isn't one of its edges
+float percent_along(const Location& location, const GraphId& edge_id, float fallback) {
+  for (const auto& edge : location.correlation().edges()) {
+    if (edge.graph_id() == edge_id) {
+      return edge.percent_along();
+    }
+  }
+  return fallback;
+}
+
+// the user's own cost factors plus the penalties for driving on or crossing earlier legs
+Costing_Options make_penalties(const Costing_Options& costing_options,
+                               const std::unordered_set<GraphId>& roads,
+                               const std::unordered_set<GraphId>& junctions,
+                               GraphReader& reader) {
+  Costing_Options penalties;
+  penalties.mutable_cost_factor_edges()->CopyFrom(costing_options.cost_factor_edges());
+  for (const auto& edge_id : roads) {
+    auto* factor = penalties.mutable_cost_factor_edges()->Add();
+    factor->set_id(edge_id.value);
+    factor->set_factor(kUsedEdgeFactor);
+    factor->set_start(0.);
+    factor->set_end(1.);
+  }
+  add_crossing_penalties(junctions, roads, reader, penalties);
+  return penalties;
+}
+
+float find_percent_along(const Location& location, const GraphId& edge_id) {
   for (const auto& edge : location.correlation().edges()) {
     if (edge.graph_id() == edge_id) {
       return edge.percent_along();
@@ -596,6 +754,27 @@ float find_percent_along(const Location& location, GraphId edge_id) {
   }
   throw std::logic_error("Round trip doesn't start or end on one of the start's edges");
 }
+
+// a pair of turning points, ranked by what the round trip through them is expected to look like
+struct TurnPair {
+  size_t a;
+  size_t b;
+  double beeline;
+  double score;
+};
+
+// a round trip through a pair of turning points
+struct Candidate {
+  size_t a;
+  size_t b;
+  std::vector<GraphId> edges;
+  double distance;
+  double cost;
+  double deviation;   // relative to the requested distance
+  double overlap;     // fraction of the middle and last leg driven on roads of earlier legs
+  uint32_t crossings; // junctions of earlier legs the middle and last leg cross
+  double score;
+};
 
 } // namespace
 
@@ -608,13 +787,14 @@ void thor_worker_t::round_trip(Api& request) {
 
   auto& options = *request.mutable_options();
   adjust_locations(request);
-  auto costing = parse_costing(request);
+  parse_costing(request);
   controller = AttributesController(options);
 
-  if (check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
-                             options.costings().find(options.costing_type())->second.options(),
-                             hierarchy_limits_config_costmatrix, allow_hierarchy_limits_modifications,
-                             mode_costing[int(mode)]->UseHierarchyLimits())) {
+  auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+  const auto& costing_options = options.costings().find(options.costing_type())->second.options();
+  if (check_hierarchy_limits(costing->GetHierarchyLimits(), costing, costing_options,
+                             hierarchy_limits_config_bidirectional_astar,
+                             allow_hierarchy_limits_modifications, costing->UseHierarchyLimits())) {
     add_warning(request, allow_hierarchy_limits_modifications ? 210 : 209);
   }
 
@@ -623,23 +803,21 @@ void thor_worker_t::round_trip(Api& request) {
   const double desired_distance = round_trip_options.distance();
   const double heading = round_trip_options.heading();
   const double tolerance = round_trip_options.heading_tolerance();
-  const bool motor_vehicle = mode == travel_mode_t::kDrive;
-  const bool coarse = !mode_costing[int(mode)]->UseHierarchyLimits();
-  const int bearing_bins = coarse ? kCoarseBearingBins : kBearingBins;
   const double distance_tolerance = round_trip_options.distance_tolerance();
-  const int per_bearing = turns_per_bearing(distance_tolerance, coarse);
+  const double overlap_factor = round_trip_options.overlap_factor();
+  const bool motor_vehicle = mode == travel_mode_t::kDrive;
 
   // the first turning point lies in the counter clockwise half of the heading's sector and the second
   // one in the clockwise half, so the round trip runs clockwise
   boost::property_tree::ptree tree_config;
   tree_config.put("max_reserved_labels_count_dijkstras", 200000);
   const PointLL start_ll(start.ll().lng(), start.ll().lat());
-  LoopTree out_tree(tree_config, {start_ll, kMinLegFraction * desired_distance,
-                                  kMaxLegFraction * desired_distance, heading - tolerance / 2.,
-                                  tolerance / 2., motor_vehicle, kDistanceBins, bearing_bins});
+  LoopTree out_tree(tree_config,
+                    {start_ll, kMinLegFraction * desired_distance, kMaxLegFraction * desired_distance,
+                     heading - tolerance / 2., tolerance / 2., motor_vehicle});
   LoopTree back_tree(tree_config, {start_ll, kMinLegFraction * desired_distance,
                                    kMaxLegFraction * desired_distance, heading + tolerance / 2.,
-                                   tolerance / 2., motor_vehicle, kDistanceBins, bearing_bins});
+                                   tolerance / 2., motor_vehicle});
   out_tree.Run(ExpansionType::forward, start, *reader, mode_costing, mode);
   back_tree.Run(ExpansionType::reverse, start, *reader, mode_costing, mode);
 
@@ -651,214 +829,202 @@ void thor_worker_t::round_trip(Api& request) {
     throw valhalla_exception_t{442};
   }
 
-  // the first and last legs come straight from the expansions
-  std::vector<Leg> out_legs(a_turns.size());
+  // pairs are ranked by the round trip length they are expected to give and by how well the triangle
+  // opens and points into the heading, the best one last
+  std::vector<TurnPair> pairs;
+  pairs.reserve(a_turns.size() * b_turns.size());
   for (size_t i = 0; i < a_turns.size(); ++i) {
-    auto& leg = out_legs[i];
-    leg.edges = out_tree.Path(a_turns[i].label);
-    leg.distance = out_tree.Label(a_turns[i].label).path_distance();
-    leg.cost = out_tree.Label(a_turns[i].label).cost().cost;
-    leg.found = true;
-    index_leg(leg, *reader);
+    for (size_t j = 0; j < b_turns.size(); ++j) {
+      pairs.push_back({i, j, a_turns[i].ll.Distance(b_turns[j].ll), 0.});
+    }
   }
-  std::vector<Leg> back_legs(b_turns.size());
-  for (size_t j = 0; j < b_turns.size(); ++j) {
-    auto& leg = back_legs[j];
-    leg.edges = back_tree.Path(b_turns[j].label);
-    leg.distance = back_tree.Label(b_turns[j].label).path_distance();
-    leg.cost = back_tree.Label(b_turns[j].label).cost().cost;
-    leg.found = true;
-    index_leg(leg, *reader);
-  }
-
-  // a matrix for the middle legs between the selected turning points. Leaving a turning point on the
-  // edge it was arrived on, or arriving on the edge it is left on, would turn the round trip around,
-  // so those edges are left out
-  std::vector<Leg> middle_legs(a_turns.size() * b_turns.size());
-  const auto compute_middle_legs = [&](const std::vector<size_t>& sources,
-                                       const std::vector<size_t>& targets) {
-    if (sources.empty() || targets.empty()) {
-      return;
-    }
-    options.mutable_sources()->Clear();
-    options.mutable_targets()->Clear();
-    for (auto i : sources) {
-      graph_tile_ptr tile;
-      const auto uturn = reader->GetOpposingEdgeId(out_legs[i].edges.back(), tile);
-      *options.mutable_sources()->Add() = node_location(a_turns[i], uturn, true, *reader);
-    }
-    for (auto j : targets) {
-      *options.mutable_targets()->Add() =
-          node_location(b_turns[j], back_legs[j].edges.front(), false, *reader);
-    }
-
-    // only the matrix paths are needed, not their shapes
-    const auto requested_shape_format = options.shape_format();
-    options.set_shape_format(no_shape);
-    std::vector<std::vector<GraphId>> paths;
-    request.clear_matrix();
-    costmatrix_.Clear();
-    costmatrix_.set_interrupt(interrupt);
-    costmatrix_.set_has_time(check_matrix_time(request, Matrix::CostMatrix));
-    costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
-                               max_matrix_distance.find(costing)->second, &paths);
-    options.set_shape_format(requested_shape_format);
-
-    const auto& matrix = request.matrix();
-    for (size_t s = 0; s < sources.size(); ++s) {
-      for (size_t t = 0; t < targets.size(); ++t) {
-        const size_t m = s * targets.size() + t;
-        auto& leg = middle_legs[sources[s] * b_turns.size() + targets[t]];
-        leg.found = m < paths.size() && !paths[m].empty();
-        if (!leg.found) {
-          continue;
-        }
-        leg.edges = std::move(paths[m]);
-        leg.distance = matrix.distances(m);
-        leg.cost = matrix.costs(m);
-        index_leg(leg, *reader);
-      }
-    }
-    options.mutable_sources()->Clear();
-    options.mutable_targets()->Clear();
-    request.clear_matrix();
-  };
-
-  // every pair of turning points with a middle leg, best first
-  const double overlap_factor = round_trip_options.overlap_factor();
-  const auto score_candidates = [&]() {
-    std::vector<candidate> candidates;
-    double min_cost_per_distance = std::numeric_limits<double>::max();
-    for (size_t i = 0; i < a_turns.size(); ++i) {
-      for (size_t j = 0; j < b_turns.size(); ++j) {
-        const auto& middle = middle_legs[i * b_turns.size() + j];
-        if (!middle.found) {
-          continue;
-        }
-        candidate c;
-        c.a = i;
-        c.b = j;
-        c.legs = {LegRange{&out_legs[i], 0, out_legs[i].edges.size()},
-                  LegRange{&middle, 0, middle.edges.size()},
-                  LegRange{&back_legs[j], 0, back_legs[j].edges.size()}};
-        c.distance = out_legs[i].distance + middle.distance + back_legs[j].distance;
-        c.cost = out_legs[i].cost + middle.cost + back_legs[j].cost;
-        if (c.distance <= 0.) {
-          continue;
-        }
-
-        // cut out the detours at both turning points, as long as some of the middle leg is left
-        const auto spur_a = find_spur(out_legs[i], middle, *reader);
-        auto spur_b = find_spur(middle, back_legs[j], *reader);
-        if (spur_a.out + spur_b.in >= middle.edges.size()) {
-          spur_b = {};
-        }
-        c.legs[0].end -= spur_a.in;
-        c.legs[1].begin += spur_a.out;
-        c.legs[1].end -= spur_b.in;
-        c.legs[2].begin += spur_b.out;
-        const double trimmed = c.distance - spur_a.length - spur_b.length;
-        if (trimmed <= 0.) {
-          continue;
-        }
-        c.cost *= trimmed / c.distance;
-        c.distance = trimmed;
-
-        // paths can turn around where the costing allows it, e.g. at a dead end
-        c.uturn = std::any_of(c.legs.begin(), c.legs.end(), [](const LegRange& range) {
-          return std::any_of(range.leg->uturns.begin(), range.leg->uturns.end(),
-                             [&](size_t k) { return k >= range.begin && k + 1 < range.end; });
-        });
-
-        c.overlap = compute_overlap(c.legs);
-        min_cost_per_distance = std::min(min_cost_per_distance, c.cost / c.distance);
-        candidates.push_back(c);
-      }
-    }
-
-    // drop those that turn around unless that would leave nothing
-    if (std::any_of(candidates.begin(), candidates.end(),
-                    [](const candidate& c) { return !c.uturn; })) {
-      std::erase_if(candidates, [](const candidate& c) { return c.uturn; });
-    }
-
-    // drop the heavy retracers unless that would leave nothing
-    if (overlap_factor > 0. &&
-        std::any_of(candidates.begin(), candidates.end(),
-                    [](const candidate& c) { return c.overlap <= kMaxOverlap; })) {
-      std::erase_if(candidates, [](const candidate& c) { return c.overlap > kMaxOverlap; });
-    }
-
-    for (auto& c : candidates) {
-      const double distance_deviation = std::abs(c.distance - desired_distance) / desired_distance;
-      const double cost_per_distance = (c.cost / c.distance) / min_cost_per_distance - 1.;
-      // the triangle should open about as wide as an equilateral one and point into the heading
-      const double opening = signed_angle(a_turns[c.a].bearing, b_turns[c.b].bearing);
-      const double bisector = a_turns[c.a].bearing + opening / 2.;
+  double detour_factor = kInitialDetourFactor;
+  // the last leg avoids the earlier ones, so it is expected to come out somewhat longer than the
+  // reverse expansion's path to its turning point, by this factor learned from the last legs so far
+  double back_factor = 1.;
+  const auto rank_pairs = [&]() {
+    for (auto& pair : pairs) {
+      const auto& a = a_turns[pair.a];
+      const auto& b = b_turns[pair.b];
+      const double expected = a.distance + detour_factor * pair.beeline + back_factor * b.distance;
+      const double opening = signed_angle(a.bearing, b.bearing);
+      const double bisector = a.bearing + opening / 2.;
       const double shape = (std::abs(opening - kIdealOpening) + angle_diff(bisector, heading)) / 90.;
-      c.score = distance_deviation + kCostPerDistanceWeight * cost_per_distance +
-                overlap_factor * c.overlap + kShapeWeight * shape;
+      pair.score = std::abs(expected - desired_distance) / desired_distance + kShapeWeight * shape;
     }
-    std::sort(candidates.begin(), candidates.end(),
-              [](const candidate& a, const candidate& b) { return a.score < b.score; });
-    return candidates;
+    std::sort(pairs.begin(), pairs.end(),
+              [](const TurnPair& x, const TurnPair& y) { return x.score > y.score; });
   };
 
-  // first pass with legs of about a third of the round trip
-  std::vector<bool> used_a(a_turns.size(), false);
-  std::vector<bool> used_b(b_turns.size(), false);
-  const double first_target = kTargetLegFraction * desired_distance;
-  compute_middle_legs(select_turns(a_turns, bearing_bins, per_bearing, first_target, used_a),
-                      select_turns(b_turns, bearing_bins, per_bearing, first_target, used_b));
-  auto candidates = score_candidates();
-
-  // if that misses the requested tolerance, the round trip closest to the length tells how much
-  // longer or shorter than planned the legs come out in this area, and a second pass picks turning
-  // points accordingly
-  const auto deviation = [&](const candidate& c) {
-    return std::abs(c.distance - desired_distance) / desired_distance;
+  // routes one leg with the given penalties, the best path and its alternatives
+  Options leg_options = options;
+  leg_options.set_alternates(kLegAlternates);
+  LegAStar astar;
+  const auto route = [&](Location& origin, Location& destination, const Costing_Options& penalties) {
+    std::vector<Leg> legs;
+    if (origin.correlation().edges_size() == 0 || destination.correlation().edges_size() == 0) {
+      return legs;
+    }
+    costing->SetCostFactorEdges(penalties);
+    astar.Clear();
+    const auto paths =
+        astar.GetBestPath(origin, destination, *reader, mode_costing, mode, leg_options);
+    costing->SetCostFactorEdges(costing_options);
+    for (const auto& path : paths) {
+      if (path.empty()) {
+        continue;
+      }
+      std::vector<GraphId> edges;
+      edges.reserve(path.size());
+      for (const auto& info : path) {
+        edges.push_back(info.edgeid);
+      }
+      auto leg = make_leg(std::move(edges), path.back().path_distance, *reader);
+      try {
+        leg.cost =
+            unpenalized_cost(leg.edges, percent_along(origin, leg.edges.front(), 0.f),
+                             percent_along(destination, leg.edges.back(), 1.f), *reader, *costing);
+      } catch (const std::exception&) { leg.cost = path.back().elapsed_cost.cost; }
+      legs.push_back(std::move(leg));
+    }
+    return legs;
   };
-  if (!candidates.empty() && deviation(candidates.front()) > distance_tolerance) {
-    const auto& closest = *std::min_element(candidates.begin(), candidates.end(),
-                                            [&](const candidate& x, const candidate& y) {
-                                              return deviation(x) < deviation(y);
-                                            });
-    const double second_target =
-        std::clamp((out_legs[closest.a].distance + back_legs[closest.b].distance) / 2. *
-                       desired_distance / closest.distance,
-                   kMinLegFraction * desired_distance, kMaxLegFraction * desired_distance);
-    LOG_DEBUG("Round trip second pass, closest is {:.0f}m, legs now aim for {:.0f}m",
-              closest.distance, second_target);
-    compute_middle_legs(select_turns(a_turns, bearing_bins, per_bearing, second_target, used_a),
-                        select_turns(b_turns, bearing_bins, per_bearing, second_target, used_b));
-    candidates = score_candidates();
+
+  std::vector<Candidate> candidates;
+  double detour_sum = 0.;
+  size_t detour_count = 0;
+  double back_sum = 0.;
+  size_t back_count = 0;
+
+  for (size_t attempt = 0; attempt < kMaxAttempts && !pairs.empty(); ++attempt) {
+    rank_pairs();
+    const auto pair = pairs.back();
+    pairs.pop_back();
+    const auto& a = a_turns[pair.a];
+    const auto& b = b_turns[pair.b];
+    auto first = make_leg(out_tree.Path(a.label), out_tree.Label(a.label).path_distance(), *reader);
+    first.cost = out_tree.Label(a.label).cost().cost;
+
+    // the middle leg avoids the first one, except where it connects to it at a
+    std::unordered_set<GraphId> first_roads;
+    add_roads(first, first_roads, *reader);
+    std::unordered_set<GraphId> first_junctions;
+    add_junctions(first, 2, 2, first_junctions);
+    auto origin = turn_location(a, first.edges.back(), true, *reader, *costing);
+    auto destination = turn_location(b, {}, false, *reader, *costing);
+    const auto middles =
+        route(origin, destination,
+              make_penalties(costing_options, first_roads, first_junctions, *reader));
+    if (middles.empty()) {
+      LOG_DEBUG("Round trip attempt {}: no middle leg", attempt);
+      continue;
+    }
+    // the best middle leg tells how much longer than the beeline middle legs come out here
+    if (pair.beeline > 0.) {
+      detour_sum += middles.front().distance / pair.beeline;
+      detour_factor = detour_sum / ++detour_count;
+    }
+
+    // the last leg avoids the first and the best middle leg, except where it connects to them at b
+    // and at the start
+    auto last_roads = first_roads;
+    add_roads(middles.front(), last_roads, *reader);
+    auto last_junctions = first_junctions;
+    add_junctions(middles.front(), 0, 2, last_junctions);
+    auto last_origin = turn_location(b, middles.front().edges.back(), true, *reader, *costing);
+    auto last_destination = start;
+    const auto lasts = route(last_origin, last_destination,
+                             make_penalties(costing_options, last_roads, last_junctions, *reader));
+    if (lasts.empty()) {
+      LOG_DEBUG("Round trip attempt {}: no last leg", attempt);
+      continue;
+    }
+    if (b.distance > 0.) {
+      back_sum += lasts.front().distance / b.distance;
+      back_factor = back_sum / ++back_count;
+    }
+
+    bool acceptable = false;
+    for (const auto& middle : middles) {
+      const auto middle_reuse = measure_reuse(middle, first_roads, first_junctions);
+      auto roads = first_roads;
+      add_roads(middle, roads, *reader);
+      auto junctions = first_junctions;
+      add_junctions(middle, 0, 2, junctions);
+
+      for (const auto& last : lasts) {
+        if (!turn_allowed(middle.edges.back(), last.edges.front(), *reader)) {
+          continue;
+        }
+        Candidate candidate{pair.a, pair.b, first.edges, 0., 0., 0., 0., 0, 0.};
+        candidate.edges.insert(candidate.edges.end(), middle.edges.begin(), middle.edges.end());
+        candidate.edges.insert(candidate.edges.end(), last.edges.begin(), last.edges.end());
+        const size_t middle_begin = first.edges.size();
+        const size_t last_begin = middle_begin + middle.edges.size();
+        if (restricted_across(candidate.edges, middle_begin, costing->access_mode(), *reader) ||
+            restricted_across(candidate.edges, last_begin, costing->access_mode(), *reader)) {
+          continue;
+        }
+
+        std::vector<PointLL> shape = first.shape;
+        shape.insert(shape.end(), middle.shape.begin(), middle.shape.end());
+        shape.insert(shape.end(), last.shape.begin(), last.shape.end());
+        const double total = first.distance + middle.distance + last.distance;
+        if (crosses_itself(shape, kCrossingFreeStartFraction * total)) {
+          continue;
+        }
+
+        const auto last_reuse = measure_reuse(last, roads, junctions);
+        const double later_distance = middle.distance + last.distance;
+        candidate.distance = first.distance + later_distance;
+        candidate.cost = first.cost + middle.cost + last.cost;
+        candidate.overlap =
+            later_distance > 0. ? (middle_reuse.overlap + last_reuse.overlap) / later_distance : 0.;
+        candidate.crossings = middle_reuse.crossings + last_reuse.crossings;
+        candidate.deviation = std::abs(candidate.distance - desired_distance) / desired_distance;
+        acceptable |= candidate.deviation <= distance_tolerance && candidate.overlap <= kMaxOverlap &&
+                      candidate.crossings == 0;
+        candidates.push_back(std::move(candidate));
+      }
+    }
+    LOG_DEBUG("Round trip attempt {}: legs of {:.0f}m, {:.0f}m and {:.0f}m, {} middle and {} last "
+              "legs, detour factor now {:.2f}, last leg factor {:.2f}",
+              attempt, first.distance, middles.front().distance, lasts.front().distance,
+              middles.size(), lasts.size(), detour_factor, back_factor);
+    if (acceptable) {
+      break;
+    }
   }
   if (candidates.empty()) {
     throw valhalla_exception_t{442};
   }
-
-  const size_t num_results =
-      std::min(candidates.size(), static_cast<size_t>(options.alternates()) + 1);
-  LOG_DEBUG("Round trip: {} candidates, best {:.0f}m = {:.0f} + {:.0f} + {:.0f}, overlap {:.2f}, "
-            "score {:.3f}",
-            candidates.size(), candidates.front().distance, out_legs[candidates.front().a].distance,
-            middle_legs[candidates.front().a * b_turns.size() + candidates.front().b].distance,
-            back_legs[candidates.front().b].distance, candidates.front().overlap,
-            candidates.front().score);
+  double min_cost_per_distance = std::numeric_limits<double>::max();
+  for (const auto& candidate : candidates) {
+    min_cost_per_distance = std::min(min_cost_per_distance, candidate.cost / candidate.distance);
+  }
+  for (auto& candidate : candidates) {
+    const double cost_per_distance = candidate.cost / candidate.distance / min_cost_per_distance;
+    candidate.score = candidate.deviation + overlap_factor * candidate.overlap +
+                      kCrossingScore * static_cast<double>(candidate.crossings) +
+                      kCostPerDistanceWeight * (cost_per_distance - 1.);
+  }
+  std::sort(candidates.begin(), candidates.end(),
+            [](const Candidate& x, const Candidate& y) { return x.score < y.score; });
+  LOG_DEBUG("Round trip: {} candidates, best {:.0f}m, overlap {:.2f}, {} crossings, score {:.3f}",
+            candidates.size(), candidates.front().distance, candidates.front().overlap,
+            candidates.front().crossings, candidates.front().score);
 
   // the round trip starts and ends at the start
   options.mutable_locations()->Clear();
   options.mutable_locations()->Add()->CopyFrom(start);
   options.mutable_locations()->Add()->CopyFrom(start);
 
-  for (size_t r = 0; r < num_results; ++r) {
-    const auto& c = candidates[r];
-    std::vector<GraphId> edges;
-    for (const auto& range : c.legs) {
-      edges.insert(edges.end(), range.leg->edges.begin() + range.begin,
-                   range.leg->edges.begin() + range.end);
+  const int num_results = static_cast<int>(options.alternates()) + 1;
+  for (const auto& candidate : candidates) {
+    if (request.trip().routes_size() >= num_results) {
+      break;
     }
-
+    const auto& edges = candidate.edges;
     const int routes_before = request.trip().routes_size();
     try {
       std::vector<PathInfo> path;
@@ -871,9 +1037,9 @@ void thor_worker_t::round_trip(Api& request) {
         path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.path_distance(),
                           label.restriction_idx(), label.transition_cost());
       };
-      recost_forward(*reader, *mode_costing[int(mode)], edge_cb, label_cb,
-                     find_percent_along(start, edges.front()),
-                     find_percent_along(start, edges.back()), TimeInfo::invalid(), false, true);
+      // with access checked, a turn the costing doesn't allow at one of the joints throws here
+      recost_forward(*reader, *costing, edge_cb, label_cb, find_percent_along(start, edges.front()),
+                     find_percent_along(start, edges.back()), TimeInfo::invalid(), false, false);
 
       auto origin = options.locations(0);
       auto destination = options.locations(1);
@@ -884,16 +1050,44 @@ void thor_worker_t::round_trip(Api& request) {
 
       if (options.verbose()) {
         int group = 1;
-        for (const auto* turn : {&a_turns[c.a], &b_turns[c.b]}) {
-          auto* l = route->mutable_round_trip_seeds()->Add();
-          l->mutable_ll()->set_lng(turn->ll.lng());
-          l->mutable_ll()->set_lat(turn->ll.lat());
-          l->set_round_trip_group_index(group++);
+        for (const auto* turn : {&a_turns[candidate.a], &b_turns[candidate.b]}) {
+          auto* seed = route->mutable_round_trip_seeds()->Add();
+          seed->mutable_ll()->set_lng(turn->ll.lng());
+          seed->mutable_ll()->set_lat(turn->ll.lat());
+          seed->set_round_trip_group_index(group++);
         }
       }
     } catch (const std::exception& e) {
-      // if the best candidate fails, the next one simply becomes the first route
-      LOG_DEBUG("Round trip candidate {} failed to build: {}", r, e.what());
+      // if a candidate fails, the next one takes its place
+      LOG_DEBUG("Round trip candidate failed to build: {}", e.what());
+      {
+        size_t lo = 1, hi = edges.size();
+        while (lo < hi) {
+          size_t mid = (lo + hi) / 2;
+          bool ok = true;
+          try {
+            auto it2 = edges.begin();
+            auto end2 = edges.begin() + mid;
+            recost_forward(
+                *reader, *costing, [&]() { return it2 == end2 ? GraphId{} : *it2++; },
+                [](const PathEdgeLabel&) {}, find_percent_along(start, edges.front()), 1.f,
+                TimeInfo::invalid(), false, false);
+          } catch (...) { ok = false; }
+          if (ok)
+            lo = mid + 1;
+          else
+            hi = mid;
+        }
+        graph_tile_ptr t;
+        const auto* e1 = reader->directededge(edges[lo - 1], t);
+        const auto* e0 = lo >= 2 ? reader->directededge(edges[lo - 2], t) : nullptr;
+        LOG_DEBUG(
+            "RTDBG first failing prefix {} of {} (out leg {}), edge {} use {} destonly {} prev {} prevopp {} fwdaccess {}",
+            lo, edges.size(), out_tree.Path(a_turns[candidate.a].label).size(), edges[lo - 1].value,
+            int(e1->use()), e1->destonly(), lo >= 2 ? edges[lo - 2].value : 0,
+            e0 ? reader->GetOpposingEdgeId(edges[lo - 2], t).value == edges[lo - 1].value : false,
+            e1->forwardaccess());
+      }
       while (request.trip().routes_size() > routes_before) {
         request.mutable_trip()->mutable_routes()->RemoveLast();
       }

@@ -129,6 +129,10 @@ protected:
   // Relative cost extension to find alternative routes.
   float alternative_cost_extend_;
 
+  // Whether shortcuts may be used while the hierarchy limits allow them. Turned off, a search can
+  // penalize individual edges via linear cost factors without a shortcut hiding them.
+  bool allow_shortcuts_;
+
   // Maximum number of additional iterations allowed once the first connection has been found.
   uint32_t alternative_iterations_delta_;
 
