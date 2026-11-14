@@ -252,6 +252,10 @@ void filter_tile(const std::string& tile_bytes,
     for (uint32_t i = 0; i < key_table.size(); ++i) {
       auto key = full_layer.key(vtzero::index_value{i});
       const std::string_view key_str{key.data(), key.size()};
+      if (layer_name != kNodeLayerName && key_str.starts_with(kCustomAttributeKeyPrefix)) {
+        attrs_allowed[i] = controller(kEdgeCustomAttribute);
+        continue;
+      }
       // mandatory fields are not part of AttributeController and that throws
       try {
         attrs_allowed[i] = controller(prop_map.at(key_str));
@@ -412,8 +416,10 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
                               vtzero::point(projection.tile_extent + projection.tile_buffer,
                                             projection.tile_extent + projection.tile_buffer));
 
-  EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller);
-  EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller);
+  const auto& custom_attribute_defs = reader->GetCustomAttributeDefs();
+  EdgesLayerBuilder edges_builder(tile, kEdgeLayerName.data(), controller, custom_attribute_defs);
+  EdgesLayerBuilder shortcuts_builder(tile, kShortcutLayerName.data(), controller,
+                                      custom_attribute_defs);
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
   IncidentLayersBuilder incidents_builder(tile, kIncidentLayerName.data(), controller);
@@ -460,16 +466,21 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     const volatile baldr::TrafficSpeed* reverse_traffic =
         opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
+    const auto* forward_custom_attributes = edge_tile->custom_attributes_tile();
+    const auto* reverse_custom_attributes = opp_edge ? opp_tile->custom_attributes_tile() : nullptr;
+
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_vtzero_t& line) {
       // Check for opposing edge
 
       if (edge->is_shortcut()) {
         shortcuts_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
-                                      reverse_traffic, edge_info);
+                                      reverse_traffic, edge_info, forward_custom_attributes,
+                                      reverse_custom_attributes);
       } else {
         edges_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
-                                  reverse_traffic, edge_info);
+                                  reverse_traffic, edge_info, forward_custom_attributes,
+                                  reverse_custom_attributes);
         build_access_restrictions_layer(access_restriction_builder, line, edge_tile, opp_tile,
                                         edge_id, opp_edge_id, edge, opp_edge);
       }
@@ -524,10 +535,13 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
 namespace valhalla {
 namespace loki {
 
-EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
-                                     const char* name,
-                                     const baldr::AttributesController& controller)
-    : vtzero::layer_builder(tile, name), controller_(controller) {
+EdgesLayerBuilder::EdgesLayerBuilder(
+    vtzero::tile_builder& tile,
+    const char* name,
+    const baldr::AttributesController& controller,
+    const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs)
+    : vtzero::layer_builder(tile, name), controller_(controller),
+      custom_attribute_defs_(custom_attribute_defs) {
   key_tile_level_ = add_key_without_dup_check("tile_level");
   key_road_class_ = add_key_without_dup_check("road_class");
 
@@ -542,6 +556,30 @@ EdgesLayerBuilder::EdgesLayerBuilder(vtzero::tile_builder& tile,
     key_edge_id_fwd_ = add_key_without_dup_check("edge_id:fwd");
     key_edge_id_rev_ = add_key_without_dup_check("edge_id:bwd");
   }
+
+  if (controller(kEdgeCustomAttribute)) {
+    key_custom_attributes_.reserve(custom_attribute_defs_.size());
+    for (const auto& def : custom_attribute_defs_) {
+      const std::string key = std::string(kCustomAttributeKeyPrefix) + def.name;
+      key_custom_attributes_.emplace_back(add_key_without_dup_check(key + ":fwd"),
+                                          add_key_without_dup_check(key + ":bwd"));
+    }
+  }
+}
+
+void EdgesLayerBuilder::add_custom_attributes(vtzero::linestring_feature_builder& feature,
+                                              const baldr::CustomAttributesTile* custom_attributes,
+                                              uint32_t edge_index,
+                                              bool forward) {
+  if (key_custom_attributes_.empty() || !custom_attributes || !*custom_attributes) {
+    return;
+  }
+  for (size_t i = 0; i < custom_attribute_defs_.size(); ++i) {
+    const auto& keys = key_custom_attributes_[i];
+    feature.add_property(forward ? keys.first : keys.second,
+                         vtzero::encoded_property_value(
+                             custom_attributes->value(edge_index, custom_attribute_defs_[i])));
+  }
 }
 
 void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
@@ -551,7 +589,9 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
                                     const baldr::DirectedEdge* reverse_edge,
                                     const volatile baldr::TrafficSpeed* forward_traffic,
                                     const volatile baldr::TrafficSpeed* reverse_traffic,
-                                    const baldr::EdgeInfo& edge_info) {
+                                    const baldr::EdgeInfo& edge_info,
+                                    const baldr::CustomAttributesTile* forward_custom_attributes,
+                                    const baldr::CustomAttributesTile* reverse_custom_attributes) {
   assert(forward_edge || reverse_edge);
 
   const auto* edge = forward_edge ? forward_edge : reverse_edge;
@@ -579,6 +619,7 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
       set_attribute_values(loki::detail::kForwardLiveSpeedAttributes, controller_, feature,
                            *forward_edge, edge_info, forward_traffic);
     }
+    add_custom_attributes(feature, forward_custom_attributes, forward_edge_id.id(), true);
   }
 
   if (reverse_edge && reverse_edge_id.is_valid()) {
@@ -590,6 +631,7 @@ void EdgesLayerBuilder::add_feature(const std::vector<vtzero::point>& geometry,
       set_attribute_values(loki::detail::kReverseLiveSpeedAttributes, controller_, feature,
                            *reverse_edge, edge_info, reverse_traffic);
     }
+    add_custom_attributes(feature, reverse_custom_attributes, reverse_edge_id.id(), false);
   }
 
   feature.commit();

@@ -142,3 +142,6 @@ All per-edge attribute values for each matched edge are available in `trace_attr
 
 Enable it by adding `"edge.custom_attribute": true` to the `filters.attributes` list. Keys are the attribute names from `attributes.json`.
 
+## Custom attributes in `tile`
+
+The `edges` and `shortcuts` layers of the [tile endpoint](api/tile.md) carry one property per attribute and direction, named `custom:<name>:fwd` and `custom:<name>:bwd`, e.g. `custom:scenic:fwd`. Enable them with `"edge.custom_attribute"` in `filters.attributes` or with `verbose`.
