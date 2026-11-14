@@ -166,11 +166,23 @@ set(flatbush_include_dir ${VALHALLA_SOURCE_DIR}/third_party/flatbush)
 
 if (PREFER_EXTERNAL_DEPS)
   # date
-  # check if tz_private.h exists, e.g. arch linux doesn't distribute that..
+  # with ENABLE_OS_TZDB we link the system's compiled tz lib, otherwise our tz_alt.cpp
+  # needs tz_private.h, which e.g. arch linux doesn't distribute
   find_package(date QUIET)
   if (date_FOUND)
     get_target_property(temp_date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
-    if (EXISTS ${temp_date_include_dir}/date/tz_private.h)
+    if (ENABLE_OS_TZDB)
+      set(temp_date_tz_defs "")
+      if (TARGET date::date-tz)
+        get_target_property(temp_date_tz_defs date::date-tz INTERFACE_COMPILE_DEFINITIONS)
+      endif()
+      if ("USE_OS_TZDB=1" IN_LIST temp_date_tz_defs)
+        set(date_include_dir ${temp_date_include_dir})
+        set(date_tz_target date::date-tz)
+      else()
+        message(WARNING "No date::date-tz built with USE_SYSTEM_TZ_DB found, using vendored date...")
+      endif()
+    elseif (EXISTS ${temp_date_include_dir}/date/tz_private.h)
       set(date_include_dir ${temp_date_include_dir})
     else()
       message(WARNING "Couldn't find date/tz_private.h in ${temp_date_include_dir}, using vendored date...")

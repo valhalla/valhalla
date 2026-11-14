@@ -78,8 +78,13 @@ set(sources
 
 if(ENABLE_OS_TZDB)
   # we don't vendor our own tzdata
-  list(APPEND sources_with_warnings
-      ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp)
+  if(NOT date_tz_target)
+    # can happen if tz wasn't built but date was or the date target
+    # specifies USE_OS_TZDB for some reason
+    # then the binary layout of the date lib is different, so we need our own
+    list(APPEND sources_with_warnings
+        ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp)
+  endif()
 else()
   list(APPEND sources
       tz_alt.cpp
@@ -124,6 +129,7 @@ valhalla_module(NAME baldr
   DEPENDS
     valhalla::midgard
     valhalla::proto
+    ${date_tz_target}
     ${valhalla_protobuf_targets}
     Boost::boost
     ${curl_target}

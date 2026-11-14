@@ -21,6 +21,10 @@ function(configure_valhalla_pc)
   if(ENABLE_OS_TZDB)
     string(APPEND CFLAGS " -DUSE_OS_TZDB=1")
   endif()
+  # not all distros ship a (working) date.pc
+  if(date_tz_target)
+    list(APPEND LIBS_PRIVATE -ldate-tz)
+  endif()
 
   if(TARGET protobuf::libprotobuf-lite)
     list(APPEND REQUIRES protobuf-lite)
