@@ -42,6 +42,7 @@
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
    * ADDED: detailed documentation for `/locate` [#6471](https://github.com/valhalla/valhalla/pull/6471)
    * CHANGED: `/tile` verbose output is now gated by its own `service_limits.tile.allow_verbose` instead of `service_limits.status.allow_verbose` [#6510](https://github.com/valhalla/valhalla/pull/6510)
+   * ADDED: `ENABLE_OS_TZDB` CMake option to use the OS time zone database at runtime instead of the vendored tzdata [#6499](https://github.com/valhalla/valhalla/pull/6499)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**

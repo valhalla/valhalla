@@ -1,12 +1,16 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
+#include "midgard/logging.h"
 
 #include <boost/algorithm/string/join.hpp>
 
 #include <algorithm>
+#include <array>
+#include <filesystem>
+#include <fstream>
 #include <sstream>
-#include <unordered_set>
+#include <string_view>
 
 namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
@@ -424,12 +428,8 @@ const std::unordered_map<std::string, size_t> tz_name_to_id = {
 // tzdb updates. this function pretty-prints missing tzs for convenience
 const std::string check_tz_map(const date::tzdb& db) {
   std::vector<std::string> new_zones_msg;
-  std::unordered_set<std::string> new_zones_names;
-
   for (const auto& tz : db.zones) {
-    // only add entirely new zones if we didn't see them as link target yet
-    if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end() &&
-        new_zones_names.find(tz.name()) == new_zones_names.end()) {
+    if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end()) {
       new_zones_msg.emplace_back(tz.name());
     }
   }
@@ -442,6 +442,36 @@ const std::string check_tz_map(const date::tzdb& db) {
 
   return result;
 }
+
+constexpr std::array<std::string_view, 2> kOsTzDataPaths = {"/usr/share/zoneinfo/tzdata.zi",
+                                                            "/var/db/timezone/zoneinfo/tzdata.zi"};
+
+// the OS tzdb turns every link into a zone of its own, so read link -> target from tzdata.zi
+std::unordered_map<std::string, std::string> read_os_tz_links() {
+  std::unordered_map<std::string, std::string> links_to_targets;
+  for (const auto path : kOsTzDataPaths) {
+    std::ifstream zi_file{std::filesystem::path{path}};
+    if (!zi_file) {
+      continue;
+    }
+    std::string line, tag, target, link;
+    while (std::getline(zi_file, line)) {
+      if (!line.starts_with("L ")) {
+        continue;
+      }
+      // a line example: "L Europe/Kyiv Europe/Kiev"
+      std::istringstream in(line);
+      if (in >> tag >> target >> link) {
+        links_to_targets.emplace(std::move(link), std::move(target));
+      }
+    }
+  }
+  if (links_to_targets.empty())
+    LOG_WARN("No tzdata.zi found, time zone links won't resolve to their canonical name");
+
+  return links_to_targets;
+}
+
 // use a cache to store already constructed sys_info's since they aren't cheap
 template <typename TP>
 const date::sys_info&
@@ -469,6 +499,19 @@ from_cache(const TP& tp,
   infos.emplace_back(tp.get_info());
   return infos.back();
 }
+
+// protect against missing tzdata on the host
+const date::tzdb& load_tzdb() {
+  if constexpr (!USE_OS_TZDB) {
+    return date::get_tzdb();
+  }
+  try {
+    return date::get_tzdb();
+  } catch (const std::runtime_error& e) {
+    throw std::runtime_error(
+        "Built with ENABLE_OS_TZDB but can't find the OS 'tzdata' package, install it.");
+  }
+}
 } // namespace
 
 using namespace valhalla::baldr;
@@ -477,19 +520,58 @@ namespace baldr {
 namespace DateTime {
 
 tz_db_t::tz_db_t() {
-  const auto& db = date::get_tzdb();
+  const auto& db = load_tzdb();
 
-  // update timezones & run the tests will fail here if new timezones were added
-  if (const std::string& msg = check_tz_map(db); msg.size()) {
-    throw std::runtime_error("Update timezone map at " + std::string(__FILE__) + ": " + msg);
+  // update timezones & run the tests will fail here if new timezones were added.
+  // the OS zoneinfo lists links as zones which we don't keep around, so only check vendored tzdata
+  // fine bcs the only reason we check the tz map is to discover _new_ timezones we don't cover yet
+  if constexpr (!USE_OS_TZDB) {
+    if (const std::string& msg = check_tz_map(db); msg.size()) {
+      throw std::runtime_error("Update timezone map at " + std::string(__FILE__) + ": " + msg);
+    }
+  }
+
+  // on systems with the tzdata.zi file, we use it to properly resolve the target tz's
+  std::unordered_map<std::string, std::string> tz_links;
+  if constexpr (USE_OS_TZDB) {
+    tz_links = read_os_tz_links();
   }
 
   zones.reserve(tz_name_to_id.size());
-  for (const auto& tz_pair : tz_name_to_id) {
-    // we find either the official timezone or we get the target timezone of a link (i.e. deprecated
-    // time zone)
-    auto* tz = db.locate_zone(tz_pair.first);
-    zones[tz_pair.second] = &*tz;
+  std::vector<std::pair<std::string, size_t>> missing_tz;
+  for (const auto& [tz_name, tz_idx] : tz_name_to_id) {
+    const auto tz_link = tz_links.find(tz_name);
+    const auto& target_name = tz_link != tz_links.end() ? tz_link->second : tz_name;
+    try {
+      // we find either the official timezone or we get the target timezone of a link (i.e.
+      // deprecated time zone)
+      zones[tz_idx] = db.locate_zone(target_name);
+    } catch (const std::runtime_error&) {
+      // should never happen that we don't find a zone in our vendored tzdata
+      if constexpr (!USE_OS_TZDB) {
+        throw std::runtime_error(std::format("Timezone {} can't be found in tzdata", target_name));
+      }
+      missing_tz.emplace_back(tz_name, tz_idx);
+    }
+  }
+
+  // older OS tzdata (than our vendored one) could lack new zones in which case
+  // we look for its predecessor in the lower 9 bits (valid down until 2018d)
+  constexpr size_t kBaseTzMask = (1 << 9) - 1;
+  for (const auto& [tz_name, tz_idx] : missing_tz) {
+    if (zones.contains(tz_idx)) {
+      // it's a renamed tz
+      continue;
+    }
+    // else see if it's a new one and try to find the deprecated one
+    const auto base_idx = zones.find(tz_idx & kBaseTzMask);
+    if (tz_idx > kBaseTzMask && base_idx != zones.end()) {
+      LOG_WARN("Time zone {} not in OS tzdb, falling back to {}", tz_name, base_idx->second->name());
+      zones[tz_idx] = base_idx->second;
+    } else {
+      // only fails for tzdata < 2018d releases
+      LOG_WARN("Time zone {} not in OS tzdb, can't resolve index {}", tz_name, tz_idx);
+    }
   }
 }
 
@@ -671,6 +753,9 @@ uint32_t day_of_week_mask(const std::string& date_time) {
 // date_time is in the format of 2015-05-06T08:00
 std::string
 get_duration(const std::string& date_time, const uint32_t seconds, const date::time_zone* time_zone) {
+  if (!time_zone) {
+    return "";
+  }
 
   date::local_seconds date;
   date = get_formatted_date(date_time);

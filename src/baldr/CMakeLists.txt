@@ -1,20 +1,6 @@
 ## Process the IANA Time Zone Database files
 set(tz_db_files africa antarctica asia australasia backward etcetera europe
-  northamerica southamerica leapseconds)
-
-# Select make command based on platform
-if(WIN32)
-  set(MAKE_CMD nmake)
-else()
-  set(MAKE_CMD make)
-endif()
-
-# Process the leap seconds file (it's in .gitignore of the tz repo)
-add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds
-COMMAND ${MAKE_CMD} leapseconds
-WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/tz
-COMMENT "Compiling third_party/tz/leapseconds with awk"
-DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
+  northamerica southamerica)
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
@@ -24,7 +10,7 @@ foreach(tz_db_file ${tz_db_files})
         --variable-name date_time_${tz_db_file} --skip 1 --raw
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     COMMENT "Compiling third_party/tz/${tz_db_file} to date_time_${tz_db_file}.h"
-    DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file} ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds)
+    DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file})
 endforeach()
 
 # Process the windowsZones.xml file
@@ -83,7 +69,6 @@ set(sources
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
-    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
@@ -91,22 +76,32 @@ set(sources
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
 
-list(APPEND sources
-    #basic timezone stuff
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_australasia.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
+if(ENABLE_OS_TZDB)
+  # we don't vendor our own tzdata
+  if(NOT date_tz_target)
+    # can happen if tz wasn't built but date was or the date target
+    # specifies USE_OS_TZDB for some reason
+    # then the binary layout of the date lib is different, so we need our own
+    list(APPEND sources_with_warnings
+        ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp)
+  endif()
+else()
+  list(APPEND sources
+      tz_alt.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_australasia.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
-list(APPEND sources_with_warnings
-    tz_alt.cpp)
+  list(APPEND sources_with_warnings
+      tz_alt.cpp)
+endif()
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
@@ -134,6 +129,7 @@ valhalla_module(NAME baldr
   DEPENDS
     valhalla::midgard
     valhalla::proto
+    ${date_tz_target}
     ${valhalla_protobuf_targets}
     Boost::boost
     ${curl_target}
