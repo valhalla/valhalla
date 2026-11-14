@@ -77,7 +77,7 @@ Valhalla's routing service uses dynamic, run-time costing to generate the route 
 | `truck` | Standard costing for trucks. Truck costing inherits the auto costing behaviors, but checks for truck access, width and height restrictions, and weight limits on the roads. |
 | `hov` | DEPRECATED: use `auto` cost with HOV costing options.|
 | `taxi` | Standard costing for taxi routes. Taxi costing inherits the auto costing behaviors, but checks for taxi lane access on the roads and favors those roads.|
-| `emergency` | Costing for emergency vehicles on an urgent run. Emergency costing inherits the auto costing behaviors, but may use ways and barriers that are only open to emergency vehicles. See [emergency costing options](#emergency-costing-options).|
+|**BETA** `emergency` | Costing for emergency vehicles. Emergency costing inherits the auto costing behaviors, but may use ways and barriers that are only open to emergency vehicles. See [emergency costing options](#emergency-costing-options).|
 | `motor_scooter` | Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. |
 |**BETA** `motorcycle` | Standard costing for travel by motorcycle.  This costing model provides options to tune the route to take roadways (road touring) vs. tracks and trails (adventure motorcycling).|
 | `multimodal` | Currently supports pedestrian and transit. In the future, multimodal will support a combination of all of the above. |
@@ -174,12 +174,9 @@ The following options are available for `truck` costing.
 
 ##### Emergency costing options
 
-Emergency costing is meant for emergency vehicles (ambulance, fire engine, police) on an urgent run. All of the options
-described above for autos also apply. In addition, emergency costing
-
-* may use ways and barriers tagged `emergency=yes` that are closed to other traffic,
-* with `ignore_oneways`, only drives against the direction of travel on edges up to 100 m long, and never on motorways,
-  trunk roads, ramps or shortcuts.
+Emergency costing is meant for emergency vehicles (ambulance, fire engine, police). All of the options described above
+for autos also apply. In addition, emergency costing may use ways and barriers tagged `emergency=yes` that are closed to
+other traffic.
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](https://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.

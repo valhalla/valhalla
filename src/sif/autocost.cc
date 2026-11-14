@@ -57,9 +57,6 @@ constexpr float kDefaultAlleyFactor = 1.0f;
 // How much to favor turn channels
 constexpr float kTurnChannelFactor = 0.6f;
 
-// Longest edge (meters) an emergency vehicle drives against its direction with ignore_oneways
-constexpr uint32_t kEmergencyWrongWayMaxLength = 100;
-
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
                                          kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -1111,11 +1108,8 @@ cost_ptr_t CreateTaxiCost(const Costing& costing_options) {
 }
 
 /**
- * Derived class providing costing for emergency vehicles on an urgent run. Uses the auto rules
- * and additionally
- *  - allows ways and barriers that are only open to emergency vehicles,
- *  - with ignore_oneways, uses only short edges against their direction and never motorways,
- *    trunk roads, ramps or shortcuts.
+ * Derived class providing costing for emergency vehicles. Uses the auto rules and additionally
+ * allows ways and barriers that are only open to emergency vehicles.
  */
 class EmergencyCost : public AutoCost {
 public:
@@ -1130,27 +1124,6 @@ public:
   }
 
   virtual ~EmergencyCost() {
-  }
-
-  /**
-   * Checks if access is allowed for the provided directed edge. Like auto, but edges against
-   * their direction of travel are limited, see IsWrongWayAllowed.
-   * @param  edge  Pointer to edge information.
-   * @return Returns true if access is allowed, false if not.
-   */
-  virtual bool IsAccessible(const baldr::DirectedEdge* edge) const override {
-    return (edge->forwardaccess() & access_mask_) ||
-           (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-           (ignore_oneways_ && (edge->reverseaccess() & access_mask_) && IsWrongWayAllowed(edge)) ||
-           (ignore_construction_ && edge->use() == baldr::Use::kConstruction);
-  }
-
-private:
-  // Only short stretches against the direction of travel, and never where oncoming traffic is
-  // fast and cannot get out of the way
-  bool IsWrongWayAllowed(const baldr::DirectedEdge* edge) const {
-    return edge->classification() > baldr::RoadClass::kTrunk && edge->use() != Use::kRamp &&
-           !edge->is_shortcut() && edge->length() <= kEmergencyWrongWayMaxLength;
   }
 };
 

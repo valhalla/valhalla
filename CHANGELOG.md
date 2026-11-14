@@ -40,7 +40,7 @@
    * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452)
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
    * ADDED: detailed documentation for `/locate` [#6471](https://github.com/valhalla/valhalla/pull/6471)
-   * ADDED: `emergency` costing for emergency vehicles on an urgent run [#6505](https://github.com/valhalla/valhalla/pull/6505)
+   * ADDED: **BETA** `emergency` costing for emergency vehicles [#6505](https://github.com/valhalla/valhalla/pull/6505)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**

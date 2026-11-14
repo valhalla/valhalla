@@ -72,12 +72,14 @@ TEST(EmergencyAccess, EmergencyOnlyWayAndBarrier) {
 }
 
 /*************************************************************/
-// with ignore_oneways, only short stretches against the direction of travel
+// oneways behave like auto: closed by default, open with ignore_oneways
 
-class EmergencyWrongWayTest : public ::testing::Test {
+class EmergencyOnewayTest : public ::testing::Test {
 protected:
-  // CB is a oneway from C to B, so A -> D has to take the detour BE, EF, FD
-  static gurka::map build(const std::string& oneway_highway, double gridsize) {
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    // CB is a oneway from C to B, so A -> D has to take the detour BE, EF, FD
     const std::string ascii_map = R"(
       A--B--C--D
          |     |
@@ -87,23 +89,14 @@ protected:
     )";
 
     const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
-                              {"CB", {{"highway", oneway_highway}, {"oneway", "yes"}}},
+                              {"CB", {{"highway", "residential"}, {"oneway", "yes"}}},
                               {"CD", {{"highway", "residential"}}},
                               {"BE", {{"highway", "residential"}}},
                               {"EF", {{"highway", "residential"}}},
                               {"FD", {{"highway", "residential"}}}};
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    return gurka::buildtiles(layout, ways, {}, {},
-                             "test/data/emergency_wrong_way_" + oneway_highway + "_" +
-                                 std::to_string(static_cast<int>(gridsize)));
-  }
-
-  static gurka::map map;
-
-  static void SetUpTestSuite() {
-    // CB is 60 m long
-    map = build("residential", 20);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/emergency_oneway");
   }
 
   static const std::vector<std::string> kDetour;
@@ -111,22 +104,20 @@ protected:
   static const options_t kIgnoreOneways;
 };
 
-gurka::map EmergencyWrongWayTest::map = {};
-const std::vector<std::string> EmergencyWrongWayTest::kDetour = {"AB", "BE", "EF", "FD"};
-const std::vector<std::string> EmergencyWrongWayTest::kWrongWay = {"AB", "CB", "CD"};
-const options_t EmergencyWrongWayTest::kIgnoreOneways = {{"/costing_options/emergency/ignore_oneways",
-                                                          "1"},
-                                                         {"/costing_options/auto/ignore_oneways",
-                                                          "1"}};
+gurka::map EmergencyOnewayTest::map = {};
+const std::vector<std::string> EmergencyOnewayTest::kDetour = {"AB", "BE", "EF", "FD"};
+const std::vector<std::string> EmergencyOnewayTest::kWrongWay = {"AB", "CB", "CD"};
+const options_t EmergencyOnewayTest::kIgnoreOneways = {{"/costing_options/emergency/ignore_oneways",
+                                                        "1"}};
 
-TEST_F(EmergencyWrongWayTest, ClosedByDefault) {
+TEST_F(EmergencyOnewayTest, ClosedByDefault) {
   for (const auto& search : kSearchVariants) {
     auto result = gurka::do_action(Options::route, map, {"A", "D"}, "emergency", search);
     gurka::assert::raw::expect_path(result, kDetour);
   }
 }
 
-TEST_F(EmergencyWrongWayTest, ShortEdgeWithIgnoreOneways) {
+TEST_F(EmergencyOnewayTest, IgnoreOneways) {
   for (const auto& search : kSearchVariants) {
     auto result =
         gurka::do_action(Options::route, map, {"A", "D"}, "emergency", with(search, kIgnoreOneways));
@@ -134,7 +125,7 @@ TEST_F(EmergencyWrongWayTest, ShortEdgeWithIgnoreOneways) {
   }
 }
 
-TEST_F(EmergencyWrongWayTest, Matrix) {
+TEST_F(EmergencyOnewayTest, Matrix) {
   // CostMatrix expands from both ends, so both trees have to accept the wrong way
   auto closed = gurka::do_action(Options::sources_to_targets, map, {"A"}, {"D"}, "emergency");
   auto open =
@@ -142,29 +133,4 @@ TEST_F(EmergencyWrongWayTest, Matrix) {
   EXPECT_EQ(open.matrix().algorithm(), Matrix::CostMatrix);
   EXPECT_NEAR(closed.matrix().distances(0), 340, 10);
   EXPECT_NEAR(open.matrix().distances(0), 180, 10);
-}
-
-TEST_F(EmergencyWrongWayTest, NotOnLongEdges) {
-  // CB is 150 m long, auto with ignore_oneways still takes it
-  auto long_map = build("residential", 50);
-  for (const auto& search : kSearchVariants) {
-    auto result = gurka::do_action(Options::route, long_map, {"A", "D"}, "emergency",
-                                   with(search, kIgnoreOneways));
-    gurka::assert::raw::expect_path(result, kDetour);
-  }
-  auto result = gurka::do_action(Options::route, long_map, {"A", "D"}, "auto", kIgnoreOneways);
-  gurka::assert::raw::expect_path(result, kWrongWay);
-}
-
-TEST_F(EmergencyWrongWayTest, NeverOnTrunkOrMotorway) {
-  for (const std::string highway : {"trunk", "motorway"}) {
-    auto fast_map = build(highway, 20);
-    for (const auto& search : kSearchVariants) {
-      auto result = gurka::do_action(Options::route, fast_map, {"A", "D"}, "emergency",
-                                     with(search, kIgnoreOneways));
-      gurka::assert::raw::expect_path(result, kDetour, highway);
-    }
-    auto result = gurka::do_action(Options::route, fast_map, {"A", "D"}, "auto", kIgnoreOneways);
-    gurka::assert::raw::expect_path(result, kWrongWay, highway);
-  }
 }
