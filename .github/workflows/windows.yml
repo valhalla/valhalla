@@ -317,9 +317,3 @@ jobs:
           export PATH="$PATH:${vcpkg_bin}/bin:${vcpkg_bin}/tools/spatialite-tools"
           # -k 0: run every test/target before giving up so one run surfaces all failures
           cmake --build build --target check -- -k 0
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true

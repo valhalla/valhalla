@@ -111,9 +111,3 @@ jobs:
 
       - name: Run Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) check
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
