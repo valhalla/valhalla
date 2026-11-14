@@ -368,7 +368,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
-        kv.first == "status" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "status" || kv.first == "tile" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
         kv.first == "max_linear_cost_edges") {
       continue;
@@ -440,7 +440,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_trace_alternates = config.get<unsigned int>("service_limits.trace.max_alternates");
   max_trace_alternates_shape = config.get<size_t>("service_limits.trace.max_alternates_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
-  allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
+  allow_status_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
+  allow_tile_verbose = config.get<bool>("service_limits.tile.allow_verbose", false);
   max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
   // assign max_distance_disable_hierarchy_culling
   max_distance_disable_hierarchy_culling =
