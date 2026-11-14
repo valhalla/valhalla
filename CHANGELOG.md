@@ -1,6 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-11-12 Valhalla 3.9.2
+* **Removed**
+* **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
@@ -22,6 +27,7 @@
    * FIXED: ETA were off by 27 secs _per leg_ due to faulty clock usage [#6486](https://github.com/valhalla/valhalla/pull/6486)
    * FIXED: respect time-dependent `private` roads [#6498](https://github.com/valhalla/valhalla/pull/6498)
    * FIXED: `ignore_oneways` is respected by reverse unidir A* (`arrive_by`), isochrones, bidirectional A* and CostMatrix, and allowed `linear_cost_factors` in reverse unidir A* [#6484](https://github.com/valhalla/valhalla/pull/6484)
+   * FIXED: isochrone GeoTIFF tiepoint was one row too far north [#6516](https://github.com/valhalla/valhalla/pull/6516)
 * **Enhancement**
    * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
@@ -41,6 +47,7 @@
    * ADDED: slight preference for `kCycleStreet` in bicycle costing [#6452](https://github.com/valhalla/valhalla/pull/6452)
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
    * ADDED: detailed documentation for `/locate` [#6471](https://github.com/valhalla/valhalla/pull/6471)
+   * CHANGED: `/tile` verbose output is now gated by its own `service_limits.tile.allow_verbose` instead of `service_limits.status.allow_verbose` [#6510](https://github.com/valhalla/valhalla/pull/6510)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
