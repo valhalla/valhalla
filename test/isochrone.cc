@@ -8,6 +8,7 @@
 
 #include <boost/geometry/algorithms/within.hpp>
 
+#include <cmath>
 #include <iostream>
 #include <ranges>
 #include <string>
@@ -579,6 +580,44 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
   double topY = geoTransform[3] + 0 * geoTransform[4] + 0 * geoTransform[5];
   double bottomY = geoTransform[3] + 0 * geoTransform[4] + y * geoTransform[5];
   EXPECT_TRUE(topY > bottomY);
+
+  VSIFCloseL(handle);
+}
+
+TEST(Isochrones, test_geotiff_start_point_is_zero) {
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  loki_worker.cleanup();
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_t.tif";
+  std::vector<unsigned char> buffer(geotiff.length());
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer.begin());
+  auto handle =
+      VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  ASSERT_NE(geotiff_dataset, nullptr);
+
+  double geoTransform[6];
+  ASSERT_EQ(geotiff_dataset->GetGeoTransform(geoTransform), CE_None);
+  const double west = geoTransform[0], pixel_width = geoTransform[1];
+  const double north = geoTransform[3], pixel_height = geoTransform[5];
+
+  const double lon = 5.042799, lat = 52.093199;
+  const int col = static_cast<int>(std::floor((lon - west) / pixel_width));
+  const int row = static_cast<int>(std::floor((lat - north) / pixel_height));
+
+  uint16_t seconds = 0;
+  CPLErr err = geotiff_dataset->GetRasterBand(1)->RasterIO(GF_Read, col, row, 1, 1, &seconds, 1, 1,
+                                                           GDT_UInt16, 0, 0);
+  EXPECT_EQ(err, CE_None);
+  EXPECT_EQ(seconds, 0);
 
   VSIFCloseL(handle);
 }
