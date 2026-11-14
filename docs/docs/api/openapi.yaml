@@ -342,7 +342,7 @@ components:
 
     CostingType:
       type: string
-      enum: [auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle, multimodal, bikeshare, auto_pedestrian]
+      enum: [auto, bicycle, pedestrian, truck, bus, taxi, emergency, motor_scooter, motorcycle, multimodal, bikeshare, auto_pedestrian]
       example: auto
 
     ShapeFormat:
@@ -987,7 +987,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseCostingOptions'
         - type: object
-          description: Options for auto, bus, and taxi costings. Parsed in src/sif/autocost.cc.
+          description: Options for auto, bus, taxi and emergency costings. Parsed in src/sif/autocost.cc.
           properties:
             alley_factor:
               type: number
@@ -1570,6 +1570,8 @@ components:
         bus:
           $ref: '#/components/schemas/AutoCostingOptions'
         taxi:
+          $ref: '#/components/schemas/AutoCostingOptions'
+        emergency:
           $ref: '#/components/schemas/AutoCostingOptions'
         bicycle:
           $ref: '#/components/schemas/BicycleCostingOptions'

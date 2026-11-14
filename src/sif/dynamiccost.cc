@@ -696,6 +696,10 @@ void ParseCosting(const rapidjson::Document& doc,
       sif::ParseTaxiCostOptions(doc, key, costing, warnings);
       break;
     }
+    case Costing::emergency: {
+      sif::ParseEmergencyCostOptions(doc, key, costing, warnings);
+      break;
+    }
     case Costing::motor_scooter: {
       sif::ParseMotorScooterCostOptions(doc, key, costing, warnings);
       break;
