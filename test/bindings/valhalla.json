@@ -251,6 +251,9 @@
     "status": {
       "allow_verbose": false
     },
+    "tile": {
+      "allow_verbose": false
+    },
     "transit": {
       "max_distance": 500000.0,
       "max_locations": 50,

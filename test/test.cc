@@ -400,6 +400,9 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "status": {
           "allow_verbose": true
         },
+        "tile": {
+          "allow_verbose": true
+        },
         "taxi": {
           "max_distance": 5000000.0,
           "max_locations": 20,
