@@ -1357,12 +1357,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.mutable_round_trip_options()->set_heading(*heading);
     }
 
-    auto heading_tolerance =
-        rapidjson::get_optional<double>(doc, "/round_trip_options/heading_tolerance");
-    if (heading_tolerance) {
-      options.mutable_round_trip_options()->set_heading_tolerance(*heading_tolerance);
-    }
-
     auto distance_tolerance =
         rapidjson::get_optional<double>(doc, "/round_trip_options/distance_tolerance");
     if (distance_tolerance) {

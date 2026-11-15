@@ -569,10 +569,6 @@ message Options {
       double heading = 1;
     }
 
-    oneof has_heading_tolerance {
-      double heading_tolerance = 2;
-    }
-
     double distance = 3;  // desired round trip distance in meters
 
     oneof has_distance_tolerance {
