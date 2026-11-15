@@ -26,7 +26,7 @@ constexpr double kMaxLegFraction = 0.6;
 // how many pairs of turning points get routed before giving up
 constexpr size_t kMaxAttempts = 30;
 
-// defaults of the search for alternatives of the middle leg, which offer more round trip lengths
+// the search for alternatives of the middle leg, which offer more round trip lengths
 // per pair of turning points. A stretch or sharing threshold of 0 uses the A*'s defaults.
 constexpr uint32_t kMiddleAlternates = 8;
 constexpr float kThresholdDelta = 420.f;
@@ -260,25 +260,10 @@ void thor_worker_t::round_trip(Api& request) {
     return x.expected_error < y.expected_error;
   });
 
-  leg_astar_.SetAlternativeSettings(round_trip_options.has_threshold_delta_case()
-                                        ? round_trip_options.threshold_delta()
-                                        : kThresholdDelta,
-                                    round_trip_options.has_alternative_cost_extend_case()
-                                        ? round_trip_options.alternative_cost_extend()
-                                        : kAlternativeCostExtend,
-                                    round_trip_options.has_alternative_iterations_delta_case()
-                                        ? round_trip_options.alternative_iterations_delta()
-                                        : kAlternativeIterationsDelta,
-                                    round_trip_options.has_at_most_longer_case()
-                                        ? round_trip_options.at_most_longer()
-                                        : kAtMostLonger,
-                                    round_trip_options.has_at_most_shared_case()
-                                        ? round_trip_options.at_most_shared()
-                                        : kAtMostShared);
+  leg_astar_.SetAlternativeSettings(kThresholdDelta, kAlternativeCostExtend,
+                                    kAlternativeIterationsDelta, kAtMostLonger, kAtMostShared);
   Options middle_options = options;
-  middle_options.set_alternates(round_trip_options.has_middle_alternates_case()
-                                    ? round_trip_options.middle_alternates()
-                                    : kMiddleAlternates);
+  middle_options.set_alternates(kMiddleAlternates);
   Options last_options = options;
   last_options.set_alternates(0);
 
@@ -303,7 +288,6 @@ void thor_worker_t::round_trip(Api& request) {
   const double tolerance = round_trip_options.distance_tolerance() * desired_distance;
   std::vector<GraphId> edges;
   double best_score = std::numeric_limits<double>::max();
-  const CandidatePair* best_pair = nullptr;
 
   for (size_t i = 0; i < std::min(pairs.size(), kMaxAttempts) && best_score > tolerance; ++i) {
     const auto& a = out_candidates[pairs[i].out];
@@ -360,7 +344,6 @@ void thor_worker_t::round_trip(Api& request) {
         continue;
       }
       best_score = score;
-      best_pair = &pairs[i];
       edges = std::move(round_trip);
       if (best_score <= tolerance) {
         break;
@@ -394,18 +377,6 @@ void thor_worker_t::round_trip(Api& request) {
   auto* route = request.mutable_trip()->mutable_routes()->Add();
   TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(), origin,
                         destination, *route->mutable_legs()->Add(), {"round_trip"}, interrupt);
-
-  // all turning points for debugging, group 2 are the chosen ones and group 1 the others
-  const auto add_seeds = [&](const std::vector<IntermediateCandidate>& candidates, size_t chosen) {
-    for (size_t i = 0; i < candidates.size(); ++i) {
-      auto* seed = route->mutable_round_trip_seeds()->Add();
-      seed->mutable_ll()->set_lng(candidates[i].ll.lng());
-      seed->mutable_ll()->set_lat(candidates[i].ll.lat());
-      seed->set_round_trip_group_index(i == chosen ? 2 : 1);
-    }
-  };
-  add_seeds(out_candidates, best_pair->out);
-  add_seeds(back_candidates, best_pair->back);
 }
 
 } // namespace thor

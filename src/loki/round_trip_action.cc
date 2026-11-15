@@ -14,8 +14,6 @@ namespace {
 
 void parse_round_trip_options(Api& request, double max_distance) {
   auto* options = request.mutable_options()->mutable_round_trip_options();
-  request.mutable_options()->mutable_locations(0)->set_round_trip_group_index(
-      0); // overwrite if the user tried to set it
 
   // nothing or negative value set, throw
   if (options->distance() <= 0.0) {

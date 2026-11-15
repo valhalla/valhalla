@@ -578,26 +578,6 @@ message Options {
     oneof has_distance_tolerance {
       double distance_tolerance = 7;  // accepted relative deviation from distance, larger is faster
     }
-
-    // the search for alternatives of the middle leg, not parsed from the API yet
-    oneof has_middle_alternates {
-      uint32 middle_alternates = 8;
-    }
-    oneof has_threshold_delta {
-      float threshold_delta = 9;  // seconds to extend the search after the first connection
-    }
-    oneof has_alternative_cost_extend {
-      float alternative_cost_extend = 10;  // relative cost extension to find alternatives
-    }
-    oneof has_alternative_iterations_delta {
-      uint32 alternative_iterations_delta = 11;  // maximum additional iterations after the first connection
-    }
-    oneof has_at_most_longer {
-      float at_most_longer = 12;  // stretch threshold for alternatives
-    }
-    oneof has_at_most_shared {
-      float at_most_shared = 13;  // sharing threshold for alternatives
-    }
   }
 
   RoundTripOptions round_trip_options = 67;
