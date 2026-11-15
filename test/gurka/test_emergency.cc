@@ -107,8 +107,8 @@ protected:
 gurka::map EmergencyOnewayTest::map = {};
 const std::vector<std::string> EmergencyOnewayTest::kDetour = {"AB", "BE", "EF", "FD"};
 const std::vector<std::string> EmergencyOnewayTest::kWrongWay = {"AB", "CB", "CD"};
-const options_t EmergencyOnewayTest::kIgnoreOneways = {{"/costing_options/emergency/ignore_oneways",
-                                                        "1"}};
+const options_t EmergencyOnewayTest::kIgnoreOneways = {
+    {"/costing_options/emergency/ignore_oneways", "1"}};
 
 TEST_F(EmergencyOnewayTest, ClosedByDefault) {
   for (const auto& search : kSearchVariants) {
@@ -133,4 +133,68 @@ TEST_F(EmergencyOnewayTest, Matrix) {
   EXPECT_EQ(open.matrix().algorithm(), Matrix::CostMatrix);
   EXPECT_NEAR(closed.matrix().distances(0), 340, 10);
   EXPECT_NEAR(open.matrix().distances(0), 180, 10);
+}
+
+/*************************************************************/
+// bus and taxi ways are open, moped ways and truck restrictions are not part of emergency
+
+TEST(EmergencyAccess, BusWayOpenMopedWayAndTruckBanNot) {
+  constexpr double gridsize_metres = 50;
+
+  const std::string ascii_map = R"(
+        A---B---C
+        |       |
+        D-------E
+
+        F---G
+        |   |
+        H---I
+
+        J---K---L
+        |       |
+        M-------N
+    )";
+
+  const gurka::ways ways = {
+      // bus only way, e.g. a bus gate
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"access", "no"}, {"bus", "yes"}}},
+      {"AD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EC", {{"highway", "residential"}}},
+      // cycle path open to mopeds ("Mofa frei"), too narrow for emergency vehicles
+      {"FG", {{"highway", "cycleway"}, {"moped", "yes"}}},
+      {"FH", {{"highway", "residential"}}},
+      {"HI", {{"highway", "residential"}}},
+      {"IG", {{"highway", "residential"}}},
+      // night ban for trucks only
+      {"JK", {{"highway", "residential"}}},
+      {"KL", {{"highway", "residential"}, {"hgv:conditional", "no @ (22:00-06:00)"}}},
+      {"JM", {{"highway", "residential"}}},
+      {"MN", {{"highway", "residential"}}},
+      {"NL", {{"highway", "residential"}}},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  // the time zone database is needed for the conditional restriction
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/emergency_access_modes",
+                               {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+
+  for (const auto& search : kSearchVariants) {
+    auto result = gurka::do_action(Options::route, map, {"A", "C"}, "auto", search);
+    gurka::assert::raw::expect_path(result, {"AD", "DE", "EC"});
+    result = gurka::do_action(Options::route, map, {"A", "C"}, "emergency", search);
+    gurka::assert::raw::expect_path(result, {"AB", "BC"});
+
+    result = gurka::do_action(Options::route, map, {"F", "G"}, "emergency", search);
+    gurka::assert::raw::expect_path(result, {"FH", "HI", "IG"});
+  }
+
+  // at night the truck has to take the detour, the emergency vehicle does not
+  const options_t night = {{"/date_time/type", "1"}, {"/date_time/value", "2026-11-10T23:00"}};
+  auto result = gurka::do_action(Options::route, map, {"J", "L"}, "truck", night);
+  gurka::assert::raw::expect_path(result, {"JM", "MN", "NL"});
+  result = gurka::do_action(Options::route, map, {"J", "L"}, "emergency", night);
+  gurka::assert::raw::expect_path(result, {"JK", "KL"});
 }

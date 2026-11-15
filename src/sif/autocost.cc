@@ -1109,7 +1109,8 @@ cost_ptr_t CreateTaxiCost(const Costing& costing_options) {
 
 /**
  * Derived class providing costing for emergency vehicles. Uses the auto rules and additionally
- * allows ways and barriers that are only open to emergency vehicles.
+ * allows ways and barriers that are only open to emergency, bus or taxi traffic (bus lanes,
+ * bus gates).
  */
 class EmergencyCost : public AutoCost {
 public:
@@ -1119,8 +1120,12 @@ public:
    * @param  costing_options  pbf with costing_options.
    */
   EmergencyCost(const Costing& costing_options)
-      // emergency access is only set on ways tagged for it, so the mask includes auto and hov
-      : AutoCost(costing_options, kAutoAccess | kHOVAccess | kEmergencyAccess) {
+      // emergency access is only set on ways tagged for it, so the mask includes the other modes
+      // whose ways an emergency vehicle may use. The mask also selects which access and turn
+      // restrictions apply, so truck (e.g. hgv:conditional night bans) and the two-wheeler modes
+      // (e.g. cycle paths open to mopeds) are left out on purpose.
+      : AutoCost(costing_options,
+                 kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess | kEmergencyAccess) {
   }
 
   virtual ~EmergencyCost() {
