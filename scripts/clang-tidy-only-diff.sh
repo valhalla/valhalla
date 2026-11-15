@@ -22,6 +22,8 @@ modified_filepaths=()
 # We set the Internal Field Separator to nothing and read line by line.
 while IFS='' read -r line
 do
+  # the rust bindings are built by cargo, so they aren't in compile_commands.json
+  [[ "$line" == src/bindings/rust/* ]] && continue
   absolute_filepath=$(realpath "$line")
   if [[ ${absolute_filepath: -2} == "cc" || ${absolute_filepath: -2} == "." ]]; then
     echo "Detected changes in $absolute_filepath"

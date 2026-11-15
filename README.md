@@ -124,6 +124,18 @@ npm install @valhallajs/valhallajs
 
 For more details, see the [NodeJS README](https://github.com/valhalla/valhalla/blob/master/src/bindings/nodejs/README.md).
 
+### Via Rust bindings
+
+[![crates.io version](https://img.shields.io/crates/v/valhalla?label=valhalla)](https://crates.io/crates/valhalla)
+
+We publish Rust bindings to crates.io with [`valhalla`](https://crates.io/crates/valhalla), which builds Valhalla from source:
+
+```bash
+cargo add valhalla
+```
+
+For more details, see the [Rust README](https://github.com/valhalla/valhalla/blob/master/src/bindings/rust/README.md).
+
 ## Contributing
 
 We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages (see [`locales/`](https://github.com/valhalla/valhalla/tree/master/locales)) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.

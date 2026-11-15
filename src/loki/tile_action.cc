@@ -782,8 +782,7 @@ std::string loki_worker_t::render_tile(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  // respect "allow_verbose" config
-  const bool return_verbose = options.verbose() && allow_verbose;
+  const bool return_verbose = options.verbose() && allow_tile_verbose;
 
   // creates controller, disables all attributes by default, but respect filters & verbose
   auto get_controller = [&options, &return_verbose]() {

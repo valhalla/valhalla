@@ -819,7 +819,6 @@ TEST(GtfsExample, MakeTile) {
   auto dt_date = DateTime::get_formatted_date(dt);
   auto dt_date_days = DateTime::days_from_pivot_date(dt_date);
   auto dt_dow = DateTime::day_of_week_mask(dt);
-  bool date_before_tile = false;
 
   // this creates routable transit tiles but doesnt connect them to the rest of the graph
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
@@ -846,12 +845,8 @@ TEST(GtfsExample, MakeTile) {
     graph_tile_ptr tile = reader.GetGraphTile(tileid);
 
     uint32_t date_created = tile->header()->date_created();
-    uint32_t dt_day;
-    if (dt_date_days < date_created) {
-      date_before_tile = true;
-    } else {
-      dt_day = dt_date_days - date_created;
-    }
+    bool date_before_tile = dt_date_days < date_created;
+    uint32_t dt_day = date_before_tile ? 0 : dt_date_days - date_created;
     for (const auto& edge : tile->GetDirectedEdges()) {
       uses[edge.use()]++;
       // nothing here was built with elevation, so every edge has to carry the no-data sentinel
@@ -1045,7 +1040,7 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(res_doc["trip"]["legs"].GetArray().Size(), 1);
 
   const auto& leg_json = res_doc["trip"]["legs"].GetArray()[0];
-  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8770.470, 0.001);
+  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8797.470, 0.001);
   EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 41.036, 0.001);
   EXPECT_EQ(leg_json["maneuvers"][0]["type"].GetUint(),
             static_cast<uint32_t>(DirectionsLeg::Maneuver::kStart));
@@ -1097,7 +1092,7 @@ TEST(GtfsExample, route_trip4) {
 
   // test the PBF output
   const auto& leg = res.directions().routes(0).legs(0);
-  EXPECT_NEAR(leg.summary().time(), 8530.445, 0.001);
+  EXPECT_NEAR(leg.summary().time(), 8557.445, 0.001);
   EXPECT_NEAR(leg.summary().length(), 16.115, 0.001);
 
   const auto& transit_info = leg.maneuver(2).transit_info();

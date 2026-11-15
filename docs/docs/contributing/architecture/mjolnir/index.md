@@ -37,7 +37,7 @@ Then build some tiles from an extract:
 
 ### Administrative Areas
 
-An administrative database is created via `valhalla_build_admins` and is used to flag country crossings on edges during the building of the graph data.  Moreover, we also use admins to determine if we drive on the right or left (default: right).  In the future, we will use admins to set the default access restrictions per country.
+An administrative database is created via `valhalla_build_admins` and is used to flag country crossings on edges during the building of the graph data.  Moreover, we also use admins to determine if we drive on the right or left, which doesn't work for an admin database built from most small extracts (see [Driving side without an admin database](#driving-side-without-an-admin-database)).  In the future, we will use admins to set the default access restrictions per country.
 
 We recommend running the `valhalla_build_admins` on the planet; otherwise, parent admin information maybe lost or not all admins will get saved to the database.  This usually happens when a way is missing from the extract, but is part of the admin relation.  Most likely the extract polygon does not cover the entire admin relation.
 
@@ -47,6 +47,17 @@ If you would like administrative information within the route graph, please foll
 2. If needed, update the admin value under mjolnir in your valhalla.json config.  Default filename and directory is `/data/valhalla/admin.sqlite`.
 3. Run `valhalla_build_admins` under the valhalla directory. `./valhalla_build_admins --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf`
 4. The next time you run `valhalla_build_tiles`, admin information will be added to the route graph.
+
+#### Driving side without an admin database
+
+An admin database built from a city or bbox extract (e.g. from BBBike) usually contains no country or state polygons, because the extract lacks the ways of those boundary relations. Either build the admin database from a larger extract that covers the whole country, or set the driving side for the entire graph:
+
+| Driving side | Config |
+|--------------|--------|
+| Right | Set `mjolnir.data_processing.use_admin_db` to `false`. |
+| Left | Leave `mjolnir.data_processing.use_admin_db` as `true` and don't provide an admin database (or delete the `mjolnir.admin` entry). |
+
+Any node not covered by a polygon in the admin database is also treated as left-hand driving.
 
 ### Timezones
 

@@ -2,7 +2,9 @@
 #include "baldr/nodeinfo.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
@@ -19,33 +21,6 @@ void access_json(uint32_t access, rapidjson::writer_wrapper_t& writer) {
   writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
   writer("moped", static_cast<bool>(access & kMopedAccess));
   writer("motorcycle", static_cast<bool>(access & kMotorcycleAccess));
-}
-
-/**
- * Get the updated bit field.
- * @param dst  Data member to be updated.
- * @param src  Value to be updated.
- * @param pos  Position (pos element within the bit field).
- * @param len  Length of each element within the bit field.
- * @return  Returns an updated value for the bit field.
- */
-uint32_t
-OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
-  uint32_t shift = (pos * len);
-  uint32_t mask = ((static_cast<uint32_t>(1) << len) - 1) << shift;
-  return (dst & ~mask) | (src << shift);
-}
-
-/**
- * Get the updated bit field.
- * @param dst  Data member to be updated.
- * @param src  Value to be updated.
- * @param pos  Position (pos element within the bit field).
- * @return  Returns an updated value for the bit field.
- */
-uint32_t OverwriteBit(const uint32_t dst, const uint32_t src, const uint32_t pos) {
-  uint32_t mask = (static_cast<uint32_t>(1) << pos);
-  return (dst & ~mask) | (src << pos);
 }
 
 } // namespace

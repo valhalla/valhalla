@@ -241,7 +241,8 @@ public:
    * Get the number of regular edges across all levels (up to
    * kMaxLocalEdgeIndex+1). Does not include shortcut edges,
    * transit edges and transit connections, and transition edges.
-   * @return  Returns the number of edges on the local level.
+   *
+   * @return Returns the number of outgoing edges across all levels.
    */
   uint32_t local_edge_count() const {
     return local_edge_count_ + 1;

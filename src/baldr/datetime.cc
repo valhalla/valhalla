@@ -559,14 +559,13 @@ std::string iso_date_time(const date::time_zone* time_zone) {
   return iso_date_time.str();
 }
 
-// Get the seconds since epoch time is already adjusted based on TZ
+// Get the unix time of a local date_time in the given timezone
 uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone* time_zone) {
   if (date_time.empty() || !time_zone) {
     return 0;
   }
   const auto d = get_formatted_date(date_time);
-  const auto utc = date::to_utc_time(get_ldt(d, time_zone).get_sys_time()); // supports leap sec.
-  return static_cast<uint64_t>(utc.time_since_epoch().count());
+  return static_cast<uint64_t>(get_ldt(d, time_zone).get_sys_time().time_since_epoch().count());
 }
 
 // Get the difference between two timezones using the current time (seconds from epoch

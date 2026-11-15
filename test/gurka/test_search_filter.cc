@@ -1229,3 +1229,141 @@ TEST_F(LevelSearchFilter, CutoffClamped) {
     FAIL() << "Failed with unexpected exception type";
   };
 }
+
+/*************************************************************/
+struct RestrictionCase {
+  std::string tag;
+  std::string value;
+};
+
+class ExcludeRestricted : public ::testing::TestWithParam<RestrictionCase> {
+protected:
+  // 40 t truck, over every limit below
+  static constexpr const char* kTruck =
+      R"("height":4.0,"width":2.55,"length":16.5,"weight":40.0,"axle_load":11.5,"axle_count":5)";
+
+  // BC is restricted, BD-DE-EC goes around it. Requests with a date_time use time-dependent
+  // forward A*, the others bidirectional A*
+  static gurka::map
+  build(const std::vector<std::pair<std::string, std::string>>& extra_bc_tags = {}) {
+    const std::string ascii_map = R"(
+    X---A---B---C---F---Y
+            |   |
+            D---E
+    )";
+    const auto& param = GetParam();
+    gurka::ways ways = {{"XA", {{"highway", "residential"}}},
+                        {"AB", {{"highway", "residential"}}},
+                        {"BC", {{"highway", "residential"}, {param.tag, param.value}}},
+                        {"CF", {{"highway", "residential"}}},
+                        {"FY", {{"highway", "residential"}}},
+                        {"BD", {{"highway", "residential"}}},
+                        {"DE", {{"highway", "residential"}}},
+                        {"EC", {{"highway", "residential"}}}};
+    for (const auto& tag : extra_bc_tags)
+      ways["BC"][tag.first] = tag.second;
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    return gurka::buildtiles(layout, ways, {}, {},
+                             "test/data/search_filter_exclude_restricted_" + param.tag +
+                                 (extra_bc_tags.empty() ? "" : "_exempt"));
+  }
+
+  static valhalla::Api route(const gurka::map& map,
+                             const std::string& from,
+                             const std::string& to,
+                             const std::string& costing_options,
+                             bool exclude_restricted,
+                             bool depart_at = false) {
+    const std::string date_time =
+        depart_at ? R"(,"date_time":{"type":1,"value":"2026-11-05T10:00"})" : "";
+    const std::string request = std::
+        format(R"({{"locations":[{},{}],"costing":"truck","costing_options":{{"truck":{{{}}}}}{}}})",
+               location(map, from, exclude_restricted), location(map, to, exclude_restricted),
+               costing_options, date_time);
+    return gurka::do_action(valhalla::Options::route, map, request);
+  }
+
+  static valhalla::Api matrix(const gurka::map& map,
+                              const std::string& from,
+                              const std::string& to,
+                              bool exclude_restricted) {
+    const std::string request = std::format(
+        R"({{"sources":[{}],"targets":[{}],"costing":"truck","costing_options":{{"truck":{{{}}}}}}})",
+        location(map, from, exclude_restricted), location(map, to, exclude_restricted), kTruck);
+    return gurka::do_action(valhalla::Options::sources_to_targets, map, request);
+  }
+
+  static std::string
+  location(const gurka::map& map, const std::string& node, bool exclude_restricted) {
+    const std::string filter =
+        exclude_restricted ? R"(,"search_filter":{"exclude_restricted":true})" : "";
+    return std::format(R"({{"lat":{:.6f},"lon":{:.6f}{}}})", map.nodes.at(node).lat(),
+                       map.nodes.at(node).lng(), filter);
+  }
+};
+
+TEST_P(ExcludeRestricted, UnfilteredOriginEdgeIsNotChecked) {
+  // without the filter, the restriction on the origin edge is ignored
+  const auto map = build();
+  for (bool depart_at : {false, true})
+    gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, false, depart_at),
+                                    {"BC", "CF", "FY"});
+}
+
+TEST_P(ExcludeRestricted, UnfilteredDestinationEdgeIsNotCheckedByBidirectionalAStar) {
+  const auto map = build();
+  gurka::assert::raw::expect_path(route(map, "X", "C", kTruck, false), {"XA", "AB", "BC"});
+}
+
+TEST_P(ExcludeRestricted, FilteredOriginEdgeIsAvoided) {
+  const auto map = build();
+  for (bool depart_at : {false, true})
+    gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, true, depart_at),
+                                    {"BD", "DE", "EC", "CF", "FY"});
+}
+
+TEST_P(ExcludeRestricted, FilteredDestinationEdgeIsAvoided) {
+  const auto map = build();
+  for (bool depart_at : {false, true})
+    gurka::assert::raw::expect_path(route(map, "X", "C", kTruck, true, depart_at),
+                                    {"XA", "AB", "BD", "DE", "EC"});
+}
+
+TEST_P(ExcludeRestricted, RestrictionInsideRouteIsAlwaysChecked) {
+  // BC is mid-route here, so thor checks it anyway
+  const auto map = build();
+  for (bool filtered : {false, true})
+    gurka::assert::raw::expect_path(route(map, "X", "Y", kTruck, filtered),
+                                    {"XA", "AB", "BD", "DE", "EC", "CF", "FY"});
+}
+
+TEST_P(ExcludeRestricted, VehicleWithinLimitsKeepsTheEdge) {
+  // a small truck is within every limit
+  const auto map = build();
+  const std::string small_truck =
+      R"("height":2.5,"width":1.9,"length":5.0,"weight":3.0,"axle_load":1.5,"axle_count":2)";
+  gurka::assert::raw::expect_path(route(map, "B", "Y", small_truck, true), {"BC", "CF", "FY"});
+}
+
+TEST_P(ExcludeRestricted, ExceptDestinationIsNotFiltered) {
+  // restrictions that exempt destinations are kept
+  const auto map = build({{GetParam().tag + ":conditional", "none @ destination"}});
+  gurka::assert::raw::expect_path(route(map, "B", "Y", kTruck, true), {"BC", "CF", "FY"});
+}
+
+TEST_P(ExcludeRestricted, MatrixAvoidsFilteredOriginEdge) {
+  const auto map = build();
+  EXPECT_NEAR(matrix(map, "B", "Y", false).matrix().distances(0), 1200, 10);
+  EXPECT_NEAR(matrix(map, "B", "Y", true).matrix().distances(0), 1600, 10);
+}
+
+INSTANTIATE_TEST_SUITE_P(SearchFilter,
+                         ExcludeRestricted,
+                         ::testing::Values(RestrictionCase{"maxweight", "7.5"},
+                                           RestrictionCase{"maxheight", "3.5"},
+                                           RestrictionCase{"maxwidth", "2.2"},
+                                           RestrictionCase{"maxlength", "10"},
+                                           RestrictionCase{"maxaxleload", "8"}),
+                         [](const ::testing::TestParamInfo<RestrictionCase>& info) {
+                           return info.param.tag;
+                         });

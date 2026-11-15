@@ -18,6 +18,7 @@ inline bool operator==(const SearchFilter& a, const SearchFilter& b) {
          a.has_max_road_class_case() == b.has_max_road_class_case() &&
          a.max_road_class() == b.max_road_class() && a.exclude_tunnel() == b.exclude_tunnel() &&
          a.exclude_bridge() == b.exclude_bridge() && a.exclude_ramp() == b.exclude_ramp() &&
+         a.exclude_restricted() == b.exclude_restricted() &&
          a.has_exclude_closures_case() == b.has_exclude_closures_case() &&
          a.exclude_closures() == b.exclude_closures() && a.exclude_toll() == b.exclude_toll() &&
          a.exclude_ferry() == b.exclude_ferry() && a.has_level_case() == b.has_level_case() &&
