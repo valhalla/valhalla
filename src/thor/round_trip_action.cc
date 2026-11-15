@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -25,8 +26,23 @@ constexpr double kMaxLegFraction = 0.47;
 // how many pairs of turning points get routed before giving up
 constexpr size_t kMaxAttempts = 8;
 
+// defaults of the search for alternatives of the middle leg, which offer more round trip lengths
+// per pair of turning points. A stretch or sharing threshold of 0 uses the A*'s defaults.
+constexpr uint32_t kMiddleAlternates = 8;
+constexpr float kThresholdDelta = 420.f;
+constexpr float kAlternativeCostExtend = 1.5f;
+constexpr uint32_t kAlternativeIterationsDelta = 200000;
+constexpr float kAtMostLonger = 0.f;
+constexpr float kAtMostShared = 0.f;
+
 // cost factor for the middle leg on the edges of the first and the last leg, in either direction
 constexpr double kUsedEdgeFactor = 1000.;
+
+// near the start the last leg can't avoid the first one, so the first leg isn't penalized for this
+// fraction of the round trip, within bounds
+constexpr double kFreeStartFraction = 0.05;
+constexpr double kMinFreeStartLength = 300.;
+constexpr double kMaxFreeStartLength = 2000.;
 
 // cost factor on the edges at the junctions of earlier legs, but only for this distance next to the
 // junction, so that crossing an earlier leg costs about the same wherever it happens
@@ -188,6 +204,8 @@ void thor_worker_t::round_trip(Api& request) {
   const double desired_distance = round_trip_options.distance();
   const double heading = round_trip_options.heading();
   const double heading_tolerance = round_trip_options.heading_tolerance();
+  const double free_start_length =
+      std::clamp(kFreeStartFraction * desired_distance, kMinFreeStartLength, kMaxFreeStartLength);
 
   // the first turning point lies in the counter clockwise half of the heading's sector and the
   // second one in the clockwise half, so the round trip runs clockwise
@@ -218,55 +236,106 @@ void thor_worker_t::round_trip(Api& request) {
     return x.expected_error < y.expected_error;
   });
 
-  // the middle leg continues from the end of the first turning point's edge and turns onto the
-  // second turning point's edge, so the A* respects the turns at both joins
-  Options leg_options = options;
-  leg_options.set_alternates(0);
-  std::vector<GraphId> edges;
+  leg_astar_.SetAlternativeSettings(round_trip_options.has_threshold_delta_case()
+                                        ? round_trip_options.threshold_delta()
+                                        : kThresholdDelta,
+                                    round_trip_options.has_alternative_cost_extend_case()
+                                        ? round_trip_options.alternative_cost_extend()
+                                        : kAlternativeCostExtend,
+                                    round_trip_options.has_alternative_iterations_delta_case()
+                                        ? round_trip_options.alternative_iterations_delta()
+                                        : kAlternativeIterationsDelta,
+                                    round_trip_options.has_at_most_longer_case()
+                                        ? round_trip_options.at_most_longer()
+                                        : kAtMostLonger,
+                                    round_trip_options.has_at_most_shared_case()
+                                        ? round_trip_options.at_most_shared()
+                                        : kAtMostShared);
+  Options middle_options = options;
+  middle_options.set_alternates(round_trip_options.has_middle_alternates_case()
+                                    ? round_trip_options.middle_alternates()
+                                    : kMiddleAlternates);
+  Options last_options = options;
+  last_options.set_alternates(0);
+
   // TODO: check restrictions
   // routes a leg that avoids the roads of the legs before it
   const auto route_leg = [&](Location& origin, Location& destination,
-                             const std::vector<GraphId>& used) {
+                             const std::vector<GraphId>& used, const Options& leg_options) {
     Costing_Options penalties;
     penalties.mutable_cost_factor_edges()->CopyFrom(costing_options.cost_factor_edges());
     add_used_edges(used, *reader, penalties);
     add_crossing_edges(used, *reader, penalties);
     costing->SetCostFactorEdges(penalties);
-    bidir_astar.Clear();
-    const auto paths =
-        bidir_astar.GetBestPath(origin, destination, *reader, mode_costing, mode, leg_options);
+    leg_astar_.Clear();
+    auto paths =
+        leg_astar_.GetBestPath(origin, destination, *reader, mode_costing, mode, leg_options);
     costing->SetCostFactorEdges(costing_options);
-    std::vector<GraphId> leg;
-    if (!paths.empty()) {
-      for (const auto& info : paths.front()) {
-        leg.push_back(info.edgeid);
-      }
-    }
-    return leg;
+    return paths;
   };
 
-  for (size_t i = 0; i < std::min(pairs.size(), kMaxAttempts) && edges.empty(); ++i) {
+  // the round trip closest to the desired distance, the search stops once one is within tolerance
+  const double tolerance = round_trip_options.distance_tolerance() * desired_distance;
+  std::vector<GraphId> edges;
+  double best_error = std::numeric_limits<double>::max();
+
+  for (size_t i = 0; i < std::min(pairs.size(), kMaxAttempts) && best_error > tolerance; ++i) {
     const auto& a = out_candidates[pairs[i].out];
     const auto& b = back_candidates[pairs[i].back];
     auto at_a = edge_location(a, true);
     auto at_b = edge_location(b, false);
-    auto destination = start;
 
     // the middle leg starts on a's edge, which ends the first leg, and ends on b's edge, which
     // starts the last leg
-    auto used = out_tree_.Path(a.label);
-    const auto middle = route_leg(at_a, at_b, used);
-    if (middle.size() < 2) {
-      continue;
-    }
-    used.insert(used.end(), middle.begin() + 1, middle.end() - 1);
-    const auto last = route_leg(at_b, destination, used);
-    if (last.empty()) {
-      continue;
-    }
+    const auto first = out_tree_.Path(a.label);
 
-    edges = used;
-    edges.insert(edges.end(), last.begin(), last.end());
+    // the first leg is penalized only beyond its first edges near the start
+    size_t free_edges = 0;
+    double length = 0.;
+    graph_tile_ptr tile;
+    for (; free_edges < first.size(); ++free_edges) {
+      const auto* edge = reader->directededge(first[free_edges], tile);
+      length += edge ? edge->length() : 0.;
+      if (length > free_start_length) {
+        break;
+      }
+    }
+    std::vector<GraphId> used(first.begin() + free_edges, first.end());
+
+    // every alternative of the middle leg gets its own last leg, which avoids it
+    const auto middles = route_leg(at_a, at_b, used, middle_options);
+    for (const auto& middle : middles) {
+      if (middle.size() < 2) {
+        continue;
+      }
+      auto last_used = used;
+      for (size_t k = 1; k + 1 < middle.size(); ++k) {
+        last_used.push_back(middle[k].edgeid);
+      }
+      auto destination = start;
+      const auto lasts = route_leg(at_b, destination, last_used, last_options);
+      if (lasts.empty() || lasts.front().empty()) {
+        continue;
+      }
+      const auto& last = lasts.front();
+
+      const double distance = a.distance + middle.back().path_distance + last.back().path_distance;
+      const double error = std::abs(distance - desired_distance);
+      if (error >= best_error) {
+        continue;
+      }
+      best_error = error;
+      edges = first;
+      for (size_t k = 1; k + 1 < middle.size(); ++k) {
+        edges.push_back(middle[k].edgeid);
+      }
+      for (const auto& info : last) {
+        edges.push_back(info.edgeid);
+      }
+      if (best_error <= tolerance) {
+        break;
+      }
+    }
   }
   if (edges.empty()) {
     throw valhalla_exception_t{442};

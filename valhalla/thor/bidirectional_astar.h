@@ -82,6 +82,34 @@ public:
    */
   void Clear() override;
 
+  /**
+   * Whether the search may use shortcuts while the hierarchy limits allow them.
+   * @param allow_shortcuts  false to only use the edges shortcuts are built from
+   */
+  void SetAllowShortcuts(bool allow_shortcuts) {
+    allow_shortcuts_ = allow_shortcuts;
+  }
+
+  /**
+   * Overrides the configured settings of the search for alternatives.
+   * @param threshold_delta               seconds to extend the search after the first connection
+   * @param alternative_cost_extend       relative cost extension to find alternatives
+   * @param alternative_iterations_delta  maximum additional iterations after the first connection
+   * @param at_most_longer                stretch threshold for alternatives, 0 for the default
+   * @param at_most_shared                sharing threshold for alternatives, 0 for the default
+   */
+  void SetAlternativeSettings(float threshold_delta,
+                              float alternative_cost_extend,
+                              uint32_t alternative_iterations_delta,
+                              float at_most_longer,
+                              float at_most_shared) {
+    threshold_delta_ = threshold_delta;
+    alternative_cost_extend_ = alternative_cost_extend;
+    alternative_iterations_delta_ = alternative_iterations_delta;
+    at_most_longer_ = at_most_longer;
+    at_most_shared_ = at_most_shared;
+  }
+
 protected:
   // Access mode used by the costing method
   uint32_t access_mode_;
@@ -135,6 +163,10 @@ protected:
 
   // Maximum number of additional iterations allowed once the first connection has been found.
   uint32_t alternative_iterations_delta_;
+
+  // Stretch and sharing thresholds for alternatives, 0 uses the defaults that depend on the route
+  float at_most_longer_;
+  float at_most_shared_;
 
   // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
   // end started on a not_thru or closed (due to live-traffic) edge
