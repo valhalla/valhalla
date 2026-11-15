@@ -171,8 +171,6 @@ protected:
   // separately from the other paths
   bool multipath_;
 
-  // opt-in hierarchy pruning like CostMatrix: once a level has seen enough up transitions and the
-  // path is longer than the level's expand_within_dist, that level isn't expanded any further
   bool use_hierarchy_limits_ = false;
   std::vector<HierarchyLimits> hierarchy_limits_;
 

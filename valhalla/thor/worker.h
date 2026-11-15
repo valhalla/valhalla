@@ -13,6 +13,7 @@
 #include <valhalla/thor/centroid.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
+#include <valhalla/thor/looptree.h>
 #include <valhalla/thor/multimodal_astar.h>
 #include <valhalla/thor/multimodal_transit.h>
 #include <valhalla/thor/timedistancebssmatrix.h>
@@ -124,6 +125,9 @@ protected:
   TimeDistanceBSSMatrix time_distance_bss_matrix_;
 
   Isochrone isochrone_gen;
+  // expansions out of and into the start of a round trip
+  LoopTree out_tree_;
+  LoopTree back_tree_;
   std::shared_ptr<meili::MapMatcher> matcher;
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
