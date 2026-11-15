@@ -160,8 +160,6 @@ public:
    */
   PrecisionT Heading(const GeoPoint& ll2) const;
 
-  PointXY<PrecisionT> PointAlongHeading(PrecisionT heading, PrecisionT distance) = delete;
-
   /**
    * Finds the closest point to the supplied polyline as well as the distance
    * to that point and the (floor) index of the segment where the closest
@@ -260,7 +258,7 @@ public:
    *
    * @return true if the system is spherical false if not
    */
-  static constexpr bool IsSpherical() {
+  static bool IsSpherical() {
     return true;
   }
 

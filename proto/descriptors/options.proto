@@ -575,10 +575,6 @@ message Options {
 
     double distance = 3;  // desired round trip distance in meters
 
-    oneof has_overlap_factor {
-      double overlap_factor = 4;  // how strongly to avoid driving the same road twice, 0 = don't care
-    }
-
     oneof has_distance_tolerance {
       double distance_tolerance = 7;  // accepted relative deviation from distance, larger is faster
     }

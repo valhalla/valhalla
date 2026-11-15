@@ -22,9 +22,7 @@ inline bool operator==(const SearchFilter& a, const SearchFilter& b) {
          a.exclude_closures() == b.exclude_closures() && a.exclude_toll() == b.exclude_toll() &&
          a.exclude_ferry() == b.exclude_ferry() && a.has_level_case() == b.has_level_case() &&
          a.level() == b.level() && a.has_exclude_steps_case() == b.has_exclude_steps_case() &&
-         a.exclude_steps() == b.exclude_steps() && a.exclude_uses() == b.exclude_uses() &&
-         a.exclude_dead_ends() == b.exclude_dead_ends() &&
-         a.exclude_not_thru() == b.exclude_not_thru();
+         a.exclude_steps() == b.exclude_steps();
 }
 inline bool operator==(const Location& a, const Location& b) {
   return a.ll() == b.ll() && a.type() == b.type() && a.has_heading_case() == b.has_heading_case() &&

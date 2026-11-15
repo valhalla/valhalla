@@ -89,8 +89,7 @@ public:
                       baldr::GraphReader& graphreader,
                       const sif::mode_costing_t& mode_costing,
                       const sif::travel_mode_t mode,
-                      const float max_matrix_distance,
-                      std::vector<std::vector<baldr::GraphId>>* = nullptr) override;
+                      const float max_matrix_distance) override;
 
   /**
    * Clear the temporary information generated during time+distance
@@ -264,8 +263,7 @@ protected:
                              const uint32_t target_idx,
                              const uint32_t connection_idx,
                              const baldr::TimeInfo& time_info,
-                             const bool invariant,
-                             std::vector<baldr::GraphId>* path = nullptr);
+                             const bool invariant);
   /**
    * Sets the date_time on the origin locations.
    *

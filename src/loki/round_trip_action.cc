@@ -48,16 +48,6 @@ void parse_round_trip_options(Api& request, double max_distance) {
                 std::format("[{:.1f},{:.1f}]", kMinHeadingTolerance, kMaxHeadingTolerance));
   }
 
-  constexpr double kDefaultOverlapFactor = 1.;
-  constexpr double kMaxOverlapFactor = 100.;
-
-  if (!options->has_overlap_factor()) {
-    options->set_overlap_factor(kDefaultOverlapFactor);
-  } else if (options->overlap_factor() < 0. || options->overlap_factor() > kMaxOverlapFactor) {
-    options->set_overlap_factor(std::clamp(options->overlap_factor(), 0., kMaxOverlapFactor));
-    add_warning(request, 306, std::format("[{:.1f},{:.1f}]", 0., kMaxOverlapFactor));
-  }
-
   constexpr double kDefaultDistanceTolerance = 0.1;
   constexpr double kMinDistanceTolerance = 0.02;
   constexpr double kMaxDistanceTolerance = 0.5;

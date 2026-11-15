@@ -70,9 +70,6 @@ message SearchFilter {
   oneof has_exclude_steps {
     bool exclude_steps = 10; // whether to exclude steps from loki results [default = true for bicycle]
   }
-  uint64 exclude_uses = 11;      // bit mask of baldr::Use values to exclude 
-  bool exclude_dead_ends = 12;   // whether to exclude edges marked as deadends
-  bool exclude_not_thru = 13;    // whether to exclude edges marked as not_thru
 }
 
 message PathEdge {

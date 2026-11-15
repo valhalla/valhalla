@@ -460,19 +460,6 @@ components:
           type: boolean
           description: > 
             **BETA** Whether to exclude steps. Defaults to `true` for `bicycle` costing and `false` otherwise.
-        exclude_uses:
-          type: array
-          items:
-            type: string
-          description: Road uses to exclude, e.g. `ramp`, `driveway` or `service_road`.
-        exclude_dead_ends:
-          type: boolean
-          default: false
-          description: Whether to exclude deadends roads.
-        exclude_not_thru:
-          type: boolean
-          default: false
-          description: Whether to exclude roads leading into a region with no other way out.
         exclude_closures:
           type: boolean
           default: true

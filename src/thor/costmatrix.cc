@@ -212,8 +212,7 @@ bool CostMatrix::SourceToTarget(Api& request,
                                 baldr::GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
                                 const sif::travel_mode_t mode,
-                                const float max_matrix_distance,
-                                std::vector<std::vector<baldr::GraphId>>* paths) {
+                                const float max_matrix_distance) {
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
   bool invariant = request.options().date_time_type() == Options::invariant;
 
@@ -354,11 +353,6 @@ bool CostMatrix::SourceToTarget(Api& request,
   // Form the matrix PBF output
   graph_tile_ptr tile;
   bool connection_failed = false;
-
-  if (paths) {
-    paths->resize(best_connection_.size());
-  }
-
   for (uint32_t connection_idx = 0; connection_idx < best_connection_.size(); connection_idx++) {
     auto best_connection = best_connection_[connection_idx];
     // if this is the second pass we don't have to process previously found ones again
@@ -369,8 +363,7 @@ bool CostMatrix::SourceToTarget(Api& request,
     uint32_t source_idx = connection_idx / target_location_list.size();
 
     std::string shape = RecostFormPath(graphreader, best_connection, request, source_idx, target_idx,
-                                       connection_idx, time_infos[source_idx], invariant,
-                                       paths ? &paths->at(connection_idx) : nullptr);
+                                       connection_idx, time_infos[source_idx], invariant);
 
     float time = best_connection.cost.secs;
     if (time < kMaxCost && request.options().verbose()) {
@@ -1288,11 +1281,9 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                                        const uint32_t target_idx,
                                        const uint32_t connection_idx,
                                        const baldr::TimeInfo& time_info,
-                                       const bool invariant,
-                                       std::vector<GraphId>* path) {
+                                       const bool invariant) {
   // no need to look at source == target or missing connectivity
-  if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose() &&
-       !path) ||
+  if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose()) ||
       connection.distance == kMaxCost) {
     return "";
   }
@@ -1350,13 +1341,6 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     } else
       path_edges.emplace_back(std::move(opp_edge_id));
   }
-
-  // maybe hand back the path edges to the caller
-  auto move_path_out = midgard::make_finally([&path, &path_edges]() {
-    if (path) {
-      *path = std::move(path_edges);
-    }
-  });
 
   const auto* source_edge =
       find_correlated_edge(request.options().sources(source_idx), path_edges.front());

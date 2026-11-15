@@ -59,8 +59,7 @@ public:
                               baldr::GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
                               const sif::travel_mode_t mode,
-                              const float max_matrix_distance,
-                              std::vector<std::vector<baldr::GraphId>>* paths = nullptr) = 0;
+                              const float max_matrix_distance) = 0;
 
   /**
    * Clear the temporary information.

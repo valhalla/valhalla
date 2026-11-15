@@ -17,9 +17,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
-#include <optional>
 #include <sstream>
-#include <string_view>
 
 using namespace valhalla;
 #ifdef ENABLE_SERVICES
@@ -62,16 +60,6 @@ void parse_exclude_layers(const boost::optional<rapidjson::Value&>& exclude_laye
       add_warning(request, 212, lyr.IsString() ? lyr.GetString() : "not a string");
     }
   }
-}
-
-// the inverse of baldr::to_string(Use)
-std::optional<baldr::Use> parse_use(std::string_view name) {
-  for (uint8_t i = 0; i < static_cast<uint8_t>(baldr::Use::kSize); ++i) {
-    if (baldr::to_string(static_cast<baldr::Use>(i)) == name) {
-      return static_cast<baldr::Use>(i);
-    }
-  }
-  return std::nullopt;
 }
 
 bool is_format_supported(Options::Action action, Options::Format format) {
@@ -363,26 +351,6 @@ void parse_location(valhalla::Location* location,
     auto exclude_steps = rapidjson::get_optional<bool>(*search_filter, "/exclude_steps");
     if (exclude_steps)
       location->mutable_search_filter()->set_exclude_steps(*exclude_steps);
-    // search_filter.exclude_uses
-    auto exclude_uses = rapidjson::get_child_optional(*search_filter, "/exclude_uses");
-    if (exclude_uses && exclude_uses->IsArray()) {
-      uint64_t mask = 0;
-      for (const auto& use_name : exclude_uses->GetArray()) {
-        const auto use = use_name.IsString() ? parse_use(use_name.GetString()) : std::nullopt;
-        if (use) {
-          mask |= uint64_t{1} << static_cast<uint8_t>(*use);
-        } else {
-          add_warning(request, 217, use_name.IsString() ? use_name.GetString() : "not a string");
-        }
-      }
-      location->mutable_search_filter()->set_exclude_uses(mask);
-    }
-    // search_filter.exclude_dead_ends
-    location->mutable_search_filter()->set_exclude_dead_ends(
-        rapidjson::get<bool>(*search_filter, "/exclude_dead_ends", false));
-    // search_filter.exclude_not_thru
-    location->mutable_search_filter()->set_exclude_not_thru(
-        rapidjson::get<bool>(*search_filter, "/exclude_not_thru", false));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -1393,11 +1361,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
         rapidjson::get_optional<double>(doc, "/round_trip_options/heading_tolerance");
     if (heading_tolerance) {
       options.mutable_round_trip_options()->set_heading_tolerance(*heading_tolerance);
-    }
-
-    auto overlap_factor = rapidjson::get_optional<double>(doc, "/round_trip_options/overlap_factor");
-    if (overlap_factor) {
-      options.mutable_round_trip_options()->set_overlap_factor(*overlap_factor);
     }
 
     auto distance_tolerance =

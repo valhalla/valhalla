@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <map>
 #include <vector>
 
@@ -97,22 +96,11 @@ public:
     return reverse_ ? bdedgelabels_[label].opp_edgeid() : bdedgelabels_[label].edgeid();
   }
 
-  const sif::BDEdgeLabel& Label(uint32_t label) const {
-    return bdedgelabels_[label];
-  }
-
-  size_t LabelCount() const {
-    return bdedgelabels_.size();
-  }
-
 protected:
   // near the start the bearing of a node says little about where the path goes, so the expansion
   // is only kept inside its cone beyond this distance, and with some slack to bend around obstacles
   static constexpr double kConeStartDistance = 3000.;
   static constexpr double kConeMargin = 25.;
-  // an edge arriving at its end node this much later than the expansion first got there drove a
-  // detour to come back, e.g. around a roundabout
-  static constexpr double kMaxArrivalDetour = 500.;
   // candidates are kept on a grid of distance and bearing, one per cell
   static constexpr int kDistanceBins = 10;
   static constexpr int kBearingBins = 4;
