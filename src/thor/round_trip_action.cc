@@ -20,11 +20,11 @@ using namespace valhalla::thor;
 namespace {
 
 // the paths from the start to a turning point are between these fractions of the round trip
-constexpr double kMinLegFraction = 0.1;
-constexpr double kMaxLegFraction = 0.47;
+constexpr double kMinLegFraction = 0.2;
+constexpr double kMaxLegFraction = 0.6;
 
 // how many pairs of turning points get routed before giving up
-constexpr size_t kMaxAttempts = 8;
+constexpr size_t kMaxAttempts = 30;
 
 // defaults of the search for alternatives of the middle leg, which offer more round trip lengths
 // per pair of turning points. A stretch or sharing threshold of 0 uses the A*'s defaults.
@@ -36,7 +36,7 @@ constexpr float kAtMostLonger = 0.f;
 constexpr float kAtMostShared = 0.f;
 
 // cost factor for the middle leg on the edges of the first and the last leg, in either direction
-constexpr double kUsedEdgeFactor = 1000.;
+constexpr double kUsedEdgeFactor = 60.;
 
 // near the start the last leg can't avoid the first one, so the first leg isn't penalized for this
 // fraction of the round trip, within bounds
@@ -46,8 +46,11 @@ constexpr double kMaxFreeStartLength = 2000.;
 
 // cost factor on the edges at the junctions of earlier legs, but only for this distance next to the
 // junction, so that crossing an earlier leg costs about the same wherever it happens
-constexpr double kCrossingEdgeFactor = 4.;
+constexpr double kCrossingEdgeFactor = 50.;
 constexpr double kCrossingLength = 100.;
+
+// meters added to a round trip's distance error per meter of road it drives more than once
+constexpr double kOverlapWeight = 20.;
 
 // a pair of turning points and how far the round trip through them is expected to miss the
 // desired distance
@@ -95,7 +98,7 @@ void add_used_edges(const std::vector<GraphId>& edges,
 // and the junction at the end of the last used edge, where the new leg starts.
 void add_crossing_edges(const std::vector<GraphId>& edges,
                         GraphReader& reader,
-                        Costing_Options& penalties) {
+                        Costing_Options& costing_options) {
   std::unordered_set<GraphId> used;
   for (const auto& edge_id : edges) {
     graph_tile_ptr tile;
@@ -144,8 +147,8 @@ void add_crossing_edges(const std::vector<GraphId>& edges,
     }
   }
 
-  const auto add_range = [&penalties](const GraphId& edge_id, double start, double end) {
-    auto* factor = penalties.mutable_cost_factor_edges()->Add();
+  const auto add_range = [&costing_options](const GraphId& edge_id, double start, double end) {
+    auto* factor = costing_options.mutable_cost_factor_edges()->Add();
     factor->set_id(edge_id.value);
     factor->set_factor(kCrossingEdgeFactor);
     factor->set_start(start);
@@ -163,6 +166,27 @@ void add_crossing_edges(const std::vector<GraphId>& edges,
       add_range(edge_id, 1. - range.second, 1.);
     }
   }
+}
+
+// the length of the roads driven more than once in either direction, the first free edges near the
+// start aside
+double overlap_length(const std::vector<GraphId>& edges, size_t free_edges, GraphReader& reader) {
+  std::unordered_set<GraphId> roads;
+  double overlap = 0.;
+  for (size_t i = free_edges; i < edges.size(); ++i) {
+    graph_tile_ptr tile;
+    const auto* edge = reader.directededge(edges[i], tile);
+    if (!edge) {
+      continue;
+    }
+    const double length = edge->length();
+    const auto opp_id = reader.GetOpposingEdgeId(edges[i], tile);
+    const auto road = opp_id.is_valid() && opp_id.value < edges[i].value ? opp_id : edges[i];
+    if (!roads.insert(road).second) {
+      overlap += length;
+    }
+  }
+  return overlap;
 }
 
 float percent_along(const Location& location, const GraphId& edge_id) {
@@ -274,12 +298,14 @@ void thor_worker_t::round_trip(Api& request) {
     return paths;
   };
 
-  // the round trip closest to the desired distance, the search stops once one is within tolerance
+  // the round trip that misses the desired distance least, with its overlap counted as a miss too,
+  // the search stops once one is within tolerance
   const double tolerance = round_trip_options.distance_tolerance() * desired_distance;
   std::vector<GraphId> edges;
-  double best_error = std::numeric_limits<double>::max();
+  double best_score = std::numeric_limits<double>::max();
+  const CandidatePair* best_pair = nullptr;
 
-  for (size_t i = 0; i < std::min(pairs.size(), kMaxAttempts) && best_error > tolerance; ++i) {
+  for (size_t i = 0; i < std::min(pairs.size(), kMaxAttempts) && best_score > tolerance; ++i) {
     const auto& a = out_candidates[pairs[i].out];
     const auto& b = back_candidates[pairs[i].back];
     auto at_a = edge_location(a, true);
@@ -319,20 +345,24 @@ void thor_worker_t::round_trip(Api& request) {
       }
       const auto& last = lasts.front();
 
-      const double distance = a.distance + middle.back().path_distance + last.back().path_distance;
-      const double error = std::abs(distance - desired_distance);
-      if (error >= best_error) {
-        continue;
-      }
-      best_error = error;
-      edges = first;
+      auto round_trip = first;
       for (size_t k = 1; k + 1 < middle.size(); ++k) {
-        edges.push_back(middle[k].edgeid);
+        round_trip.push_back(middle[k].edgeid);
       }
       for (const auto& info : last) {
-        edges.push_back(info.edgeid);
+        round_trip.push_back(info.edgeid);
       }
-      if (best_error <= tolerance) {
+
+      const double distance = a.distance + middle.back().path_distance + last.back().path_distance;
+      const double score = std::abs(distance - desired_distance) +
+                           kOverlapWeight * overlap_length(round_trip, free_edges, *reader);
+      if (score >= best_score) {
+        continue;
+      }
+      best_score = score;
+      best_pair = &pairs[i];
+      edges = std::move(round_trip);
+      if (best_score <= tolerance) {
         break;
       }
     }
@@ -364,6 +394,18 @@ void thor_worker_t::round_trip(Api& request) {
   auto* route = request.mutable_trip()->mutable_routes()->Add();
   TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(), origin,
                         destination, *route->mutable_legs()->Add(), {"round_trip"}, interrupt);
+
+  // all turning points for debugging, group 2 are the chosen ones and group 1 the others
+  const auto add_seeds = [&](const std::vector<IntermediateCandidate>& candidates, size_t chosen) {
+    for (size_t i = 0; i < candidates.size(); ++i) {
+      auto* seed = route->mutable_round_trip_seeds()->Add();
+      seed->mutable_ll()->set_lng(candidates[i].ll.lng());
+      seed->mutable_ll()->set_lat(candidates[i].ll.lat());
+      seed->set_round_trip_group_index(i == chosen ? 2 : 1);
+    }
+  };
+  add_seeds(out_candidates, best_pair->out);
+  add_seeds(back_candidates, best_pair->back);
 }
 
 } // namespace thor
