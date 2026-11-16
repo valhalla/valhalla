@@ -13,6 +13,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -24,7 +25,6 @@ using namespace valhalla::midgard;
 
 namespace {
 const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
-constexpr float COMPRESSION_HINT = 3.5f;
 
 // the point of this function is to avoid race conditions for writing a tile between threads
 // so the easiest thing to do is just use the thread id to differentiate
@@ -62,18 +62,29 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
 
   // for setting where to write the uncompressed data to
   std::vector<char> data;
-  auto dst_func = [&data, &compressed](z_stream& s) -> int {
+  auto dst_func = [&data](z_stream& s) -> int {
     // if the whole buffer wasn't used we are done
     auto size = data.size();
     if (s.total_out < size)
       data.resize(s.total_out);
     // we need more space
     else {
-      // assume we need 3.5x the space
-      data.resize(size + (compressed.size() * COMPRESSION_HINT));
+      // The first buffer holds only the header; read the tile size and grow exactly once.
+      auto next_size = sizeof(GraphTileHeader);
+      if (size == sizeof(GraphTileHeader)) {
+        GraphTileHeader header;
+        std::memcpy(&header, data.data(), sizeof(header));
+        const size_t tile_size = header.end_offset();
+        if (tile_size < sizeof(GraphTileHeader) || tile_size >= data.max_size())
+          throw std::runtime_error("Invalid inflated tile size");
+        // Allow one extra byte to detect oversized tiles.
+        next_size = tile_size + 1;
+      } else if (size != 0)
+        throw std::runtime_error("Inflated tile exceeds its declared size");
+      data.resize(next_size);
       // set the pointer to the next spot
       s.next_out = static_cast<Byte*>(static_cast<void*>(data.data() + size));
-      s.avail_out = compressed.size() * COMPRESSION_HINT;
+      s.avail_out = next_size - size;
     }
     return Z_NO_FLUSH;
   };

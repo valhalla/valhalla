@@ -4,6 +4,7 @@
 
    * FIXED: Turkish (tr-TR) narrative grammar [#6444](https://github.com/valhalla/valhalla/pull/6444)
    * FIXED: raise MACOSX_DEPLOYMENT_TARGET to 15 for OSX python wheels [#6518](https://github.com/valhalla/valhalla/pull/6518)
+   * FIXED: stop inflating compressed tiles that exceed their declared size [#6521](https://github.com/valhalla/valhalla/pull/6521)
 * **Enhancement**
    * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
 
