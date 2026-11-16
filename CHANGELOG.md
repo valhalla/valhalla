@@ -6,6 +6,7 @@
    * FIXED: raise MACOSX_DEPLOYMENT_TARGET to 15 for OSX python wheels [#6518](https://github.com/valhalla/valhalla/pull/6518)
 * **Enhancement**
    * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
+   * CHANGED: Multithreaded `GraphFilter` [#6374](https://github.com/valhalla/valhalla/pull/6374)
 
 ## Release Date: 2026-11-12 Valhalla 3.9.2
 * **Removed**
