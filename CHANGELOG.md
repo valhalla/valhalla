@@ -1,8 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+
    * FIXED: Turkish (tr-TR) narrative grammar [#6444](https://github.com/valhalla/valhalla/pull/6444)
+   * FIXED: raise MACOSX_DEPLOYMENT_TARGET to 15 for OSX python wheels [#6518](https://github.com/valhalla/valhalla/pull/6518)
 * **Enhancement**
+   * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
 
 ## Release Date: 2026-11-12 Valhalla 3.9.2
 * **Removed**
@@ -30,7 +33,6 @@
    * FIXED: `ignore_oneways` is respected by reverse unidir A* (`arrive_by`), isochrones, bidirectional A* and CostMatrix, and allowed `linear_cost_factors` in reverse unidir A* [#6484](https://github.com/valhalla/valhalla/pull/6484)
    * FIXED: isochrone GeoTIFF tiepoint was one row too far north [#6516](https://github.com/valhalla/valhalla/pull/6516)
 * **Enhancement**
-   * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
    * ADDED: `stop_impact` in `trace_attributes` [#6368](https://github.com/valhalla/valhalla/pull/6368)
