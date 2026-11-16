@@ -91,18 +91,19 @@ public:
   }
 
   /**
-   * Overrides the configured settings of the search for alternatives.
+   * Overrides the configured settings of the search for alternates.
+   *
    * @param threshold_delta               seconds to extend the search after the first connection
    * @param alternative_cost_extend       relative cost extension to find alternatives
    * @param alternative_iterations_delta  maximum additional iterations after the first connection
    * @param at_most_longer                stretch threshold for alternatives, 0 for the default
    * @param at_most_shared                sharing threshold for alternatives, 0 for the default
    */
-  void SetAlternativeSettings(float threshold_delta,
-                              float alternative_cost_extend,
-                              uint32_t alternative_iterations_delta,
-                              float at_most_longer,
-                              float at_most_shared) {
+  void SetAlternateSettings(float threshold_delta,
+                            float alternative_cost_extend,
+                            uint32_t alternative_iterations_delta,
+                            float at_most_longer,
+                            float at_most_shared) {
     threshold_delta_ = threshold_delta;
     alternative_cost_extend_ = alternative_cost_extend;
     alternative_iterations_delta_ = alternative_iterations_delta;

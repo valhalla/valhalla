@@ -31,7 +31,7 @@ constexpr size_t kMaxAttempts = 30;
 
 // the search for alternatives of the middle leg, which offer more round trip lengths
 // per pair of turning points. A stretch or sharing threshold of 0 uses the A*'s defaults.
-constexpr uint32_t kMiddleAlternates = 8;
+constexpr uint32_t kMiddleAlternates = 12;
 constexpr float kThresholdDelta = 420.f;
 constexpr float kAlternativeCostExtend = 1.5f;
 constexpr uint32_t kAlternativeIterationsDelta = 200000;
@@ -41,11 +41,11 @@ constexpr float kAtMostShared = 0.f;
 // cost factor for the middle leg on the edges of the first and the last leg, in either direction
 constexpr double kUsedEdgeFactor = 60.;
 
-// near the start the last leg can't avoid the first one, so the first leg isn't penalized for this
-// fraction of the round trip, within bounds
-constexpr double kFreeStartFraction = 0.05;
+// near the start overlap between the out and back legs is allowed
+// the first/last 7% of the desired distance, within 300m and 4km
+constexpr double kFreeStartFraction = 0.07;
 constexpr double kMinFreeStartLength = 300.;
-constexpr double kMaxFreeStartLength = 2000.;
+constexpr double kMaxFreeStartLength = 4000.;
 
 // cost factor on the edges at the junctions of earlier legs, but only for this distance next to the
 // junction, so that crossing an earlier leg costs about the same wherever it happens
@@ -241,6 +241,7 @@ void thor_worker_t::round_trip(Api& request) {
   back_tree_.Run(ExpansionType::reverse, *locations, *reader, mode_costing, mode,
                  kMinLegFraction * desired_distance, kMaxLegFraction * desired_distance,
                  heading + kHeadingTolerance / 2., kHeadingTolerance / 2.);
+
   const auto out_candidates = out_tree_.Candidates();
   const auto back_candidates = back_tree_.Candidates();
 
@@ -251,7 +252,8 @@ void thor_worker_t::round_trip(Api& request) {
     for (size_t j = 0; j < back_candidates.size(); ++j) {
       const auto& a = out_candidates[i];
       const auto& b = back_candidates[j];
-      // the middle leg is expected to detour from its beeline as much as the paths to a and b do
+      // estimate how much the middle leg will deviate from the beeline based on the deviation on the
+      // out and back legs
       const double beelines = start_ll.Distance(a.ll) + start_ll.Distance(b.ll);
       const double detour = beelines > 0. ? (a.distance + b.distance) / beelines : 1.;
       const double expected = a.distance + detour * a.ll.Distance(b.ll) + b.distance;
@@ -262,8 +264,8 @@ void thor_worker_t::round_trip(Api& request) {
     return x.expected_error < y.expected_error;
   });
 
-  leg_astar_.SetAlternativeSettings(kThresholdDelta, kAlternativeCostExtend,
-                                    kAlternativeIterationsDelta, kAtMostLonger, kAtMostShared);
+  leg_astar_.SetAlternateSettings(kThresholdDelta, kAlternativeCostExtend,
+                                  kAlternativeIterationsDelta, kAtMostLonger, kAtMostShared);
   Options middle_options = options;
   middle_options.set_alternates(kMiddleAlternates);
   Options last_options = options;
