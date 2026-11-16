@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Turkish (tr-TR) narrative grammar [#6444](https://github.com/valhalla/valhalla/pull/6444)
 * **Enhancement**
    * CHANGED: Multithreaded `GraphFilter` [#6374](https://github.com/valhalla/valhalla/pull/6374)
 
