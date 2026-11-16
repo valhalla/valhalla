@@ -117,6 +117,8 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
     {"uk-UA", "Поверніть праворуч на Main Street."},
     {"vi", "Rẽ phải vào Main Street."},
     {"vi-VN", "Rẽ phải vào Main Street."},
+    {"zh", "右转进入Main Street。"},
+    {"zh-CN", "右转进入Main Street。"},
 };
 
 ///////////////////////////////////////////////////////////////////////////////
