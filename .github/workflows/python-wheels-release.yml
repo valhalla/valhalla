@@ -241,7 +241,7 @@ jobs:
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
             # try to use the existing build folder
             PIP_NO_BUILD_ISOLATION="1"
-          MACOSX_DEPLOYMENT_TARGET: 14
+          MACOSX_DEPLOYMENT_TARGET: 15
         # represents the minimum python version we release for
           CIBW_BUILD: cp312-*
 
