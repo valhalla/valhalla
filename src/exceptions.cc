@@ -87,6 +87,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {175, {175, "Exceeded max zoom level of", 400, HTTP_400, OSRM_INVALID_VALUE, "tile_zoom_invalid"}},
     {176, {176, "Exceeded maximum number of vertices for exclude_polygons", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_large_polygon"}},
     {177, {177, "Polygon crosses antimeridian", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "polygon_parse_failed"}},
+    {178, {178, "Insufficiently specified parameter round trip distance", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_round_trip_distance"}},
     {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -160,6 +161,9 @@ const std::unordered_map<int, std::string> warning_codes = {
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
   {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
+  {304, R"(round trip distance exceeds maximum allowed value, clamping to )"},
+  {305, R"(round trip heading tolerance outside valid range )"},
+  {307, R"(round trip distance tolerance outside valid range )"},
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
   {401, R"(Routing failed on first pass, retrying with relaxed restrictions)"},

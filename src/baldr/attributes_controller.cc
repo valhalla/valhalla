@@ -130,6 +130,7 @@ const std::unordered_map<std::string_view, bool> AttributesController::kDefaultA
     {kEdgeShortcut, false},
     {kEdgeLeavesTile, false},
     {kEdgeCurvature, false},
+    {kEdgeCustomAttribute, false},
 
     // Mostly MVT relevant
     {kEdgeSpeedFwd, false},

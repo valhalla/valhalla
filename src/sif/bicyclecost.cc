@@ -648,7 +648,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const baldr::GraphId& edgeid,
-                           const graph_tile_ptr&,
+                           const graph_tile_ptr& tile,
                            const baldr::TimeInfo&,
                            uint8_t&) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
@@ -722,8 +722,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Create an edge factor based on total stress (sum of accommodation factor and roadway
   // stress) and the weighted grade penalty for the edge.
-  float factor =
-      1.0f + grade_penalty[edge->weighted_grade()] + (accommodation_factor * roadway_stress);
+  float factor = 1.0f + grade_penalty[edge->weighted_grade()] +
+                 (accommodation_factor * roadway_stress) + CustomAttributesFactor(tile, edgeid);
 
   // If surface is worse than the minimum we add a surface factor
   if (edge->surface() >= minimal_surface_penalized_) {

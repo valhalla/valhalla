@@ -10,6 +10,10 @@
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
@@ -528,7 +532,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-            edge->toll() * toll_factor_;
+            edge->toll() * toll_factor_ + CustomAttributesFactor(tile, edgeid);
 
   switch (edge->use()) {
     case Use::kAlley:

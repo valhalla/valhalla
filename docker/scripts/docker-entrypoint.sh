@@ -21,8 +21,65 @@ do_build_tar() {
       options="${options} --overwrite"
     fi 
     valhalla_build_extract ${options} || exit 1
+    tile_tar_rebuilt="True"
   fi
 }
+
+# the extract is indexed by edge position, so it's stale whenever the tile tar was rebuilt
+do_build_custom_attributes() {
+  if [[ "${build_custom_attributes}" != "True" && "${build_custom_attributes}" != "Force" ]]; then
+    return
+  fi
+  if [[ "${build_custom_attributes}" == "True" && -f "${CUSTOM_ATTRIBUTES_TAR}" && "${tile_tar_rebuilt}" == "False" ]]; then
+    echo "INFO: Found ${CUSTOM_ATTRIBUTES_TAR}, skipping custom attributes extract."
+    return
+  fi
+  if ! [[ -f "${TILE_TAR}" ]]; then
+    echo "WARNING: Custom attributes extract requested, but no tile tar found at ${TILE_TAR}, skipping."
+    return
+  fi
+  if [[ -z "${custom_attributes_defs}" ]]; then
+    echo "ERROR: build_custom_attributes is ${build_custom_attributes}, but custom_attributes_defs is empty."
+    exit 1
+  fi
+  echo ""
+  echo "======================================"
+  echo "= Building custom attributes extract ="
+  echo "======================================"
+  echo ""
+  valhalla_build_custom_attributes_extract -c "${CONFIG_FILE}" \
+    --attribute-defs "${custom_attributes_defs}" \
+    --default-values "${custom_attributes_default_values}" || exit 1
+
+  if [[ -z "${custom_attributes_lua}" ]]; then
+    return
+  fi
+  if ! [[ -f "${CUSTOM_ATTRIBUTES_LUA}" ]]; then
+    echo "WARNING: custom_attributes_lua is set, but ${CUSTOM_ATTRIBUTES_LUA} doesn't exist, keeping default values."
+    return
+  fi
+  if [[ -z "${custom_attributes_tag_keys}" ]]; then
+    echo "ERROR: custom_attributes_lua is set, but custom_attributes_tag_keys is empty."
+    exit 1
+  fi
+  local pbf_files
+  pbf_files=$(find_pbf_files | xargs)
+  if [[ -z "${pbf_files}" ]]; then
+    echo "WARNING: No PBF files found in ${CUSTOM_FILES}, keeping default custom attribute values."
+    return
+  fi
+  echo ""
+  echo "====================================="
+  echo "= Adding custom attributes from OSM ="
+  echo "====================================="
+  echo ""
+  valhalla_add_custom_attributes -c "${CONFIG_FILE}" \
+    --tag-keys "${custom_attributes_tag_keys}" \
+    --lua "${CUSTOM_ATTRIBUTES_LUA}" \
+    ${pbf_files} || exit 1
+}
+
+tile_tar_rebuilt="False"
 
 export server_threads=${server_threads:-$(nproc)}
 if [[ "$force_rebuild" == "True" ]]; then
@@ -39,6 +96,7 @@ if [[ $1 == "build_tiles" ]]; then
   else
     echo "WARNING: Skipping tar building. Expect degraded performance while using Valhalla."
   fi
+  do_build_custom_attributes
 
   # set 775/664 permissions on all created files
   find "${CUSTOM_FILES}" -type d -exec chmod 775 {} \;
@@ -59,6 +117,7 @@ if [[ $1 == "build_tiles" ]]; then
   fi
 elif [[ $1 == "tar_tiles" ]]; then
   do_build_tar "$build_tar"
+  do_build_custom_attributes
 else
   echo "ERROR: Unrecognized CMD: '$1'"
   exit 1

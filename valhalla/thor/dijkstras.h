@@ -171,6 +171,9 @@ protected:
   // separately from the other paths
   bool multipath_;
 
+  bool use_hierarchy_limits_ = false;
+  std::vector<HierarchyLimits> hierarchy_limits_;
+
   // TODO: add an interrupt here so that the caller can abort the main loop externally
 
   /**

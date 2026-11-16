@@ -119,6 +119,8 @@ constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPe
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
 
+constexpr ranged_default_t<float> kCustomAttributeWeightRange{-1.0f, 0.0f, 1.0f};
+
 // Default dimension
 constexpr float kDefaultHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultWidth = 1.9f;  // Meters (74.8031 inches)
@@ -159,7 +161,8 @@ double custom_cost_t::sort_and_find_smallest() {
 BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
-      alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
+      uturn_penalty_{0.f, kTCUnfavorableUturn, kMaxPenalty}, alley_penalty_{0.f, kDefaultAlleyPenalty,
+                                                                            kMaxPenalty},
       gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
                                                                     kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
@@ -226,7 +229,23 @@ DynamicCost::DynamicCost(const Costing& costing,
     }
   }
 
+  // costings built without parsing (e.g. in tests) have no value set
+  uturn_penalty_ = costing.options().has_uturn_penalty_case() ? costing.options().uturn_penalty()
+                                                              : kTCUnfavorableUturn;
+
   SetCostFactorEdges(costing.options());
+
+  const auto& weights = costing.options().use_custom_attributes();
+  for (const auto& def : costing.custom_attribute_defs()) {
+    custom_attribute_defs_.push_back(
+        {def.name(), static_cast<baldr::CustomAttributeType>(def.type()), def.scale(), def.offset()});
+    const auto it = weights.find(def.name());
+    if (it != weights.end() && it->second != 0.0f) {
+      custom_attribute_weights_.push_back({def.offset(),
+                                           static_cast<baldr::CustomAttributeType>(def.type()),
+                                           it->second * def.scale()});
+    }
+  }
 }
 
 DynamicCost::~DynamicCost() {
@@ -537,6 +556,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.maneuver_penalty_, json, "/maneuver_penalty", maneuver_penalty,
                           warnings);
 
+  // uturn_penalty
+  JSON_PBF_RANGED_DEFAULT(co, cfg.uturn_penalty_, json, "/uturn_penalty", uturn_penalty, warnings);
+
   // alley_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.alley_penalty_, json, "/alley_penalty", alley_penalty, warnings);
 
@@ -637,6 +659,29 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.width_, json, "/width", width, warnings);
   JSON_PBF_RANGED_DEFAULT(co, cfg.length_, json, "/length", length, warnings);
   JSON_PBF_RANGED_DEFAULT(co, cfg.weight_, json, "/weight", weight, warnings);
+
+  // use_custom_attributes: {"attr_name": weight, ...}, json entries override pbf ones
+  auto* weights = co->mutable_use_custom_attributes();
+  if (const auto attrs = rapidjson::get_child_optional(json, "/use_custom_attributes")) {
+    if (attrs->IsObject()) {
+      for (auto it = attrs->MemberBegin(); it != attrs->MemberEnd(); ++it) {
+        if (it->name.IsString() && it->value.IsNumber()) {
+          (*weights)[it->name.GetString()] = it->value.GetFloat();
+        }
+      }
+    }
+  }
+
+  for (auto& entry : *weights) {
+    bool clamped = false;
+    entry.second = kCustomAttributeWeightRange(entry.second, clamped);
+    if (clamped) {
+      auto* warning = warnings.Add();
+      warning->set_description("'/use_custom_attributes/" + entry.first + "' has been clamped to " +
+                               std::to_string(kCustomAttributeWeightRange.def));
+      warning->set_code(500);
+    }
+  }
 }
 
 void ParseCosting(const rapidjson::Document& doc,

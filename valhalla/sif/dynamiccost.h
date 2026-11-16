@@ -24,7 +24,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro
 
@@ -1008,7 +1010,7 @@ public:
         seconds += kTCNameInconsistentUturn;
       } else if (has_reverse ||
                  (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left)) {
-        seconds += kTCUnfavorableUturn;
+        seconds += uturn_penalty_;
         // Did we make a pencil point uturn?
       } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
                  !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
@@ -1019,7 +1021,7 @@ public:
         seconds += kTCNameInconsistentUturn;
       } else if (has_reverse || (penalize_internal_uturns &&
                                  internal_turn == InternalTurn::kRightTurn && has_right)) {
-        seconds += kTCUnfavorableUturn;
+        seconds += uturn_penalty_;
         // Did we make a pencil point uturn?
       } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
                  edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
@@ -1378,6 +1380,20 @@ protected:
   }
 
   /**
+   * Returns the weighted sum of the edge's custom attributes to add to the edge factor, or 0 if
+   * the request weights none of them or the tile has no custom attributes.
+   */
+  float CustomAttributesFactor(const baldr::graph_tile_ptr& tile,
+                               const baldr::GraphId& edgeid) const {
+    if (custom_attribute_weights_.empty()) {
+      return 0.f;
+    }
+    const auto* custom_attributes = tile->custom_attributes_tile();
+    return custom_attributes ? custom_attributes->weighted_sum(edgeid.id(), custom_attribute_weights_)
+                             : 0.f;
+  }
+
+  /**
    * Calculate `track` costs based on tracks preference.
    * @param use_tracks value of tracks preference in range [0; 1]
    */
@@ -1440,6 +1456,7 @@ protected:
   uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
   float suburban_curvature_factor_;
   float urban_curvature_factor_;
+  float uturn_penalty_; // Seconds added for a u-turn.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1519,6 +1536,17 @@ protected:
   double min_linear_cost_factor_;
   bool has_allowed_linear_edges_{false};
 
+  // Custom attribute definitions. Order is the tiles' column order.
+  std::vector<baldr::CustomAttributeDef> custom_attribute_defs_;
+  // Columns with a non-zero request weight, the weight multiplied by the column's scale
+  std::vector<baldr::WeightedCustomAttribute> custom_attribute_weights_;
+
+public:
+  const std::vector<baldr::CustomAttributeDef>& custom_attribute_defs() const {
+    return custom_attribute_defs_;
+  }
+
+protected:
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1703,6 +1731,7 @@ struct BaseCostingOptionsConfig {
 
   ranged_default_t<float> dest_only_penalty_;
   ranged_default_t<float> maneuver_penalty_;
+  ranged_default_t<float> uturn_penalty_;
   ranged_default_t<float> alley_penalty_;
   ranged_default_t<float> gate_cost_;
   ranged_default_t<float> gate_penalty_;

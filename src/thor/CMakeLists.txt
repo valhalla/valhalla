@@ -25,6 +25,7 @@ set(sources
   status_action.cc
   trace_attributes_action.cc
   trace_route_action.cc
+  round_trip_action.cc
   triplegbuilder_utils.h)
 
 set(system_includes

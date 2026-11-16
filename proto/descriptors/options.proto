@@ -364,12 +364,18 @@ message Costing {
     oneof has_low_class_factor {
       float low_class_factor = 97;
     }
+
+    map<string, float> use_custom_attributes = 98; // Per-attribute weights keyed by attribute name, default empty (disabled)
     oneof has_steps_factor {
       float steps_factor = 99;
     }
 
     oneof has_use_curvature {
       float use_curvature = 100;
+    }
+
+    oneof has_uturn_penalty {
+      float uturn_penalty = 101;
     }
   }
 
@@ -385,6 +391,17 @@ message Costing {
   oneof has_filter_closures {
     bool filter_closures = 4;
   }
+
+  // for internal use only: attributes.json of the custom attributes extract, in column order.
+  // populated during request parsing so the costing can map request keys to
+  // custom attributes' columns. Setting this in a request has no effect.
+  message CustomAttributeDef {
+    string name = 1;
+    uint32 type = 2; // baldr::CustomAttributeType
+    float scale = 3;
+    uint32 offset = 4; // in bits
+  }
+  repeated CustomAttributeDef custom_attribute_defs = 5;
 }
 
 message LinearFeatureCost {
@@ -427,6 +444,7 @@ message Options {
     centroid = 11;
     status = 12;
     tile = 13;
+    round_trip = 14;
   }
 
   enum DateTimeType {
@@ -563,4 +581,22 @@ message Options {
   TileOptions tile_options = 64;                                   // additional /tile specific options
   repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
   uint32 expansion_max_distance = 66;                              // Maximum path distance in meters for expansion. 0 = disabled.
+
+  message RoundTripOptions {
+    oneof has_heading {
+      double heading = 1;
+    }
+
+    oneof has_heading_tolerance {
+      double heading_tolerance = 2;
+    }
+
+    double distance = 3;  // desired round trip distance in meters
+
+    oneof has_distance_tolerance {
+      double distance_tolerance = 7;  // accepted relative deviation from distance, larger is faster
+    }
+  }
+
+  RoundTripOptions round_trip_options = 67;
 }

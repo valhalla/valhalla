@@ -32,6 +32,7 @@ set(sources
   complexrestrictionbuilder.cc
   convert_transit.cc
   countryaccess.cc
+  custom_attributes_builder.cc
   dataquality.cc
   directededgebuilder.cc
   edgeinfobuilder.cc

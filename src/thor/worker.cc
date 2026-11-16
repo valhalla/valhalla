@@ -65,11 +65,15 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       timedep_reverse(config.get_child("thor")), costmatrix_(config.get_child("thor")),
       time_distance_matrix_(config.get_child("thor")),
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
+      out_tree_(config.get_child("thor")), back_tree_(config.get_child("thor")),
+      leg_astar_(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
       matcher_factory(config, reader), controller{},
       allow_hierarchy_limits_modifications(
           config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)) {
+  // the round trip legs penalize single edges, which a shortcut would hide
+  leg_astar_.SetAllowShortcuts(false);
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -177,6 +181,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
       }
       case Options::status: {
         status(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
+        break;
+      }
+      case Options::round_trip: {
+        round_trip(request);
         result.messages.emplace_back(serialize_to_pbf(request));
         break;
       }
@@ -359,6 +368,9 @@ void thor_worker_t::cleanup() {
   time_distance_matrix_.Clear();
   time_distance_bss_matrix_.Clear();
   isochrone_gen.Clear();
+  out_tree_.Clear();
+  back_tree_.Clear();
+  leg_astar_.Clear();
   centroid_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {

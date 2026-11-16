@@ -67,15 +67,17 @@ bool is_format_supported(Options::Action action, Options::Format format) {
       // json
       0xFFFF, // all actions support json
       // gpx
-      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route),
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::round_trip),
       // osrm
       (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
           (1 << Options::trace_attributes) | (1 << Options::locate) | (1 << Options::status) |
-          (1 << Options::sources_to_targets) | (1 << Options::expansion),
+          (1 << Options::sources_to_targets) | (1 << Options::expansion) | (1 << Options::round_trip),
       // pbf
       (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
           (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
-          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
+          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion) |
+          (1 << Options::round_trip),
   // geotiff
 #ifdef ENABLE_GEOTIFF
       (1 << Options::isochrone),
@@ -1347,6 +1349,41 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get<bool>(doc, "/roundabout_exits",
                            options.has_roundabout_exits_case() ? options.roundabout_exits() : true);
   options.set_roundabout_exits(roundabout_exits);
+
+  // round trip options
+  if (action == Options::round_trip) {
+    options.mutable_round_trip_options()->set_distance(
+        rapidjson::get<double>(doc, "/round_trip_options/distance", 0.0));
+
+    auto heading = rapidjson::get_optional<double>(doc, "/round_trip_options/heading");
+    if (heading) {
+      options.mutable_round_trip_options()->set_heading(*heading);
+    }
+
+    auto heading_tolerance =
+        rapidjson::get_optional<double>(doc, "/round_trip_options/heading_tolerance");
+    if (heading_tolerance) {
+      options.mutable_round_trip_options()->set_heading_tolerance(*heading_tolerance);
+    }
+
+    auto distance_tolerance =
+        rapidjson::get_optional<double>(doc, "/round_trip_options/distance_tolerance");
+    if (distance_tolerance) {
+      options.mutable_round_trip_options()->set_distance_tolerance(*distance_tolerance);
+    }
+
+    // a round trip shouldn't turn around halfway, so u-turns cost an hour unless the user says
+    // otherwise
+    constexpr float kRoundTripUturnPenalty = 3600.f;
+    const auto costing_name = Costing_Enum_Name(options.costing_type());
+    if (!rapidjson::get_optional<float>(doc, ("/costing_options/" + costing_name + "/uturn_penalty")
+                                                 .c_str())) {
+      auto costing = options.mutable_costings()->find(options.costing_type());
+      if (costing != options.mutable_costings()->end()) {
+        costing->second.mutable_options()->set_uturn_penalty(kRoundTripUturnPenalty);
+      }
+    }
+  }
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);

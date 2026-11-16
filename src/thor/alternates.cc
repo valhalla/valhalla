@@ -67,10 +67,12 @@ double get_at_most_longer(double optimal_cost) {
 // Bounded stretch. We use cost as an approximation for stretch, to filter out
 // candidate connections that are much more costly than the optimal cost. Culls
 // the list of connections to only those within the stretch tolerance
-void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections) {
+void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections,
+                                  float at_most_longer) {
   std::sort(connections.begin(), connections.end());
-  const float at_most_longer = get_at_most_longer(connections.front().cost);
-  auto max_cost = connections.front().cost * at_most_longer;
+  const float stretch =
+      at_most_longer > 0.f ? at_most_longer : get_at_most_longer(connections.front().cost);
+  auto max_cost = connections.front().cost * stretch;
   auto new_end = std::lower_bound(connections.begin(), connections.end(), max_cost);
   connections.erase(new_end, connections.end());
 }
