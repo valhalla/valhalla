@@ -33,6 +33,19 @@ void parse_round_trip_options(Api& request, double max_distance) {
     options->set_heading(wrapped < 0.0 ? wrapped + 360.0 : wrapped);
   }
 
+  constexpr double kMinHeadingTolerance = 10.;
+  constexpr double kMaxHeadingTolerance = 180.;
+
+  if (!options->has_heading_tolerance()) {
+    options->set_heading_tolerance(45.0);
+  } else if (options->heading_tolerance() < kMinHeadingTolerance ||
+             options->heading_tolerance() > kMaxHeadingTolerance) {
+    options->set_heading_tolerance(
+        std::clamp(options->heading_tolerance(), kMinHeadingTolerance, kMaxHeadingTolerance));
+    add_warning(request, 305,
+                std::format("[{:.1f},{:.1f}]", kMinHeadingTolerance, kMaxHeadingTolerance));
+  }
+
   constexpr double kDefaultDistanceTolerance = 0.1;
   constexpr double kMinDistanceTolerance = 0.02;
   constexpr double kMaxDistanceTolerance = 0.5;

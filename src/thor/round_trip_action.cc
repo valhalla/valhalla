@@ -23,9 +23,6 @@ namespace {
 constexpr double kMinLegFraction = 0.2;
 constexpr double kMaxLegFraction = 0.6;
 
-// the width in degrees of the sector around the heading that the turning points are searched in
-constexpr double kHeadingTolerance = 45.;
-
 // how many pairs of turning points get routed before giving up
 constexpr size_t kMaxAttempts = 30;
 
@@ -230,6 +227,7 @@ void thor_worker_t::round_trip(Api& request) {
   const auto& round_trip_options = options.round_trip_options();
   const double desired_distance = round_trip_options.distance();
   const double heading = round_trip_options.heading();
+  const double heading_tolerance = round_trip_options.heading_tolerance();
   const double free_start_length =
       std::clamp(kFreeStartFraction * desired_distance, kMinFreeStartLength, kMaxFreeStartLength);
 
@@ -237,10 +235,10 @@ void thor_worker_t::round_trip(Api& request) {
   // second one in the clockwise half, so the round trip runs clockwise
   out_tree_.Run(ExpansionType::forward, *locations, *reader, mode_costing, mode,
                 kMinLegFraction * desired_distance, kMaxLegFraction * desired_distance,
-                heading - kHeadingTolerance / 2., kHeadingTolerance / 2.);
+                heading - heading_tolerance / 2., heading_tolerance / 2.);
   back_tree_.Run(ExpansionType::reverse, *locations, *reader, mode_costing, mode,
                  kMinLegFraction * desired_distance, kMaxLegFraction * desired_distance,
-                 heading + kHeadingTolerance / 2., kHeadingTolerance / 2.);
+                 heading + heading_tolerance / 2., heading_tolerance / 2.);
 
   const auto out_candidates = out_tree_.Candidates();
   const auto back_candidates = back_tree_.Candidates();
