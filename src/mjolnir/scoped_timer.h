@@ -19,10 +19,10 @@ namespace mjolnir {
         auto _scoped_timer_duration = std::chrono::duration_cast<std::chrono::seconds>(              \
                                           _scoped_timer_end - _scoped_timer_start_##__COUNTER__)     \
                                           .count();                                                  \
-        std::string file_path = __FILE__;                                                            \
+        std::string relative_file_path = __FILE__;                                                   \
         std::string valhalla_dir_str = VALHALLA_STRINGIZE(VALHALLA_SOURCE_DIR);                      \
-        size_t len = valhalla_dir_str.length();                                                      \
-        std::string relative_file_path = file_path.substr(len + 1);                                  \
+        if (relative_file_path.starts_with(valhalla_dir_str))                                        \
+          relative_file_path = relative_file_path.substr(valhalla_dir_str.size() + 1);               \
         valhalla::midgard::logging::Log(std::string(relative_file_path) +                            \
                                             "::" + std::string(func_name) + " took " +               \
                                             std::to_string(_scoped_timer_duration) + "s",            \

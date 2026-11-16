@@ -1066,7 +1066,7 @@ TEST_F(DateTimeTest, DepartAt) {
     auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "B"}, "auto",
                                 {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
-    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:21");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:20");
     EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
     EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+01:00");
   }
@@ -1102,7 +1102,7 @@ TEST_F(DateTimeTest, ArriveBy) {
     // one time zone crossing
     auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G"}, "auto",
                                 {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
-    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:37");
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:36");
     EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
     EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
     EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
@@ -1120,9 +1120,9 @@ TEST_F(DateTimeTest, ArriveBy) {
     // two time zone crossings
     auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G", "H", "B"}, "auto",
                                 {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
-    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T07:53");
-    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T07:16");
-    EXPECT_EQ(api.options().locations(2).date_time(), "2020-10-30T07:37");
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T07:50");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T07:14");
+    EXPECT_EQ(api.options().locations(2).date_time(), "2020-10-30T07:36");
     EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T09:00");
     EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
     EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");

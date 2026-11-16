@@ -183,7 +183,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // TODO(derolf): what about FORWARD=true?
   if (!FORWARD) {
     // Skip this edge if no access possible
-    if (!(meta.edge->reverseaccess() & access_mode_)) {
+    if (!costing_->MayAccess(meta.edge, false, access_mode_)) {
       return false;
     }
   }
@@ -237,19 +237,19 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     bool edge_destonly = false;
     if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+      if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.unix_time,
                              nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
                              &edge_destonly) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                               time_info.local_time, nodeinfo->timezone())) {
+                               time_info.unix_time, nodeinfo->timezone())) {
         return false;
       }
     } else {
       if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                    time_info.local_time, nodeinfo->timezone(), restriction_idx,
+                                    time_info.unix_time, nodeinfo->timezone(), restriction_idx,
                                     destonly_restriction_mask, &edge_destonly) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
-                               time_info.local_time, nodeinfo->timezone())) {
+                               time_info.unix_time, nodeinfo->timezone())) {
         return false;
       }
     }
@@ -343,19 +343,19 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
       bool edge_destonly = false;
       if (FORWARD) {
-        if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+        if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.unix_time,
                                nodeinfo->timezone(), restriction_idx, destonly_restriction_mask,
                                &edge_destonly) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                                 time_info.local_time, nodeinfo->timezone())) {
+                                 time_info.unix_time, nodeinfo->timezone())) {
           return false;
         }
       } else {
         if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                      time_info.local_time, nodeinfo->timezone(), restriction_idx,
+                                      time_info.unix_time, nodeinfo->timezone(), restriction_idx,
                                       destonly_restriction_mask, &edge_destonly) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false,
-                                 &edgestatus_, time_info.local_time, nodeinfo->timezone())) {
+                                 &edgestatus_, time_info.unix_time, nodeinfo->timezone())) {
           return false;
         }
       }
@@ -822,7 +822,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       bool edge_destonly = false;
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid,
-                                                  time_info.valid ? time_info.local_time : 0,
+                                                  time_info.valid ? time_info.unix_time : 0,
                                                   time_info.timezone_index, &edge_destonly);
 
       if (FORWARD) {

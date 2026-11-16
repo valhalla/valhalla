@@ -66,23 +66,26 @@ void add_shortcut(GraphReader& reader,
 namespace valhalla {
 namespace loki {
 
-void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
-                           const sif::TravelMode& mode,
-                           GraphReader& reader,
-                           valhalla::Options& options,
-                           double min_allowed_factor,
-                           uint64_t max_allowed_edges) {
+std::vector<size_t> add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
+                                          const sif::TravelMode& mode,
+                                          GraphReader& reader,
+                                          valhalla::Options& options,
+                                          double min_allowed_factor,
+                                          uint64_t max_allowed_edges) {
   Costing_Options* costing_options =
       options.mutable_costings()->find(options.costing_type())->second.mutable_options();
 
   // keep track of how many edges we're adding
   uint64_t edge_count = 0;
+  std::vector<size_t> failed_lines;
 
-  for (auto& line : *options.mutable_cost_factor_lines()) {
+  for (int line_idx = 0; line_idx < options.cost_factor_lines_size(); ++line_idx) {
+    auto& line = *options.mutable_cost_factor_lines(line_idx);
     std::vector<std::vector<PathInfo>> legs;
     if (!RouteMatcher::FormPath(mode_costing, mode, reader, line, false, /* use_shortcuts=*/true,
                                 legs)) {
-      throw valhalla_exception_t{233};
+      failed_lines.push_back(line_idx);
+      continue;
     }
     for (const auto& leg : legs) {
       for (size_t i = 0; i < leg.size(); ++i) {
@@ -174,6 +177,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& mode_costing,
       }
     }
   }
+  return failed_lines;
 }
 
 } // namespace loki

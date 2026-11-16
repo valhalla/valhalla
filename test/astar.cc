@@ -1939,7 +1939,10 @@ public:
     return 0.1f;
   }
 
-  bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr&, uint16_t) const override {
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr&,
+               const baldr::GraphId&,
+               uint16_t) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));

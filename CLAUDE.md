@@ -175,6 +175,7 @@ This is the most important navigation aid. Large files like `pbfgraphparser.cc` 
 | Map matching (Meili) data flow | `src/meili/map_matcher.cc` (`OfflineMatch`) → `src/meili/match_route.cc` (`ConstructRoute`) → `src/thor/map_matcher.cc` (`FormPath`) → `src/thor/trace_route_action.cc` (`build_trace`) → `src/thor/triplegbuilder.cc` (`TripLegBuilder::Build`). Candidates: `src/meili/candidate_search.cc`. Viterbi: `src/meili/viterbi_search.cc` |
 | Behavior affected by `include_pedestrian`/`bicycle`/`driving: false` | `src/mjolnir/graphfilter.cc` (`FilterTiles`, `AggregateTiles`). Filtering happens AFTER parsing — shared nodes between filtered ways create intersections that split edges during parsing. After filtering removes those edges, aggregation merges nodes that have only 2 remaining edges back together, which can change edge topology. Check `ExpandFromNodeInner` for the aggregation walk |
 | Anything in `src/bindings/python/...` — adding/modifying a `.def(...)` call, debugging pyvalhalla install/wheel issues, `.pyi` stub generation | [src/bindings/python/CLAUDE.md](src/bindings/python/CLAUDE.md) |
+| Anything in `src/bindings/rust/...` — cxx bridges, `build.rs`, the `valhalla` crate | Run `cargo` from the repo root, the manifest is the root `Cargo.toml`. `build.rs` builds libvalhalla via CMake but doesn't re-run it for `third_party/` changes (`cargo clean` after a submodule bump), and generates `ConfigBuilder` from the dicts in `scripts/valhalla_build_config`. The bridges use C++ members by name, so renaming e.g. `DirectedEdge` methods breaks the Rust build |
 
 ## Performance at Planet Scale
 
@@ -208,7 +209,7 @@ Edges touched per route — shows why per-edge overhead matters:
 
 **Gurka integration tests** (`test/gurka/test_*.cc`) — target `gurka_<name>`. Build ASCII road maps → generate tiles → run full API → verify. Use for testing routing behavior, access restrictions, turn restrictions, costing, maneuvers — anything requiring multiple modules. See `docs/docs/contributing/gurka.md` for the full framework reference including map construction, relations, assertions, and debugging with GeoJSON. `run-gurka` target runs all of them. 
 
-**Bindings tests** (`test/bindings/python/`, `test/bindings/nodejs/`) — targets `run-python_valhalla` and `run-nodejs_valhalla`. Exercise the Python / Node.js bindings against `libvalhalla`; only built when `ENABLE_PYTHON_BINDINGS` / `ENABLE_NODE_BINDINGS` are on (Node.js also needs a `node` binary).
+**Bindings tests** (`test/bindings/python/`, `test/bindings/nodejs/`) — targets `run-python_valhalla` and `run-nodejs_valhalla`. Exercise the Python / Node.js bindings against `libvalhalla`; only built when `ENABLE_PYTHON_BINDINGS` / `ENABLE_NODE_BINDINGS` are on (Node.js also needs a `node` binary). Rust bindings tests (`test/bindings/rust/`) run with `cargo test`, not `make check`, and need the `utrecht_tiles` target built in `build/`.
 
 **Python script tests** (`test/scripts/test_*.py`) — target `run-scripts`. Test the `valhalla_build_*` helper scripts (config, extract, elevation). Some need system deps not in the build (e.g. `shapely`) and fail if those aren't installed.
 
@@ -347,7 +348,7 @@ All accept JSON via POST. Protobuf definitions in `proto/` — root message `Api
 ```
 valhalla/          # Public headers (valhalla/<module>/*.h)
 src/               # Implementations + CLI tools (valhalla_*.cc)
-  bindings/        # Python (nanobind) and Node.js bindings
+  bindings/        # Python (nanobind), Node.js and Rust (cxx) bindings
 proto/             # Protobuf definitions (*.proto)
 test/              # Unit tests + test helpers (test.h/test.cc)
   gurka/           # Integration test framework (~136 tests)
