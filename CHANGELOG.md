@@ -1,6 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2026-11-16 Valhalla 3.9.3
+* **Removed**
+* **Bug Fix**
 
    * FIXED: Turkish (tr-TR) narrative grammar [#6444](https://github.com/valhalla/valhalla/pull/6444)
    * FIXED: raise MACOSX_DEPLOYMENT_TARGET to 15 for OSX python wheels [#6518](https://github.com/valhalla/valhalla/pull/6518)
