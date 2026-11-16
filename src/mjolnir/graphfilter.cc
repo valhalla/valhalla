@@ -399,11 +399,11 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
 
         // Add heading and traversability to temporary list so we can update nodeinfo headings to
         // account for removed edges.
-        if (j < kMaxLocalEdgeIndex) {
+        if (j <= kMaxLocalEdgeIndex) {
           headings.push_back(nodeinfo->heading(j));
           traversabilities.push_back(nodeinfo->local_driveability(j));
 
-        } else if (headings.size() < kMaxLocalEdgeIndex) {
+        } else if (headings.size() <= kMaxLocalEdgeIndex) {
           // Heading is not stored for the node. Compute it from the shape
           auto shape = tile->edgeinfo(directededge).shape();
           if (!directededge->forward()) {
