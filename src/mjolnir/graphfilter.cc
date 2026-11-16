@@ -489,13 +489,6 @@ void FilterTilesWorker(const boost::property_tree::ptree& pt,
         ++edge_count;
       }
 
-      // Mask bits past the edge count survive only at nodes without filtered edges
-      if (edge_filtered) {
-        for (uint32_t j = nodeinfo->edge_count(); j < new_local_indexes.size(); ++j) {
-          new_local_indexes[j] = kRemovedEdge;
-        }
-      }
-
       // Add the node to the tilebuilder unless no edges remain
       if (edge_count > 0) {
         // Add a node builder to the tile. Update the edge count and edgeindex
