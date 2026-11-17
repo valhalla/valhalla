@@ -13,7 +13,6 @@
 
 #include <chrono>
 #include <cmath>
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -72,9 +71,8 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
       // The first buffer holds only the header; read the tile size and grow exactly once.
       auto next_size = sizeof(GraphTileHeader);
       if (size == sizeof(GraphTileHeader)) {
-        GraphTileHeader header;
-        std::memcpy(&header, data.data(), sizeof(header));
-        const size_t tile_size = header.end_offset();
+        const auto* header = reinterpret_cast<const GraphTileHeader*>(data.data());
+        const size_t tile_size = header->end_offset();
         if (tile_size < sizeof(GraphTileHeader) || tile_size >= data.max_size())
           throw std::runtime_error("Invalid inflated tile size");
         // Allow one extra byte to detect oversized tiles.
