@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Turkish (tr-TR) narrative: remaining English phrases and grammar [#6525](https://github.com/valhalla/valhalla/pull/6525)
 * **Enhancement**
 
 ## Release Date: 2026-11-16 Valhalla 3.9.3
