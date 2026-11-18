@@ -183,7 +183,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // TODO(derolf): what about FORWARD=true?
   if (!FORWARD) {
     // Skip this edge if no access possible
-    if (!(meta.edge->reverseaccess() & access_mode_)) {
+    if (!costing_->MayAccess(meta.edge, false, access_mode_)) {
       return false;
     }
   }
