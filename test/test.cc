@@ -174,7 +174,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "transit_available",
           "expansion",
           "centroid",
-          "status"
+          "status",
+          "round_trip"
         ],
         "service": {
           "proxy": "inproc://%%/loki"
@@ -292,30 +293,35 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "bicycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "bikeshare": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "auto_pedestrian": {
           "max_distance": 500000.0,
           "max_matrix_distance": 200000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "bus": {
           "max_distance": 5000000.0,
           "max_locations": 50,
           "max_matrix_distance": 400000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "centroid": {
           "max_distance": 200000.0,
@@ -365,19 +371,22 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "motorcycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "multimodal": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 0.0,
-          "max_matrix_location_pairs": 0
+          "max_matrix_location_pairs": 0,
+          "max_round_trip_distance": 200000.0
         },
         "pedestrian": {
           "max_distance": 250000.0,
@@ -385,7 +394,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_matrix_distance": 200000.0,
           "max_matrix_location_pairs": 2500,
           "max_multimodal_walking_distance": 10000,
-          "min_multimodal_walking_distance": 1
+          "min_multimodal_walking_distance": 1,
+          "max_round_trip_distance": 200000.0
         },
         "skadi": {
           "max_shape": 750000,
@@ -401,7 +411,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "trace": {
           "max_alternates": 3,
@@ -415,13 +426,15 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         },
         "truck": {
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_location_pairs": 2500
+          "max_matrix_location_pairs": 2500,
+          "max_round_trip_distance": 200000.0
         }
       },
       "thor": {

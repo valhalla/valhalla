@@ -1353,7 +1353,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // round trip options
   if (action == Options::round_trip) {
     options.mutable_round_trip_options()->set_distance(
-        rapidjson::get<double>(doc, "/round_trip_options/distance", 0.0));
+        rapidjson::get<double>(doc, "/round_trip_options/distance",
+                               options.round_trip_options().distance()));
 
     auto heading = rapidjson::get_optional<double>(doc, "/round_trip_options/heading");
     if (heading) {
