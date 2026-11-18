@@ -360,6 +360,7 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `sv-SE` | `sv` | Swedish (Sweden) |
 | `tr-TR` | `tr` | Turkish (Turkey) |
 | `uk-UA` | `uk` | Ukrainian (Ukraine) |
+| `zh-CN` | `zh` | Chinese (China) |
 
 #### Other request options
 

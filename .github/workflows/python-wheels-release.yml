@@ -179,12 +179,6 @@ jobs:
         with:
           name: wheels-linux-${{  matrix.arch  }}
           path: wheelhouse/*.whl
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
   
   build_osx:
     # this is the arm64 image for macos-13
@@ -247,7 +241,7 @@ jobs:
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
             # try to use the existing build folder
             PIP_NO_BUILD_ISOLATION="1"
-          MACOSX_DEPLOYMENT_TARGET: 14
+          MACOSX_DEPLOYMENT_TARGET: 15
         # represents the minimum python version we release for
           CIBW_BUILD: cp312-*
 
@@ -257,13 +251,6 @@ jobs:
         with:
           name: wheels-osx-arm64
           path: wheelhouse/*.whl
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
   
   build_win:
     name: windows
@@ -371,13 +358,6 @@ jobs:
         with:
           name: wheels-win-amd64
           path: wheelhouse/*.whl
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
 
   verify_wheels_linux:
     name: verify-linux

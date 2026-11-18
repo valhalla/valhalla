@@ -121,12 +121,6 @@ jobs:
         run: |
           sudo make -C build install
           make -C build package
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
 
   debug_build:
     name: debug
@@ -205,12 +199,6 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
 
   arm_build:
     name: arm
@@ -280,9 +268,3 @@ jobs:
       
       - name: Install Valhalla
         run: sudo make -C build install
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
-        with:
-          detached: true
