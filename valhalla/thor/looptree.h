@@ -80,10 +80,10 @@ public:
   }
 
   // the edges between the start and the candidate's edge, in driving order
-  std::vector<baldr::GraphId> Path(uint32_t label) const {
+  std::vector<baldr::GraphId> GetPath(uint32_t label) const {
     std::vector<baldr::GraphId> edges;
     for (auto l = label; l != baldr::kInvalidLabel; l = bdedgelabels_[l].predecessor()) {
-      edges.push_back(TraversedEdge(l));
+      edges.push_back(TraversedEdgeId(l));
     }
     if (!reverse_) {
       std::reverse(edges.begin(), edges.end());
@@ -92,14 +92,16 @@ public:
   }
 
   // reverse labels hold the edge in expansion direction, the traversed one is its opposing edge
-  baldr::GraphId TraversedEdge(uint32_t label) const {
+  baldr::GraphId TraversedEdgeId(uint32_t label) const {
     return reverse_ ? bdedgelabels_[label].opp_edgeid() : bdedgelabels_[label].edgeid();
   }
 
 protected:
-  // near the start the bearing of a node says little about where the path goes, so the expansion
-  // is only kept inside its cone beyond this distance, and with some slack to bend around obstacles
+  // a loop runs towards a heading, within a tolerance.
+  // we can use this to prune the expansion where it steps out of this cone shape
+  // where its far enough from the start
   static constexpr double kConeStartDistance = 3000.;
+  // allow for a bit of wiggle room
   static constexpr double kConeMargin = 25.;
   // candidates are kept on a grid of distance and bearing, one per cell
   static constexpr int kDistanceBins = 10;
@@ -149,13 +151,13 @@ protected:
       return ExpansionRecommendation::prune_expansion;
     }
 
-    // continue but don't mind this edge as a candidate
+    // continue but don't consider this edge a candidate
     if (distance < min_distance_ || off_center > cone_half_width_) {
       return ExpansionRecommendation::continue_expansion;
     }
 
     const uint32_t label = edgestatus_.Get(pred.edgeid(), pred.path_id()).index();
-    const baldr::GraphId edge_id = TraversedEdge(label);
+    const baldr::GraphId edge_id = TraversedEdgeId(label);
     baldr::graph_tile_ptr edge_tile;
     const auto* edge = reader.directededge(edge_id, edge_tile);
 
@@ -189,6 +191,7 @@ protected:
         edge->deadend() || edge->not_thru()) {
       return false;
     }
+
     switch (edge->use()) {
       case baldr::Use::kRamp:
       case baldr::Use::kTurnChannel:
@@ -214,6 +217,7 @@ protected:
         break;
     }
     // away from the start the hierarchy limits keep motor vehicles on higher road classes anyway
+    // but service/other roads generally don't make good via candidates for motorized vehicles
     return !motor_vehicle_ || edge->classification() <= baldr::RoadClass::kResidential;
   }
 

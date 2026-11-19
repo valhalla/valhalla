@@ -169,11 +169,12 @@ protected:
   float at_most_longer_;
   float at_most_shared_;
 
-  // Configured settings for alternates, Clear() restores them
+  // configured settings for alternates
   float default_threshold_delta_;
   float default_alternative_cost_extend_;
   uint32_t default_alternative_iterations_delta_;
 
+  // Resets alternate settings and allow_shortcuts
   void ResetSettings();
 
   // Extends search in one direction if the other direction exhausted, but only if the non-exhausted

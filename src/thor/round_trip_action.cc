@@ -49,7 +49,7 @@ constexpr double kMaxFreeStartLength = 4000.;
 constexpr double kCrossingEdgeFactor = 50.;
 constexpr double kCrossingLength = 100.;
 
-// meters added to a round trip's distance error per meter of road it drives more than once
+// how much to weigh each meter of overlap
 constexpr double kOverlapWeight = 20.;
 
 // a pair of turning points and how far the round trip through them is expected to miss the
@@ -61,7 +61,7 @@ struct CandidatePair {
 };
 
 // a location at the start or at the end of the candidate's edge only
-Location edge_location(const IntermediateCandidate& candidate, bool at_end) {
+Location make_edge_location(const IntermediateCandidate& candidate, bool at_end) {
   Location location;
   location.mutable_ll()->set_lng(candidate.ll.lng());
   location.mutable_ll()->set_lat(candidate.ll.lat());
@@ -168,8 +168,8 @@ void add_crossing_edges(const std::vector<GraphId>& edges,
   }
 }
 
-// the length of the roads driven more than once in either direction, the first free edges near the
-// start aside
+// the length of the roads driven more than once in either direction, except for the first free edges
+// near the start
 double overlap_length(const std::vector<GraphId>& edges, size_t free_edges, GraphReader& reader) {
   std::unordered_set<GraphId> roads;
   double overlap = 0.;
@@ -228,6 +228,8 @@ void thor_worker_t::round_trip(Api& request) {
   const double desired_distance = round_trip_options.distance();
   const double heading = round_trip_options.heading();
   const double heading_tolerance = round_trip_options.heading_tolerance();
+
+  // how much path distance from the start of the out leg is not penalized
   const double free_start_length =
       std::clamp(kFreeStartFraction * desired_distance, kMinFreeStartLength, kMaxFreeStartLength);
 
@@ -277,7 +279,6 @@ void thor_worker_t::round_trip(Api& request) {
     add_crossing_edges(used, *reader, penalties);
     costing->SetCostFactorEdges(penalties);
     bidir_astar.Clear();
-    // single edges get penalized, which a shortcut would hide
     bidir_astar.SetAllowShortcuts(false);
     bidir_astar.SetAlternateSettings(kThresholdDelta, kAlternativeCostExtend,
                                      kAlternativeIterationsDelta, kAtMostLonger, kAtMostShared);
@@ -294,29 +295,29 @@ void thor_worker_t::round_trip(Api& request) {
   double best_score = std::numeric_limits<double>::max();
 
   for (size_t i = 0; i < std::min(pairs.size(), kMaxAttempts) && best_score > tolerance; ++i) {
-    const auto& a = out_candidates[pairs[i].out];
-    const auto& b = back_candidates[pairs[i].back];
-    auto at_a = edge_location(a, true);
-    auto at_b = edge_location(b, false);
-
     // the middle leg starts on a's edge, which ends the first leg, and ends on b's edge, which
     // starts the last leg
-    const auto first = out_tree_.Path(a.label);
+    const auto& a = out_candidates[pairs[i].out];
+    const auto& b = back_candidates[pairs[i].back];
+    auto at_a = make_edge_location(a, true);
+    auto at_b = make_edge_location(b, false);
 
-    // the first leg is penalized only beyond its first edges near the start
+    const auto out_leg = out_tree_.GetPath(a.label);
+
+    // the out leg is penalized only beyond its first edges near the start
     size_t free_edges = 0;
     double length = 0.;
     graph_tile_ptr tile;
-    for (; free_edges < first.size(); ++free_edges) {
-      const auto* edge = reader->directededge(first[free_edges], tile);
+    for (; free_edges < out_leg.size(); ++free_edges) {
+      const auto* edge = reader->directededge(out_leg[free_edges], tile);
       length += edge ? edge->length() : 0.;
       if (length > free_start_length) {
         break;
       }
     }
-    std::vector<GraphId> used(first.begin() + free_edges, first.end());
+    std::vector<GraphId> used(out_leg.begin() + free_edges, out_leg.end());
 
-    // every alternative of the middle leg gets its own last leg, which avoids it
+    // every alternate of the middle leg gets its own last leg, which avoids it
     const auto middles = route_leg(at_a, at_b, used, middle_options);
     for (const auto& middle : middles) {
       if (middle.size() < 2) {
@@ -333,7 +334,7 @@ void thor_worker_t::round_trip(Api& request) {
       }
       const auto& last = lasts.front();
 
-      auto round_trip = first;
+      auto round_trip = out_leg;
       for (size_t k = 1; k + 1 < middle.size(); ++k) {
         round_trip.push_back(middle[k].edgeid);
       }
@@ -342,6 +343,7 @@ void thor_worker_t::round_trip(Api& request) {
       }
 
       const double distance = a.distance + middle.back().path_distance + last.back().path_distance;
+      // final score to compare trips against, lower is better
       const double score = std::abs(distance - desired_distance) +
                            kOverlapWeight * overlap_length(round_trip, free_edges, *reader);
       if (score >= best_score) {
@@ -349,6 +351,8 @@ void thor_worker_t::round_trip(Api& request) {
       }
       best_score = score;
       edges = std::move(round_trip);
+
+      // stop at the first one within tolerance
       if (best_score <= tolerance) {
         break;
       }
