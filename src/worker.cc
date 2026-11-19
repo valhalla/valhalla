@@ -951,6 +951,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  if (action == Options::round_trip) {
+    constexpr float kRoundTripUturnPenalty = 3600.f;
+    auto& co = *(*options.mutable_costings())[options.costing_type()].mutable_options();
+    if (!co.has_uturn_penalty_case()) {
+      co.set_uturn_penalty(kRoundTripUturnPenalty);
+    }
+  }
+
   // TODO(nils): if we parse the costing options before the ignore_closures logic,
   //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
   //   as in the above logic the costing options aren't even parsed yet,
@@ -1371,18 +1379,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
         rapidjson::get_optional<double>(doc, "/round_trip_options/distance_tolerance");
     if (distance_tolerance) {
       options.mutable_round_trip_options()->set_distance_tolerance(*distance_tolerance);
-    }
-
-    // a round trip shouldn't turn around halfway, so u-turns cost an hour unless the user says
-    // otherwise
-    constexpr float kRoundTripUturnPenalty = 3600.f;
-    const auto costing_name = Costing_Enum_Name(options.costing_type());
-    if (!rapidjson::get_optional<float>(doc, ("/costing_options/" + costing_name + "/uturn_penalty")
-                                                 .c_str())) {
-      auto costing = options.mutable_costings()->find(options.costing_type());
-      if (costing != options.mutable_costings()->end()) {
-        costing->second.mutable_options()->set_uturn_penalty(kRoundTripUturnPenalty);
-      }
     }
   }
 

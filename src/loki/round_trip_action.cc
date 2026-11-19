@@ -27,7 +27,7 @@ void parse_round_trip_options(Api& request, double max_distance) {
   }
 
   if (!options->has_heading()) {
-    options->set_heading(0.0); // todo: randomly using seed
+    options->set_heading(0.0); // go north if the user didn't set anything
   } else if (options->heading() >= 360. || options->heading() < 0.0) {
     auto wrapped = std::fmod(options->heading(), 360.0);
     options->set_heading(wrapped < 0.0 ? wrapped + 360.0 : wrapped);
