@@ -115,3 +115,8 @@ class Actor(_Actor):
         elif not isinstance(req, str):
             raise ValueError("Request must be either of type str or dict")
         return super().tile(req)
+
+    @dict_or_str
+    def round_trip(self, req: Union[str, dict]) -> Union[str, dict]:
+        """Calculates a route."""
+        return super().round_trip(req)

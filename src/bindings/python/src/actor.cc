@@ -81,13 +81,17 @@ void init_actor(nb::module_& m) {
       .def(
           "status", [](vt::actor_t& self, std::string& req) { return self.status(req); },
           nb::call_guard<nb::gil_scoped_release>())
-      .def("tile", [](vt::actor_t& self, std::string& req) -> nb::bytes {
-        std::string result;
-        {
-          nb::gil_scoped_release release;
-          result = self.tile(req);
-        }
-        return nb::bytes(result.c_str(), result.size());
-      });
+      .def("tile",
+           [](vt::actor_t& self, std::string& req) -> nb::bytes {
+             std::string result;
+             {
+               nb::gil_scoped_release release;
+               result = self.tile(req);
+             }
+             return nb::bytes(result.c_str(), result.size());
+           })
+      .def(
+          "round_trip", [](vt::actor_t& self, std::string& req) { return self.round_trip(req); },
+          nb::call_guard<nb::gil_scoped_release>());
 }
 } // namespace pyvalhalla
