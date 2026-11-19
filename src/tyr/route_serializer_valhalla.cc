@@ -210,6 +210,10 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
         writer("side_of_street", Location_SideOfStreet_Enum_Name(location->side_of_street()));
       }
 
+      if (!location->street().empty()) {
+        tyr::street_hint(*location, writer);
+      }
+
       writer("original_index", location->correlation().original_index());
 
       writer.end_object();

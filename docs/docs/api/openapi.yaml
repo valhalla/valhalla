@@ -503,7 +503,19 @@ components:
           description: Label echoed in the response.
         street:
           type: string
-          description: Street address hint for snapping.
+          description: Street name to prefer matching streets over the closest one when scoring higher than `street_threshold`.
+        street_radius:
+          type: integer
+          minimum: 0
+          x-rad-max: 1000
+          x-rad-default: 200
+          description: Radius in meters in which edges are scored against `street`, defaults to 200. The max value is service configuration dependent (5000 by default).
+        street_threshold:
+          type: number
+          minimum: 0
+          maximum: 1
+          x-rad-default: 0.6
+          description: Minimum score an edge needs to match `street`, defaults to 0.6.
         date_time:
           type: string
           description: Per-location ISO 8601 datetime override, in the format `YYYY-MM-DDTHH:MM`, e.g. `2016-07-03T08:06`.

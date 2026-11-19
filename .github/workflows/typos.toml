@@ -19,6 +19,9 @@ subtiles = "subtiles"
 nd = "nd" # node
 Thur = "Thur" # short for Thursday, found in timeparsing.cc
 
+# trigrams in docs
+ser = "ser"
+
 # places
 Pont = "Pont"     # Rue du Pont
 Filles = "Filles" # Rue des Filles
