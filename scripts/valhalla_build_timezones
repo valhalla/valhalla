@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# usage: valhalla_build_timezones [timezone-boundary-builder release] > timezones.sqlite
+release="${1:-2026f}"
+
 error_exit() {
   echo "error: $1" 1>&2
   exit 1
@@ -31,10 +34,10 @@ fi
 rm -rf dist
 rm -f ./timezones-with-oceans-1970.shapefile.zip
 
-url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2026f/timezones-with-oceans-1970.shapefile.zip"
+url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/${release}/timezones-with-oceans-1970.shapefile.zip"
 
 echo "downloading timezone polygon file." 1>&2
-curl -L -s -o ./timezones-with-oceans-1970.shapefile.zip ${url} || error_exit "curl failed for ${url}"
+curl -L -s -f -o ./timezones-with-oceans-1970.shapefile.zip "${url}" || error_exit "curl failed for ${url}"
 unzip ./timezones-with-oceans-1970.shapefile.zip 1>&2 || error_exit "unzip failed"
 
 # on windows we need to patch tmp paths to contain the leading drive letter

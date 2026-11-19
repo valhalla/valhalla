@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <ctime>
 #include <iomanip>
+#include <limits>
 #include <locale>
 #include <sstream>
 #include <string>
@@ -34,6 +35,9 @@ namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
+// index of time zones unknown to this build's tz data
+constexpr uint32_t kUnknownTimeZone = std::numeric_limits<uint32_t>::max();
+
 // tz db
 struct tz_db_t {
   tz_db_t();
@@ -46,6 +50,12 @@ struct tz_db_t {
    * @returns The hard-coded tz index, mainly used for graph build.
    */
   size_t to_index(const std::string& zone) const;
+
+  /**
+   * Like to_index, but returns kUnknownTimeZone for time zones unknown to this build's tz data
+   * instead of throwing.
+   */
+  uint32_t find_index(const std::string& zone) const;
   /**
    * Returns the currently supported time zone given our hard-coded tz index.
    *
