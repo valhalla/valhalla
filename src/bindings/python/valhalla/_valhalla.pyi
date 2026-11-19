@@ -55,6 +55,8 @@ class _Actor:
 
     def tile(self, arg: str, /) -> bytes: ...
 
+    def round_trip(self, arg: str, /) -> str: ...
+
 class GraphId:
     """
     Identifier of a node or an edge within the tiled, hierarchical graph.
