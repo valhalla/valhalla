@@ -581,7 +581,7 @@ message Options {
     double distance = 3;  // desired round trip distance in meters
 
     oneof has_distance_tolerance {
-      double distance_tolerance = 7;  // accepted relative deviation from distance, larger is faster
+      double distance_tolerance = 7;  // accepted relative deviation from distance
     }
   }
 

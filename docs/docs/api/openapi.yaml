@@ -1783,6 +1783,10 @@ components:
               items:
                 $ref: '#/components/schemas/Location'
               description: Exactly one location, the start and end of the round trip.
+            costing:
+              type: string
+              enum: [auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle]
+              description: Multimodal costings (`multimodal`, `transit`, `bikeshare`, `auto_pedestrian`) are not supported.
             directions_type:
               $ref: '#/components/schemas/DirectionsType'
             round_trip_options:

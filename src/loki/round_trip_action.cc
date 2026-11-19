@@ -79,6 +79,15 @@ void loki_worker_t::round_trip(Api& request) {
   }
 
   auto& options = *request.mutable_options();
+  switch (options.costing_type()) {
+    case Costing::multimodal:
+    case Costing::transit:
+    case Costing::bikeshare:
+    case Costing::auto_pedestrian:
+      throw valhalla_exception_t{125, "'" + Costing_Enum_Name(options.costing_type()) + "'"};
+    default:
+      break;
+  }
   const auto& costing_name = Costing_Enum_Name(options.costing_type());
   auto it = max_roundtrip_distances.find(costing_name);
   if (it == max_roundtrip_distances.end()) {
