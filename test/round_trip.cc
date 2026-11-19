@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 using namespace valhalla;
@@ -52,6 +53,24 @@ bool has_warning(const Api& request, unsigned code) {
                      [code](const auto& warning) { return warning.code() == code; });
 }
 
+// the length weighted centroid of a shape, so that densely mapped stretches don't pull it over
+PointLL centroid(const std::vector<PointLL>& shape) {
+  double lng = 0., lat = 0., length = 0.;
+  for (size_t i = 0; i + 1 < shape.size(); ++i) {
+    const double segment = shape[i].Distance(shape[i + 1]);
+    lng += segment * (shape[i].lng() + shape[i + 1].lng()) / 2.;
+    lat += segment * (shape[i].lat() + shape[i + 1].lat()) / 2.;
+    length += segment;
+  }
+  return length > 0. ? PointLL(lng / length, lat / length) : shape.front();
+}
+
+// the absolute difference between two headings in degrees, between 0 and 180
+double heading_difference(double a, double b) {
+  const double diff = std::fmod(std::abs(a - b), 360.);
+  return diff > 180. ? 360. - diff : diff;
+}
+
 struct RoundTripCase {
   std::string name;
   std::string request;
@@ -92,6 +111,11 @@ TEST_P(RoundTripDistance, WithinTolerance) {
 
   if (param.warning != 307) {
     EXPECT_NEAR(distance, options.distance(), options.distance_tolerance() * options.distance());
+
+    // the heading is only a rough direction, but the bulk of the loop has to lie ahead of the start
+    const double bearing = shape.front().Heading(centroid(shape));
+    EXPECT_LT(heading_difference(bearing, options.heading()), 90.)
+        << "centroid bearing " << bearing << ", heading " << options.heading();
   }
 }
 
