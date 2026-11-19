@@ -243,7 +243,7 @@ In the end, you'll find the wheel in `./wheelhouse`.
 
 #### Linux
 
-Linux wheels are built in the upstream `manylinux_2_28` image (AlmaLinux 8, for broad `glibc` compatibility) plus the dependencies AlmaLinux doesn't package or packages too old, built from source into `/opt/valhalla-deps`. See [docker/manylinux/Dockerfile](../../../docker/manylinux/Dockerfile). After a change to that directory lands on master, manually run the [docker-manylinux-build](../../../.github/workflows/docker-manylinux-build.yml) workflow to rebuild `ghcr.io/valhalla/manylinux:2_28_valhalla_python`, then re-run the failed python/node.js jobs.
+Linux wheels are built in the upstream `manylinux_2_28` image (AlmaLinux 8, for broad `glibc` compatibility) plus the dependencies AlmaLinux doesn't package or packages too old, built from source into `/opt/valhalla-deps`. See [docker/manylinux/Dockerfile](https://github.com/valhalla/valhalla/blob/master/docker/manylinux/Dockerfile). After a change to that directory lands on master, manually run the [docker-manylinux-build](https://github.com/valhalla/valhalla/actions/workflows/docker-manylinux-build.yml) workflow to rebuild `ghcr.io/valhalla/manylinux:2_28_valhalla_python`, then re-run the failed python/node.js jobs.
 
 To test changes to the image locally:
 
