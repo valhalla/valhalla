@@ -48,12 +48,12 @@ jobs:
             os: linux
             arch: x64
             runner: ubuntu-latest
-            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python-test
           - name: linux arm
             os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
-            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python-test
           - name: osx
             os: macos
             arch: arm64
