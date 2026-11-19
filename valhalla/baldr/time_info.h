@@ -108,7 +108,7 @@ struct TimeInfo {
       return TimeInfo::invalid();
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
-    if (timezone_index == 0) {
+    if (timezone_index == 0 || !dt::get_tz_db().from_index(timezone_index)) {
       // Don't use the provided one if its not valid
       if (!dt::get_tz_db().from_index(default_timezone_index)) {
         default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC");

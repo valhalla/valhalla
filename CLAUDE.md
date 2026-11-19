@@ -57,6 +57,7 @@ cmake --build . -j$(nproc) --target gurka_access --target gurka_route && \
 | `ENABLE_TESTS` | ON | Build test targets |
 | `ENABLE_SANITIZERS` | OFF | All sanitizers (Debug builds) |
 | `ENABLE_ADDRESS_SANITIZER` | OFF | ASan only |
+| `ENABLE_OS_TZDB` | OFF | Read tzdata from the OS zoneinfo at runtime instead of embedding the vendored `third_party/tz` into the build. Exposed with PUBLIC `USE_OS_TZDB=1`. Not available on Windows |
 | `LOGGING_LEVEL` | INFO | NONE, ALL, ERROR, WARN, INFO, DEBUG, TRACE |
 
 ## Architecture

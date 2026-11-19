@@ -1428,8 +1428,8 @@ static constexpr NodeAttributeTile kNodeAttributes[] = {
         baldr::kNodeTimeZone,
         &NodesLayerBuilder::key_timezone_,
         [](const baldr::NodeInfo& ni) {
-          return vtzero::encoded_property_value(
-              ni.timezone() ? baldr::DateTime::get_tz_db().from_index(ni.timezone())->name() : "");
+          const auto* tz = baldr::DateTime::get_tz_db().from_index(ni.timezone());
+          return vtzero::encoded_property_value(tz ? tz->name() : "");
         },
     },
     {

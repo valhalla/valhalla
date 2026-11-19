@@ -30,6 +30,7 @@ Important build options include:
 | `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
 | `-DPREFER_SYSTEM_DEPS` (`ON` / `OFF`) | Whether to use internally vendored headers or find the equivalent external package (defaults to off).|
 | `-DENABLE_GEOTIFF` (`ON` / `OFF`) | Whether to include libgeotiff as a dependency (used for serialization of isochrone grid, defaults to ON).|
+| `-DENABLE_OS_TZDB` (`ON` / `OFF`) | Read time zones from the OS zoneinfo at runtime instead of embedding the vendored tzdata (defaults to off, not supported on Windows). Time zones newer than the OS tzdata fall back to the zone they were split from.|
 | `-DCMAKE_UNITY_BUILD` (`ON` / `OFF`) | Whether to enable unity builds to speed up compilation (defaults to off). You may need to experiment with different values for `-DCMAKE_UNITY_BUILD_BATCH_SIZE` (default is 8) to achieve successful compilation.|
 
 ## Building with `vcpkg` - any platform
