@@ -10,7 +10,7 @@ on:
 
 env:
   REPO: ghcr.io/valhalla/manylinux
-  IMAGE: ghcr.io/valhalla/manylinux:2_28_valhalla_python-test
+  IMAGE: ghcr.io/valhalla/manylinux:2_28_valhalla_python
 
 permissions:
   contents: read
@@ -18,8 +18,8 @@ permissions:
 
 jobs:
   build:
-    # no forks, TODO: and don't overwrite the image from a branch
-    if: ${{ github.repository_owner == 'valhalla' }}
+    # no forks, and don't overwrite the image from a branch
+    if: ${{ github.repository_owner == 'valhalla' && github.ref == 'refs/heads/master' }}
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
