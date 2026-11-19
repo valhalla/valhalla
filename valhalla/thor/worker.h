@@ -128,8 +128,6 @@ protected:
   // expansions out of and into the start of a round trip
   LoopTree out_tree_;
   LoopTree back_tree_;
-  // routes the legs of a round trip, with its own settings for alternatives
-  BidirectionalAStar leg_astar_;
   std::shared_ptr<meili::MapMatcher> matcher;
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;

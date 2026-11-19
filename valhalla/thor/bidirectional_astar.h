@@ -169,6 +169,13 @@ protected:
   float at_most_longer_;
   float at_most_shared_;
 
+  // Configured settings for alternates, Clear() restores them
+  float default_threshold_delta_;
+  float default_alternative_cost_extend_;
+  uint32_t default_alternative_iterations_delta_;
+
+  void ResetSettings();
+
   // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
   // end started on a not_thru or closed (due to live-traffic) edge
   bool extended_search_;

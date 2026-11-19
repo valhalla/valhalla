@@ -66,13 +66,21 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  allow_shortcuts_ = true;
-  threshold_delta_ = config.get<float>("bidirectional_astar.threshold_delta", kThresholdDelta);
-  alternative_cost_extend_ =
+  default_threshold_delta_ =
+      config.get<float>("bidirectional_astar.threshold_delta", kThresholdDelta);
+  default_alternative_cost_extend_ =
       config.get<float>("bidirectional_astar.alternative_cost_extend", kAlternativeCostExtend);
-  alternative_iterations_delta_ =
+  default_alternative_iterations_delta_ =
       config.get<uint32_t>("bidirectional_astar.alternative_iterations_delta",
                            kAlternativeIterationsDelta);
+  ResetSettings();
+}
+
+void BidirectionalAStar::ResetSettings() {
+  allow_shortcuts_ = true;
+  threshold_delta_ = default_threshold_delta_;
+  alternative_cost_extend_ = default_alternative_cost_extend_;
+  alternative_iterations_delta_ = default_alternative_iterations_delta_;
   at_most_longer_ = 0.f;
   at_most_shared_ = 0.f;
 }
@@ -108,6 +116,7 @@ void BidirectionalAStar::Clear() {
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  ResetSettings();
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward

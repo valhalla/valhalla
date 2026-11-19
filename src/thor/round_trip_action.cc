@@ -262,8 +262,6 @@ void thor_worker_t::round_trip(Api& request) {
     return x.expected_error < y.expected_error;
   });
 
-  leg_astar_.SetAlternateSettings(kThresholdDelta, kAlternativeCostExtend,
-                                  kAlternativeIterationsDelta, kAtMostLonger, kAtMostShared);
   Options middle_options = options;
   middle_options.set_alternates(kMiddleAlternates);
   Options last_options = options;
@@ -278,9 +276,13 @@ void thor_worker_t::round_trip(Api& request) {
     add_used_edges(used, *reader, penalties);
     add_crossing_edges(used, *reader, penalties);
     costing->SetCostFactorEdges(penalties);
-    leg_astar_.Clear();
+    bidir_astar.Clear();
+    // single edges get penalized, which a shortcut would hide
+    bidir_astar.SetAllowShortcuts(false);
+    bidir_astar.SetAlternateSettings(kThresholdDelta, kAlternativeCostExtend,
+                                     kAlternativeIterationsDelta, kAtMostLonger, kAtMostShared);
     auto paths =
-        leg_astar_.GetBestPath(origin, destination, *reader, mode_costing, mode, leg_options);
+        bidir_astar.GetBestPath(origin, destination, *reader, mode_costing, mode, leg_options);
     costing->SetCostFactorEdges(costing_options);
     return paths;
   };
