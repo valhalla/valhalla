@@ -28,6 +28,10 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
   const auto d = acos(sl1 * sl2 + cl1 * cl2 * cos(lon1 - lon2));
   // interpolation parameters
   auto sd = sin(d);
+  // minuscule angles don't work well with law of cosines
+  if (!(sd > 0)) {
+    return *this;
+  }
   const auto a = sin(d * (1 - distance)) / sd;
   const auto b = sin(d * distance) / sd;
   const auto acs1 = a * cl1;
