@@ -586,6 +586,51 @@ void BicycleTrafficSignals(const std::string& config_file) {
   */
 }
 
+void WayWithAllMissingNodesIsSkipped(const std::string& config_file) {
+  /*
+  The fixture contains bike share ways covering the guard paths of bss_way:
+ - way 6001: closed way referencing existing nodes (1,2,3) -> imported
+   normally, its centroid is computed over the 3 valid node locations;
+ - way 6002: every referenced node (999999, 999998) is missing from the
+   extract -> osmium leaves their locations invalid -> !loc.valid() for each
+   ref -> valid == 0 -> skipped with a LOG_WARN;
+ - way 6003: no <nd> at all -> nodes.size() == 0 / count == 0 -> early return.
+Expected result: only way 6001 ends up in bss_nodes_ (size == 1); malformed
+or unresolvable ways are skipped instead of producing a bogus centroid or
+crashing the parser.
+*/
+  boost::property_tree::ptree conf;
+  rapidjson::read_json(config_file, conf);
+  conf.put("mjolnir.import_bike_share_stations", true);
+
+  auto osmdata =
+      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/bss_way_missing_nodes.osm.pbf"},
+                                ways_file, way_nodes_file, access_file);
+
+  PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
+                             {VALHALLA_SOURCE_DIR "test/data/bss_way_missing_nodes.osm.pbf"},
+                             way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
+  sequence<OSMBSSNode> bss_nodes(bss_nodes_file, false);
+  // seul le way 6001 (nodes résolubles) est importé ; 6002 est ignoré (valid == 0)
+  ASSERT_EQ(bss_nodes.size(), 1);
+  const OSMBSSNode& bss = *bss_nodes.begin();
+
+  EXPECT_EQ(bss.node.osmid_, 6001);
+
+  valhalla::BikeShareStationInfo info;
+  ASSERT_TRUE(info.ParseFromString(osmdata.node_names.name(bss.bss_info_index)));
+  EXPECT_EQ(info.ref(), "11046");
+  EXPECT_EQ(info.bss_uri(), "way:6001");
+  EXPECT_EQ(info.capacity(), 20);
+  EXPECT_EQ(info.name(), "Station Valide");
+}
+
+TEST(GraphParser, TestWayWithAllMissingNodesIsSkipped) {
+  // write the tiles with it
+  WayWithAllMissingNodesIsSkipped(config_file);
+}
+
 TEST(GraphParser, TestBollardsGatesAndAccess) {
   // write the tiles with it
   BollardsGatesAndAccess(config_file);
