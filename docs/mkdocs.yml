@@ -164,6 +164,7 @@ nav:
       - Introduction for users: start/introduction.md
       - Installation: start/installation.md
       - Build from source: start/building.md
+      - Configuration schema: start/configuration.md
       - Terminology: start/terminology.md
       - History: start/history.md
   - HTTP API:

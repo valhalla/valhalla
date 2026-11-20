@@ -167,6 +167,9 @@ install(TARGETS _valhalla
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/_valhalla.pyi
   DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla"
   COMPONENT python)
+install(FILES ${VALHALLA_SOURCE_DIR}/schema/config_schema.json
+  DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla"
+  COMPONENT python)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DESTINATION "${VALHALLA_INSTALL_PYDIR}"
   COMPONENT python

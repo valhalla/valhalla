@@ -434,6 +434,10 @@ install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
+install(FILES schema/config_schema.json
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/valhalla"
+  COMPONENT runtime)
+
 # install third_party
 install(DIRECTORY ${rapidjson_include_dir}/rapidjson
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
