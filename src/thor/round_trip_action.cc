@@ -44,10 +44,10 @@ constexpr double kFreeStartFraction = 0.07;
 constexpr double kMinFreeStartLength = 300.;
 constexpr double kMaxFreeStartLength = 4000.;
 
-// cost factor on the edges at the junctions of earlier legs, but only for this distance next to the
-// junction, so that crossing an earlier leg costs about the same wherever it happens
-constexpr double kCrossingEdgeFactor = 50.;
-constexpr double kCrossingLength = 100.;
+// cost factor on the edges at the junctions of earlier legs, penalize a short fixed
+// amount of every edge so every crossing costs about the same
+constexpr double kCrossingEdgeFactor = 150.;
+constexpr double kCrossingLength = 3.;
 
 // how much to weigh each meter of overlap
 constexpr double kOverlapWeight = 20.;
@@ -93,9 +93,8 @@ void add_used_edges(const std::vector<GraphId>& edges,
   }
 }
 
-// Penalizes the edges at the junctions the used edges pass, next to the junction: the start of the
-// edges leaving it and the end of the edges arriving at it. Left out are the used edges themselves
-// and the junction at the end of the last used edge, where the new leg starts.
+// penalize edges that cross a previous leg's path by adding outgoing and incoming edges at traversed
+// nodes as cost factor edges in order to avoid bowties
 void add_crossing_edges(const std::vector<GraphId>& edges,
                         GraphReader& reader,
                         Costing_Options& costing_options) {
@@ -120,16 +119,18 @@ void add_crossing_edges(const std::vector<GraphId>& edges,
       if (edge->is_shortcut() || edge->length() == 0) {
         continue;
       }
+      // TODO: this has the caveat that very short edges at the crossing may still be sufficiently
+      // cheap
       const double fraction = std::min(1., kCrossingLength / edge->length());
       if (!used.contains(edge_id)) {
         auto& range = ranges[edge_id];
-        range.first = std::max(range.first, fraction);
+        range.first = fraction;
       }
       graph_tile_ptr opp_tile = tile;
       const auto opp_id = reader.GetOpposingEdgeId(edge_id, opp_tile);
       if (opp_id.is_valid() && !used.contains(opp_id)) {
         auto& range = ranges[opp_id];
-        range.second = std::max(range.second, fraction);
+        range.second = fraction;
       }
     }
   };
@@ -155,6 +156,7 @@ void add_crossing_edges(const std::vector<GraphId>& edges,
     factor->set_end(end);
   };
   for (const auto& [edge_id, range] : ranges) {
+    // could happen if a short edge crosses a path at both ends
     if (range.first + range.second >= 1.) {
       add_range(edge_id, 0., 1.);
       continue;
@@ -245,7 +247,7 @@ void thor_worker_t::round_trip(Api& request) {
   const auto out_candidates = out_tree_.Candidates();
   const auto back_candidates = back_tree_.Candidates();
 
-  // the pairs expected to come closest to the desired distance go first
+  // form pairs and check which ones could get us close to the desired distance
   std::vector<CandidatePair> pairs;
   pairs.reserve(out_candidates.size() * back_candidates.size());
   for (size_t i = 0; i < out_candidates.size(); ++i) {
@@ -260,6 +262,8 @@ void thor_worker_t::round_trip(Api& request) {
       pairs.push_back({i, j, std::abs(expected - desired_distance)});
     }
   }
+
+  // the pairs expected to come closest to the desired distance go first
   std::sort(pairs.begin(), pairs.end(), [](const CandidatePair& x, const CandidatePair& y) {
     return x.expected_error < y.expected_error;
   });
