@@ -364,7 +364,7 @@
         "16": "<NUMBER_SIGN> çıkışından çıkın.",
         "17": "<BRANCH_SIGN> çıkışından çıkın.",
         "18": "<NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
-        "19": "<TOWARD_SIGN> doğru çıkın.",
+        "19": "<TOWARD_SIGN> işaretine doğru çıkın.",
         "20": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkışından çıkın.",
         "21": "<BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "22": "<BRANCH_SIGN> üzerindeki <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
@@ -429,7 +429,7 @@
         "0": "<RELATIVE_DIRECTION>daki çıkıştan çıkın.",
         "1": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından çıkın.",
         "2": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından çıkın.",
-        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <BRANCH_SIGN> doğru çıkın.",
+        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
         "4": "<RELATIVE_DIRECTION>daki <TOWARD_SIGN> işaretine doğru çıkın.",
         "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "6": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
@@ -588,11 +588,11 @@
     "merge_verbal": {
       "phrases": {
         "0": "Yola katıl.",
-        "1": "<RELATIVE_DIRECTION> doğru yola katılın.",
+        "1": "<RELATIVE_DIRECTION>dan yola katılın.",
         "2": "<STREET_NAMES> yoluna katılın.",
-        "3": "<RELATIVE_DIRECTION> doğru <STREET_NAMES> yoluna katılın.",
+        "3": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>dan yola katılın.",
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
-        "5": "<RELATIVE_DIRECTION> doğru <TOWARD_SIGN> işaretine katılın."
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>dan yola katılın."
       },
       "empty_street_name_labels": [
         "yaya yolu",

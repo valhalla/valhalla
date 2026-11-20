@@ -1076,7 +1076,7 @@ msgstr "<NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın."
 #. e.g. Take the exit toward Lewistown.
 msgctxt "instructions.exit.phrases.19"
 msgid "Take the exit toward <TOWARD_SIGN>."
-msgstr "<TOWARD_SIGN> doğru çıkın."
+msgstr "<TOWARD_SIGN> işaretine doğru çıkın."
 
 #. e.g. Take exit 67 B-A toward Lewistown.
 msgctxt "instructions.exit.phrases.20"
@@ -1262,7 +1262,7 @@ msgstr "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından çıkın."
 #. e.g. Take exit 67 B-A on the right onto U.S. 3 22 West.
 msgctxt "instructions.exit_verbal.phrases.3"
 msgid "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
-msgstr "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <BRANCH_SIGN> doğru çıkın."
+msgstr "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın."
 
 #. e.g. Take the exit on the right toward Lewistown.
 msgctxt "instructions.exit_verbal.phrases.4"
@@ -1744,7 +1744,7 @@ msgstr "Yola katıl."
 #. e.g. Merge left.
 msgctxt "instructions.merge_verbal.phrases.1"
 msgid "Merge <RELATIVE_DIRECTION>."
-msgstr "<RELATIVE_DIRECTION> doğru yola katılın."
+msgstr "<RELATIVE_DIRECTION>dan yola katılın."
 
 #. e.g. Merge onto I 76 West/Pennsylvania Turnpike.
 msgctxt "instructions.merge_verbal.phrases.2"
@@ -1754,7 +1754,7 @@ msgstr "<STREET_NAMES> yoluna katılın."
 #. e.g. Merge right onto I 83 South.
 msgctxt "instructions.merge_verbal.phrases.3"
 msgid "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-msgstr "<RELATIVE_DIRECTION> doğru <STREET_NAMES> yoluna katılın."
+msgstr "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>dan yola katılın."
 
 #. e.g. Merge toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.4"
@@ -1764,7 +1764,7 @@ msgstr "<TOWARD_SIGN> işaretine doğru yola katılın."
 #. e.g. Merge right toward Baltimore.
 msgctxt "instructions.merge_verbal.phrases.5"
 msgid "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-msgstr "<RELATIVE_DIRECTION> doğru <TOWARD_SIGN> işaretine katılın."
+msgstr "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>dan yola katılın."
 
 msgctxt "instructions.merge_verbal.replacement.empty_street_name_labels.0"
 msgid "the walkway"
