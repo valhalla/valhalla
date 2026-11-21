@@ -364,6 +364,8 @@ message Costing {
     oneof has_low_class_factor {
       float low_class_factor = 97;
     }
+
+    map<string, float> use_custom_attributes = 98; // Per-attribute weights keyed by attribute name, default empty (disabled)
     oneof has_steps_factor {
       float steps_factor = 99;
     }
@@ -385,6 +387,17 @@ message Costing {
   oneof has_filter_closures {
     bool filter_closures = 4;
   }
+
+  // for internal use only: attributes.json of the custom attributes extract, in column order.
+  // populated during request parsing so the costing can map request keys to
+  // custom attributes' columns. Setting this in a request has no effect.
+  message CustomAttributeDef {
+    string name = 1;
+    uint32 type = 2; // baldr::CustomAttributeType
+    float scale = 3;
+    uint32 offset = 4; // in bits
+  }
+  repeated CustomAttributeDef custom_attribute_defs = 5;
 }
 
 message LinearFeatureCost {

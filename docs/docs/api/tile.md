@@ -85,6 +85,9 @@ edge.yield_sign_<direction>
 edge.access_<direction>
 edge.live_speed_<direction>
 
+// custom attributes, see https://valhalla.github.io/valhalla/custom_attributes/
+edge.custom_attribute
+
 // node attributes
 node.drive_on_right
 node.elevation
