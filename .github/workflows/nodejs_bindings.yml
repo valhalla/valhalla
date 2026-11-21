@@ -48,21 +48,18 @@ jobs:
             os: linux
             arch: x64
             runner: ubuntu-latest
-            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python-test
           - name: linux arm
             os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
-            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python-test
           - name: osx
             os: macos
             arch: arm64
             runner: macos-15
             container: null
     env:
-      # we have a few packages installed to the system as well as built from source
-      # we need to prioritize the ones built from source
-      LD_LIBRARY_PATH: ${{ matrix.os == 'linux' && '/usr/local/lib64:/usr/local/lib' || '' }}
       # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
       CCACHE_DIR: ${{ matrix.os == 'linux' && '.ccache' || '' }}
     steps:
