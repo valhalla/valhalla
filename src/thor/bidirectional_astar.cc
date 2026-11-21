@@ -66,12 +66,23 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  threshold_delta_ = config.get<float>("bidirectional_astar.threshold_delta", kThresholdDelta);
-  alternative_cost_extend_ =
+  default_threshold_delta_ =
+      config.get<float>("bidirectional_astar.threshold_delta", kThresholdDelta);
+  default_alternative_cost_extend_ =
       config.get<float>("bidirectional_astar.alternative_cost_extend", kAlternativeCostExtend);
-  alternative_iterations_delta_ =
+  default_alternative_iterations_delta_ =
       config.get<uint32_t>("bidirectional_astar.alternative_iterations_delta",
                            kAlternativeIterationsDelta);
+  ResetSettings();
+}
+
+void BidirectionalAStar::ResetSettings() {
+  allow_shortcuts_ = true;
+  threshold_delta_ = default_threshold_delta_;
+  alternative_cost_extend_ = default_alternative_cost_extend_;
+  alternative_iterations_delta_ = default_alternative_iterations_delta_;
+  at_most_longer_ = 0.f;
+  at_most_shared_ = 0.f;
 }
 
 // Destructor
@@ -105,6 +116,7 @@ void BidirectionalAStar::Clear() {
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  ResetSettings();
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -201,7 +213,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // that level. If using a shortcut, set the shortcuts mask.
   if (meta.edge->is_shortcut()) {
     // Skip shortcuts if hierarchy limits are disabled
-    if (ignore_hierarchy_limits_ || !get_opp_edge_data())
+    if (ignore_hierarchy_limits_ || !allow_shortcuts_ || !get_opp_edge_data())
       return false;
 
     const auto& opp_edgestatus = FORWARD ? edgestatus_reverse_ : edgestatus_forward_;
@@ -1214,13 +1226,15 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   if (desired_paths_count_ > 1) {
     // Cull alternate paths longer than maximum stretch
     // TODO: we should skip adding the connection at all if it's greater than stretch
-    filter_alternates_by_stretch(best_connections_);
+    filter_alternates_by_stretch(best_connections_, at_most_longer_);
   }
   // For looking up edge ids on previously chosen best paths
   std::vector<std::unordered_set<GraphId>> shared_edgeids;
 
   // get maximum amount of sharing parameter based on origin->destination distance
-  float max_sharing = desired_paths_count_ > 1 ? get_max_sharing(origin, dest) : 0.f;
+  float max_sharing = desired_paths_count_ <= 1 ? 0.f
+                      : at_most_shared_ > 0.f   ? at_most_shared_
+                                                : get_max_sharing(origin, dest);
 
   LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
 

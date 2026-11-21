@@ -16,7 +16,13 @@ TEST(pbf_api, pbf_in_out) {
     |    |    |
     8    9    0
     |    |    |
-    G-a--H--b-I)";
+    G-a--H--b-I
+    |    |    |
+    |    |    |
+    |    |    |
+    J----K----L
+
+  )";
 
   const gurka::ways ways = {
       {"AB", {{"highway", "motorway"}}},    {"BC", {{"highway", "primary"}}},
@@ -25,6 +31,9 @@ TEST(pbf_api, pbf_in_out) {
       {"EF", {{"highway", "secondary"}}},   {"DG", {{"highway", "trunk_link"}}},
       {"EH", {{"highway", "cycleway"}}},    {"FI", {{"highway", "service"}}},
       {"GH", {{"highway", "tertiary"}}},    {"HI", {{"highway", "unclassified"}}},
+      {"GJ", {{"highway", "residential"}}}, {"HK", {{"highway", "residential"}}},
+      {"IL", {{"highway", "residential"}}}, {"JK", {{"highway", "residential"}}},
+      {"KL", {{"highway", "residential"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map =
@@ -65,6 +74,11 @@ TEST(pbf_api, pbf_in_out) {
     } else if (action == Options::tile) {
       expected_pbf = gurka::do_action(Options::Action(action), map, "E", 8, "pedestrian", {}, nullptr,
                                       &expected_json, &request_json);
+    } else if (action == Options::round_trip) {
+      expected_pbf = gurka::do_action(Options::Action(action), map, {"G"}, "pedestrian",
+                                      {{"/round_trip_options/distance", "500"},
+                                       {"/round_trip_options/heading", "120"}},
+                                      {}, &expected_json, "break", &request_json);
     } else {
       expected_pbf = gurka::do_action(Options::Action(action), map, {"A", "C", "I", "G"},
                                       "pedestrian", {}, {}, &expected_json, "break", &request_json);

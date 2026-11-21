@@ -2116,6 +2116,7 @@ std::string serialize(valhalla::Api& api) {
       json->emplace("tracepoints", osrm::waypoints(options.shape(), true));
       break;
     case valhalla::Options::route:
+    case valhalla::Options::round_trip:
       json->emplace("waypoints", osrm::waypoints(api.trip()));
       break;
     case valhalla::Options::optimized_route:

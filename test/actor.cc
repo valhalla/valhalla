@@ -169,6 +169,13 @@ TEST(Actor, SupportedFormats) {
   xyz->set_y(5405);
   xyz->set_z(14);
 
+  // for round trip
+  Options round_trip_options;
+  auto* ops = round_trip_options.mutable_round_trip_options();
+  ops->set_distance(500);
+  round_trip_options.set_costing_type(Costing_Type::Costing_Type_auto_);
+  round_trip_options.mutable_locations()->Add()->CopyFrom(loc1);
+
   const struct {
     Options::Action action;
     std::string (tyr::actor_t::*action_fn)(const std::string& request_str,
@@ -189,6 +196,7 @@ TEST(Actor, SupportedFormats) {
       {Options::centroid, &tyr::actor_t::centroid, options},
       {Options::status, &tyr::actor_t::status, options},
       {Options::tile, &tyr::actor_t::tile, tile_options},
+      {Options::round_trip, &tyr::actor_t::round_trip, round_trip_options},
   };
   ASSERT_EQ(std::size(tests), Options::Action_ARRAYSIZE - 1) // -1 for `Options::no_action`
       << "Please add missing action to this test";
