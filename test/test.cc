@@ -321,6 +321,12 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 200000.0,
           "max_locations": 5
         },
+        "emergency": {
+          "max_distance": 5000000.0,
+          "max_locations": 20,
+          "max_matrix_distance": 400000.0,
+          "max_matrix_location_pairs": 2500
+        },
         "hierarchy_limits": {
             "allow_modification": false,
             "costmatrix": {

@@ -170,6 +170,7 @@ const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingType
     {Costing::truck, {Costing::truck}},
     {Costing::motorcycle, {Costing::motorcycle}},
     {Costing::taxi, {Costing::taxi}},
+    {Costing::emergency, {Costing::emergency}},
     {Costing::auto_, {Costing::auto_}},
     {Costing::bikeshare, {Costing::bikeshare, Costing::pedestrian, Costing::bicycle}},
     {Costing::auto_pedestrian, {Costing::auto_pedestrian, Costing::pedestrian, Costing::auto_}},
