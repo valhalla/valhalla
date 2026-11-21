@@ -1,5 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/complexrestriction.h"
+#include "baldr/compression_utils.h"
 #include "baldr/tilegetter.h"
 #include "config.h"
 #include "midgard/pointll.h"
@@ -21,6 +22,8 @@ using namespace valhalla::midgard;
 namespace {
 
 struct testable_graphtile : public valhalla::baldr::GraphTile {
+  using GraphTile::DecompressTile;
+
   testable_graphtile(const uint32_t (&offsets)[kBinCount], std::vector<GraphId>& bins) {
     header_ = new GraphTileHeader();
     header_->set_edge_bin_offsets(offsets);
@@ -171,6 +174,54 @@ std::vector<char> header_only_tile(uint64_t end_offset) {
   std::vector<char> tile(sizeof(header));
   memcpy(tile.data(), &header, sizeof(header));
   return tile;
+}
+
+std::vector<char> gzip_tile(std::vector<char>& tile) {
+  std::vector<char> compressed(compressBound(tile.size()) + 32);
+  auto src = [&tile](z_stream& s) {
+    s.next_in = reinterpret_cast<Byte*>(tile.data());
+    s.avail_in = tile.size();
+    return Z_FINISH;
+  };
+  auto dst = [&compressed](z_stream& s) {
+    if (s.total_out == 0) {
+      s.next_out = reinterpret_cast<Byte*>(compressed.data());
+      s.avail_out = compressed.size();
+    } else {
+      compressed.resize(s.total_out);
+    }
+  };
+  if (!valhalla::baldr::deflate(src, dst))
+    throw std::runtime_error("Failed to gzip tile");
+  return compressed;
+}
+
+TEST(GraphTileIntegrity, InflationExceedsDeclaredSize) {
+  for (size_t size : {size_t{16 * 1024 * 1024}, sizeof(GraphTileHeader) + 1}) {
+    SCOPED_TRACE(size);
+    auto tile = header_only_tile(sizeof(GraphTileHeader));
+    tile.resize(size);
+    EXPECT_EQ(testable_graphtile::DecompressTile(GraphId(746, 2, 0), gzip_tile(tile)), nullptr);
+  }
+}
+
+TEST(GraphTileIntegrity, CompressedEndOffsetLessThanHeader) {
+  for (size_t size : {size_t{0}, sizeof(GraphTileHeader) - 1}) {
+    SCOPED_TRACE(size);
+    auto tile = header_only_tile(size);
+    EXPECT_EQ(testable_graphtile::DecompressTile(GraphId(746, 2, 0), gzip_tile(tile)), nullptr);
+  }
+}
+
+TEST(GraphTileIntegrity, CompressedTileSizes) {
+  for (size_t size : {sizeof(GraphTileHeader), sizeof(GraphTileHeader) + 1, size_t{65536}}) {
+    SCOPED_TRACE(size);
+    auto tile = header_only_tile(size);
+    tile.resize(size);
+    auto result = testable_graphtile::DecompressTile(GraphId(746, 2, 0), gzip_tile(tile));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->header()->end_offset(), size);
+  }
 }
 
 TEST(GraphTileIntegrity, DownloadThatIsNotATileIsNotCached) {
