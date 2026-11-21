@@ -28,7 +28,7 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
   const auto d = acos(sl1 * sl2 + cl1 * cl2 * cos(lon1 - lon2));
   // interpolation parameters
   auto sd = sin(d);
-  // identical points, nothing to interpolate
+  // identical points, nothing to interpolate. Handles NaN as well
   if (!(sd > 0)) {
     return *this;
   }
