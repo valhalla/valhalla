@@ -1,12 +1,19 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: protect PointLL::PointAlongSegment against very close points [#6532](https://github.com/valhalla/valhalla/pull/6532)
+   * FIXED: Turkish (tr-TR) narrative: remaining English phrases and grammar [#6525](https://github.com/valhalla/valhalla/pull/6525)
+* **Enhancement**
 
+## Release Date: 2026-11-16 Valhalla 3.9.3
+* **Removed**
+* **Bug Fix**
    * FIXED: Turkish (tr-TR) narrative grammar [#6444](https://github.com/valhalla/valhalla/pull/6444)
    * FIXED: raise MACOSX_DEPLOYMENT_TARGET to 15 for OSX python wheels [#6518](https://github.com/valhalla/valhalla/pull/6518)
    * FIXED: stop inflating compressed tiles that exceed their declared size [#6521](https://github.com/valhalla/valhalla/pull/6521)
 * **Enhancement**
    * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
+   * CHANGED: Multithreaded `GraphFilter` [#6374](https://github.com/valhalla/valhalla/pull/6374)
 
 ## Release Date: 2026-11-12 Valhalla 3.9.2
 * **Removed**
