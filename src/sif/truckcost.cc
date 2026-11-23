@@ -563,7 +563,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
             edge->toll() * toll_factor_ +
             (low_class_factor_ * (edge->classification() >= baldr::RoadClass::kResidential)) +
-            CustomAttributesFactor(tile, edgeid);
+            CustomAttributesFactor(tile, edge);
 
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;

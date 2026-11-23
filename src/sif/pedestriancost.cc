@@ -778,7 +778,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] +
-                 grade_penalty[edge->weighted_grade()] + CustomAttributesFactor(tile, edgeid);
+                 grade_penalty[edge->weighted_grade()] + CustomAttributesFactor(tile, edge);
   const float uf = use_factor_[static_cast<uint8_t>(edge->use())];
   if (uf != 0.0f) {
     factor *= uf;

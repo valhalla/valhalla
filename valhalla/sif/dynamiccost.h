@@ -1384,12 +1384,13 @@ protected:
    * the request weights none of them or the tile has no custom attributes.
    */
   float CustomAttributesFactor(const baldr::graph_tile_ptr& tile,
-                               const baldr::GraphId& edgeid) const {
+                               const baldr::DirectedEdge* edge) const {
     if (custom_attribute_weights_.empty()) {
       return 0.f;
     }
     const auto* custom_attributes = tile->custom_attributes_tile();
-    return custom_attributes ? custom_attributes->weighted_sum(edgeid.id(), custom_attribute_weights_)
+    const auto index = static_cast<uint32_t>(edge - tile->directededge(0));
+    return custom_attributes ? custom_attributes->weighted_sum(index, custom_attribute_weights_)
                              : 0.f;
   }
 

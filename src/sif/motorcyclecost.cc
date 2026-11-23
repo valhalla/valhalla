@@ -452,7 +452,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (edge->toll()) {
     factor += toll_factor_;
   }
-  factor += CustomAttributesFactor(tile, edgeid);
+  factor += CustomAttributesFactor(tile, edge);
 
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;

@@ -723,7 +723,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Create an edge factor based on total stress (sum of accommodation factor and roadway
   // stress) and the weighted grade penalty for the edge.
   float factor = 1.0f + grade_penalty[edge->weighted_grade()] +
-                 (accommodation_factor * roadway_stress) + CustomAttributesFactor(tile, edgeid);
+                 (accommodation_factor * roadway_stress) + CustomAttributesFactor(tile, edge);
 
   // If surface is worse than the minimum we add a surface factor
   if (edge->surface() >= minimal_surface_penalized_) {
