@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
@@ -661,7 +663,7 @@ TEST_F(DestinationOnlyZones, ReverseSearchAddsPenaltyOnceOnZoneEntry) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   // the reverse search labels the opposing edges, so check both directions
   auto cost_of = [&](const std::string& a, const std::string& b) {
-    for (const auto& ends : {std::pair{a, b}, std::pair{b, a}}) {
+    for (const auto& ends : std::array{std::pair{a, b}, std::pair{b, a}}) {
       auto id = static_cast<uint64_t>(
           std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, ends.first, ends.second)));
       auto found = costs.find(id);
@@ -693,6 +695,46 @@ TEST_F(DestinationOnlyZones, OtherCostingsReadTheirOwnTags) {
     gurka::assert::raw::expect_path(truck, {"AB", "BC", "CD", "DE", "EF"}, "truck");
     auto car = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", restricted);
     gurka::assert::raw::expect_path(car, {"AB", "BJ", "JK", "KF"}, "auto");
+  }
+}
+
+TEST(StandAlone, ConditionalPrivateIsDestinationOnly) {
+  const std::string ascii_map = R"(
+        A----B--X--C----D
+             |     |
+             E-----F
+      )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BXC",
+       {{"highway", "residential"},
+        {"motor_vehicle:conditional", "private @ (Mo-Fr 07:30-08:00; PH off; SH off)"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"BE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FC", {{"highway", "residential"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/conditional_private",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+
+  // 2020-04-02 is a Thursday
+  for (const auto& dt : kDateTimeTypes) {
+    auto inactive =
+        gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                         {{"/date_time/type", dt}, {"/date_time/value", "2020-04-02T12:00"}});
+    gurka::assert::raw::expect_path(inactive, {"AB", "BXC", "CD"}, "date_time type " + dt);
+
+    auto through =
+        gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                         {{"/date_time/type", dt}, {"/date_time/value", "2020-04-02T07:40"}});
+    gurka::assert::raw::expect_path(through, {"AB", "BE", "EF", "FC", "CD"}, "date_time type " + dt);
+
+    auto destination =
+        gurka::do_action(valhalla::Options::route, map, {"A", "X"}, "auto",
+                         {{"/date_time/type", dt}, {"/date_time/value", "2020-04-02T07:40"}});
+    gurka::assert::raw::expect_path(destination, {"AB", "BXC"}, "date_time type " + dt);
   }
 }
 

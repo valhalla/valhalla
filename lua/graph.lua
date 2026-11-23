@@ -22,6 +22,7 @@ highway = {
 ["undefined"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["unknown"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["living_street"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+["ladder"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true", ["bike_forward"] = "false"},
 ["footway"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
@@ -404,7 +405,8 @@ tunnel = {
 ["yes"] = "true",
 ["no"] = "false",
 ["1"] = "true",
-["building_passage"] = "true"
+["building_passage"] = "true",
+["avalanche_protector"] = "true"
 }
 
 --TODO: snowmobile might not really be passable for much other than ped..
@@ -923,11 +925,11 @@ function filter_tags_generic(kv)
     return 1
   end
 
-  --toss actual areas, but keep pedestrian areas 
+  --toss actual areas, but keep pedestrian areas
   if kv["area"] == "yes" then
     if kv["highway"] == "pedestrian" then
       kv["pedestrian_area"] = "true"
-    else 
+    else
     return 1
     end
   end
@@ -1602,6 +1604,8 @@ function filter_tags_generic(kv)
         use = 33 --elevator
      elseif (kv["highway"] == "steps" and kv["conveying"] ~= nil) then
         use = 34 --escalator
+     elseif kv["highway"] == "ladder" then
+        use = 36 -- ladder
      elseif kv["highway"] == "steps" then
         use = 26 --steps/stairs
      elseif kv["highway"] == "path" then

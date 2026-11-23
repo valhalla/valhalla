@@ -80,7 +80,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" || kv.first == "max_exclude_polygons_vertices" ||
         kv.first == "skadi" || kv.first == "trace" || kv.first == "isochrone" ||
-        kv.first == "centroid" || kv.first == "status" ||
+        kv.first == "centroid" || kv.first == "status" || kv.first == "tile" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions" ||
         kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
         kv.first == "max_linear_cost_edges") {

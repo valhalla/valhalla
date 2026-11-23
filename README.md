@@ -124,6 +124,18 @@ npm install @valhallajs/valhallajs
 
 For more details, see the [NodeJS README](https://github.com/valhalla/valhalla/blob/master/src/bindings/nodejs/README.md).
 
+### Via Rust bindings
+
+[![crates.io version](https://img.shields.io/crates/v/valhalla?label=valhalla)](https://crates.io/crates/valhalla)
+
+We publish Rust bindings to crates.io with [`valhalla`](https://crates.io/crates/valhalla), which builds Valhalla from source:
+
+```bash
+cargo add valhalla
+```
+
+For more details, see the [Rust README](https://github.com/valhalla/valhalla/blob/master/src/bindings/rust/README.md).
+
 ## Contributing
 
 We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages (see [`locales/`](https://github.com/valhalla/valhalla/tree/master/locales)) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
@@ -162,3 +174,4 @@ The following projects are open-source and built with the intention to make it e
 - [**routingpy**](https://github.com/gis-ops/routingpy): A Python client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available on [PyPI](https://pypi.org/project/routingpy/).
 - [**routingjs**](https://github.com/gis-ops/routingjs): A TypeScript client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available as engine-specific packages on [npm](https://www.npmjs.com/package/@routingjs/valhalla).
 - [**Valhalla_jll.jl**](https://github.com/JuliaBinaryWrappers/Valhalla_jll.jl): Valhalla binaries shipped for Julia.
+- [**valhalla-mobile**](https://github.com/Rallista/valhalla-mobile): A wrapper library for valhalla on iOS (Swift) and (Android) Kotlin. Released through Swift Package Manager and Maven Central.

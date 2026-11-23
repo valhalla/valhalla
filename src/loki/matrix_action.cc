@@ -140,7 +140,9 @@ void loki_worker_t::matrix(Api& request) {
         }
       }
     }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+  } catch (const valhalla_exception_t& e) { throw e; } catch (const std::exception&) {
+    throw valhalla_exception_t{171};
+  }
 
   // are all the locations in the same color regions
   if (!connectivity_map) {

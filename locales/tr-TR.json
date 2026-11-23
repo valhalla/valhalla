@@ -27,27 +27,27 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Saat <TIME>'da varış.",
-        "1": "Saat <TIME>'da <TRANSIT_STOP> durağına varış."
+        "0": "Varış saati <TIME>.",
+        "1": "<TRANSIT_STOP> durağına varış saati <TIME>."
       }
     },
     "bear": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin. <STREET_NAMES> caddesine devam edin.",
-        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION> yönelin.",
-        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION> yönelin.",
-        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION> yönelin."
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin.",
+        "2": "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin. <STREET_NAMES> üzerinde devam edin.",
+        "3": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a yönelin.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a yönelin.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a yönelin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -56,21 +56,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> yönelin.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin.",
-        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION> yönelin.",
-        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION> yönelin.",
-        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION> yönelin."
+        "0": "<RELATIVE_DIRECTION>a yönelin.",
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin.",
+        "2": "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a yönelin.",
+        "3": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a yönelin.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a yönelin.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a yönelin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -90,39 +90,39 @@
     "continue": {
       "phrases": {
         "0": "Devam edin.",
-        "1": "<STREET_NAMES> caddesine devam edin.",
+        "1": "<STREET_NAMES> üzerinde devam edin.",
         "2": "<JUNCTION_NAME> kavşağından devam edin.",
         "3": "<TOWARD_SIGN> işaretine doğru devam edin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ]
     },
     "continue_verbal": {
       "phrases": {
         "0": "Devam edin.",
         "1": "<LENGTH> boyunca devam edin.",
-        "2": "<STREET_NAMES> caddesine devam edin.",
-        "3": "<STREET_NAMES> caddesinde <LENGTH> boyunca devam edin.",
+        "2": "<STREET_NAMES> üzerinde devam edin.",
+        "3": "<STREET_NAMES> üzerinde <LENGTH> boyunca devam edin.",
         "4": "<JUNCTION_NAME> kavşağından devam edin.",
         "5": "<JUNCTION_NAME> kavşağından <LENGTH> boyunca devam edin.",
         "6": "<TOWARD_SIGN> işaretine doğru devam edin.",
         "7": "<TOWARD_SIGN> işaretine doğru for <LENGTH> boyunca devam edin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometre",
@@ -142,30 +142,30 @@
     "continue_verbal_alert": {
       "phrases": {
         "0": "Decam edin.",
-        "1": "<STREET_NAMES>caddesine devam edin.",
+        "1": "<STREET_NAMES> üzerinde devam edin.",
         "2": "<JUNCTION_NAME> kavşağına devam edin.",
         "3": "<TOWARD_SIGN> işaretine doğru devam edin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ]
     },
     "depart": {
       "phrases": {
         "0": "Kalkış: <TIME>.",
-        "1": "Kalkış: <TRANSIT_STOP> durağından saat <TIME>'da kalkış."
+        "1": "Kalkış: <TIME>, <TRANSIT_STOP> durağından."
       }
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Saat <TIME>'da kalkış.",
-        "1": "<TRANSIT_STOP> durağından saat <TIME>'da kalkış."
+        "0": "Kalkış saati <TIME>.",
+        "1": "<TRANSIT_STOP> durağından kalkış saati <TIME>."
       }
     },
     "destination": {
@@ -206,55 +206,55 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Asansöre binin.",
+        "1": "Asansöre binip <LEVEL> seviyesine gidin."
       }
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Binaya girin.",
+        "1": "Binaya girin ve <STREET_NAMES> üzerinde devam edin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk"
+        "yaya geçidi"
       ]
     },
     "enter_ferry": {
       "phrases": {
         "0": "Feribota binin.",
-        "1": "<STREET_NAMES> caddesine dönün.",
-        "2": "<STREET_NAMES> caddesine dönün <FERRY_LABEL>.",
+        "1": "<STREET_NAMES> yönüne dönün.",
+        "2": "<STREET_NAMES> yönüne dönün <FERRY_LABEL>.",
         "3": "<TOWARD_SIGN> işaretine doğru feribota binin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "ferry_label": "Feribot"
     },
     "enter_ferry_verbal": {
       "phrases": {
         "0": "Feribota binin.",
-        "1": "<STREET_NAMES> caddesine dönün.",
-        "2": "<STREET_NAMES> caddesine dönün <FERRY_LABEL>.",
+        "1": "<STREET_NAMES> yönüne dönün.",
+        "2": "<STREET_NAMES> yönüne dönün <FERRY_LABEL>.",
         "3": "<TOWARD_SIGN> işaretine doğru feribota binin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "ferry_label": "Feribot"
     },
@@ -262,29 +262,29 @@
       "phrases": {
         "0": "Döner kavşağa girin.",
         "1": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
-        "2": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "3": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru devam edin.",
+        "2": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "3": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> yönüne devam edin.",
         "4": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "5": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "6": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
+        "5": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "6": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> üzerinde devam edin.",
         "7": "Döner kavşağa girin ve <TOWARD_SIGN> işaretine doğru çıkın.",
-        "8": "<STREET_NAMES> caddesine girin",
-        "9": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
-        "10": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine çıkın.",
-        "11": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
-        "12": "<STREET_NAMES> caddesine girin ve<ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "13": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "14": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
-        "15": "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
+        "8": "<STREET_NAMES> yoluna girin",
+        "9": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
+        "10": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "11": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> üzerinde devam edin.",
+        "12": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "13": "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "14": "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> üzerinde devam edin.",
+        "15": "<STREET_NAMES> yoluna girin ve <TOWARD_SIGN> işaretine doğru çıkın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "ordinal_values": [
         "Birinci",
@@ -303,29 +303,29 @@
       "phrases": {
         "0": "Döner kavşağa girin.",
         "1": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
-        "2": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "3": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.",
+        "2": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "3": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.",
         "4": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "5": "Döner kavşağa girin <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "6": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.",
+        "5": "Döner kavşağa girin <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "6": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.",
         "7": "Döner kavşağa girin ve <TOWARD_SIGN> işaretine doğru çıkın.",
-        "8": "<STREET_NAMES> caddesine girin",
-        "9": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
-        "10": "<STREET_NAMES> caddesine girin ve<ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "11": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.",
-        "12": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "13": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
-        "14": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>caddesine doğru çıkın.",
-        "15": "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
+        "8": "<STREET_NAMES> yoluna girin",
+        "9": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
+        "10": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "11": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.",
+        "12": "<STREET_NAMES> yoluna girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "13": "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_STREET_NAMES> yönüne çıkın.",
+        "14": "<STREET_NAMES> yoluna girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> yönüne çıkın.",
+        "15": "<STREET_NAMES> yoluna girin ve <TOWARD_SIGN> işaretine doğru çıkın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "ordinal_values": [
         "Birinci",
@@ -342,36 +342,36 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Yürüyen merdivene binin.",
+        "1": "Yürüyen merdivene binip <LEVEL> seviyesine gidin."
       }
     },
     "exit": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>daki çıkıştan çıkın.",
-        "1": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan çıkın.",
-        "2": "<RELATIVE_DIRECTION>taki <BRANCH_SIGN> çıkıştan çıkın.",
-        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <BRANCH_SIGN> işaretine doğru çıkın.",
+        "1": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından çıkın.",
+        "2": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından çıkın.",
+        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
         "4": "<RELATIVE_DIRECTION>daki çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "6": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "6": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "7": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "8": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından çıkın.",
         "10": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
         "12": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "14": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
-        "15": "Çıkın",
-        "16": "<NUMBER_SIGN> çıkıştan çıkın.",
+        "15": "Çıkıştan çıkın.",
+        "16": "<NUMBER_SIGN> çıkışından çıkın.",
         "17": "<BRANCH_SIGN> çıkışından çıkın.",
-        "18": "<NUMBER_SIGN> çıkıştan <BRANCH_SIGN> işaretine doğru çıkın.",
-        "19": "<TOWARD_SIGN> doğru çıkın.",
-        "20": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkıştan çıkın.",
+        "18": "<NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
+        "19": "<TOWARD_SIGN> işaretine doğru çıkın.",
+        "20": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkışından çıkın.",
         "21": "<BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
-        "22": "<BRANCH_SIGN> üzerindeki <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "22": "<BRANCH_SIGN> üzerindeki <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "23": "<NAME_SIGN> çıkışından çıkın.",
         "25": "<BRANCH_SIGN> üzerindeki <NAME_SIGN> çıkışından çıkın.",
         "27": "<TOWARD_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
-        "29": "<BRANCH_SIGN> üzerindeki <NAME_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın."
+        "29": "<BRANCH_SIGN> üzerindeki <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın."
       },
       "relative_directions": [
         "sol",
@@ -380,72 +380,72 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Binadan çıkın.",
+        "1": "Binadan çıkın ve <STREET_NAMES> üzerinde devam edin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk"
+        "yaya geçidi"
       ]
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Döner kavşaktan çıkın",
-        "1": "<STREET_NAMES> caddesine doğru döner kavşaktan çıkın.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru döner kavşaktan çıkın. <STREET_NAMES> caddesine devam edin.",
+        "0": "Döner kavşaktan çıkın.",
+        "1": "<STREET_NAMES> yönüne döner kavşaktan çıkın.",
+        "2": "<BEGIN_STREET_NAMES> yönüne döner kavşaktan çıkın. <STREET_NAMES> üzerinde devam edin.",
         "3": "<TOWARD_SIGN> işaretine doğru döner kavşaktan çıkın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ]
     },
     "exit_roundabout_verbal": {
       "phrases": {
         "0": "Döner kavşaktan çıkın.",
-        "1": "<STREET_NAMES> caddesine doğru döner kavşaktan çıkın.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru döner kavşaktan çıkın.",
+        "1": "<STREET_NAMES> yönüne döner kavşaktan çıkın.",
+        "2": "<BEGIN_STREET_NAMES> yönüne döner kavşaktan çıkın.",
         "3": "<TOWARD_SIGN> işaretine doğru döner kavşaktan çıkın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ]
     },
     "exit_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>daki çıkıştan çıkın.",
-        "1": "Take exit on the <RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan çıkın.",
+        "1": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından çıkın.",
         "2": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından çıkın.",
-        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <BRANCH_SIGN> doğru çıkın.",
+        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
         "4": "<RELATIVE_DIRECTION>daki <TOWARD_SIGN> işaretine doğru çıkın.",
-        "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "6": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
-        "7": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
-        "8": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkıştan çıkın.",
+        "7": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "8": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından çıkın.",
         "10": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
-        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "12": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
         "14": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
-        "15": "Çıkıştan çıkın",
-        "16": "<NUMBER_SIGN> çıkıştan çıkın.",
+        "15": "Çıkıştan çıkın.",
+        "16": "<NUMBER_SIGN> çıkışından çıkın.",
         "17": "<BRANCH_SIGN> çıkışından çıkın.",
         "18": "<BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkın.",
         "19": "<TOWARD_SIGN> işaretine giden çıkıştan çıkın.",
-        "20": "<TOWARD_SIGN> işaretine giden <NUMBER_SIGN> çıkıştan çıkın.",
+        "20": "<TOWARD_SIGN> işaretine giden <NUMBER_SIGN> çıkışından çıkın.",
         "21": "<TOWARD_SIGN> işaretine giden <BRANCH_SIGN> çıkışından çıkın.",
-        "22": "<TOWARD_SIGN> işaretine giden <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkıştan çıkın.",
+        "22": "<TOWARD_SIGN> işaretine giden <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkın.",
         "23": "<NAME_SIGN> çıkışından çıkın.",
         "25": "<BRANCH_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
         "27": "<TOWARD_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
@@ -465,120 +465,120 @@
       "phrases": {
         "0": "Çatalın <RELATIVE_DIRECTION> yönünde kalın.",
         "1": "<NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
-        "2": "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın.",
-        "3": "<STREET_NAMES> caddesine giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> yönüne girmek için <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> yönüne giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
         "4": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
-        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "5": "<TOWARD_SIGN> işaretine giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "6": "<STREET_NAMES> yönüne girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
         "7": "<STREET_NAMES> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "orta",
         "sağ"
       ]
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>da kalın.",
-        "1": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
-        "2": "<STREET_NAMES> caddesinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
-        "3": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+        "0": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>da kalın.",
+        "1": "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> üzerinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "orta",
         "sağ"
       ]
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>da kalın.",
-        "1": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> için <RELATIVE_DIRECTION>da kalın.",
-        "2": "<STREET_NAMES> caddesinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
-        "3": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+        "0": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>da kalın.",
+        "1": "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> üzerinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> üzerinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "orta",
         "sağ"
       ]
     },
     "keep_verbal": {
       "phrases": {
         "0": "Çatalın <RELATIVE_DIRECTION>da kalın.",
-        "1": "<NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
-        "2": "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın.",
-        "3": "<STREET_NAMES> caddesine doğru <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "1": "<NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> yönüne girmek için <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> yönüne <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
         "4": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
-        "5": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
-        "6": "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
-        "7": "<STREET_NAMES> caddesinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
+        "5": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "6": "<STREET_NAMES> yönüne girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "7": "<STREET_NAMES> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
-        "straight",
+        "orta",
         "sağ"
       ]
     },
     "level_change": {
       "phrases": {
-        "0": "Continue to <LEVEL>."
+        "0": "<LEVEL> seviyesine devam edin."
       }
     },
     "merge": {
       "phrases": {
         "0": "Yola katılın.",
         "1": "<RELATIVE_DIRECTION>dan yola katılın.",
-        "2": "<STREET_NAMES> caddesine doğru yola katılın.",
-        "3": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>dan yola katılın.",
+        "2": "<STREET_NAMES> yoluna katılın.",
+        "3": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>dan yola katılın.",
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
-        "5": "<RELATIVE_DIRECTION>dan yola katılın toward <TOWARD_SIGN> işaretine doğru."
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>dan yola katılın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -588,20 +588,20 @@
     "merge_verbal": {
       "phrases": {
         "0": "Yola katıl.",
-        "1": "<RELATIVE_DIRECTION> doğru yola katılın.",
-        "2": "<STREET_NAMES> caddesine katılın.",
-        "3": "<RELATIVE_DIRECTION> doğru <STREET_NAMES>caddesine katılın.",
+        "1": "<RELATIVE_DIRECTION>dan yola katılın.",
+        "2": "<STREET_NAMES> yoluna katılın.",
+        "3": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>dan yola katılın.",
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
-        "5": "<RELATIVE_DIRECTION> doğru <TOWARD_SIGN> işaretine katılın."
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>dan yola katılın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -610,18 +610,18 @@
     },
     "park_vehicle": {
       "phrases": {
-        "0": "Park your vehicle"
+        "0": "Aracınızı park edin"
       }
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "<OBJECT_LABEL> hizasından geçin.",
+        "1": "<OBJECT_LABEL> üzerindeki trafik ışıklarından geçin."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "kapı",
+        "dikmeler",
+        "kavşak"
       ]
     },
     "post_transition_transit_verbal": {
@@ -636,16 +636,16 @@
     "post_transition_verbal": {
       "phrases": {
         "0": "<LENGTH> boyunca devam edin.",
-        "1": "<STREET_NAMES> caddesinde <LENGTH> boyunca devam edin."
+        "1": "<STREET_NAMES> üzerinde <LENGTH> boyunca devam edin."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "metric_lengths": [
         "<KILOMETERS>kilometre",
@@ -729,20 +729,20 @@
     "sharp": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın. <STREET_NAMES> caddesine devam edin.",
-        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
+        "2": "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın. <STREET_NAMES> üzerinde devam edin.",
+        "3": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
         "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
         "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -752,20 +752,20 @@
     "sharp_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
-        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
+        "2": "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
+        "3": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
         "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
         "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -775,17 +775,17 @@
     "start": {
       "phrases": {
         "0": "<CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "1": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "2": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin. <STREET_NAMES> caddesine devam edin.",
+        "1": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "2": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin. <STREET_NAMES> üzerinde devam edin.",
         "4": "<CARDINAL_DIRECTION> yönüne doğru sürün.",
-        "5": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru sürün.",
-        "6": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru sürün. <STREET_NAMES> caddesine devam edin.",
+        "5": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru sürün.",
+        "6": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru sürün. <STREET_NAMES> üzerinde devam edin.",
         "8": "<CARDINAL_DIRECTION> yönüne yürüyün.",
-        "9": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne yürüyün.",
-        "10": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne yürüyün.<STREET_NAMES> caddesine devam edin.",
+        "9": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne yürüyün.",
+        "10": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne yürüyün.<STREET_NAMES> üzerinde devam edin.",
         "16": "<CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
-        "17": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
-        "18": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin. <STREET_NAMES> caddesine devam edin."
+        "17": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
+        "18": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin. <STREET_NAMES> üzerinde devam edin."
       },
       "cardinal_directions": [
         "kuzey",
@@ -798,37 +798,37 @@
         "kuzeybatı"
       ],
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ]
     },
     "start_verbal": {
       "phrases": {
         "0": "<CARDINAL_DIRECTION> yönüne ilerleyin.",
         "1": "<LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "2": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "3": "<STREET_NAMES> caddesinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "4": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "2": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "3": "<STREET_NAMES> üzerinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "4": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
         "5": "<CARDINAL_DIRECTION> yönüne sürün.",
         "6": "<LENGTH> boyunca <CARDINAL_DIRECTION> yönüne sürün.",
-        "7": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "8": "<STREET_NAMES> caddesinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
-        "9": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "7": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "8": "<STREET_NAMES> üzerinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "9": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
         "10": "<CARDINAL_DIRECTION> yönüne yürüyün.",
         "11": "<CARDINAL_DIRECTION> yönünde <LENGTH> boyunca yürüyün.",
-        "12": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru yürüyün.",
-        "13": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru <LENGTH> boyunca yürüyün.",
-        "14": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru yürüyün.",
+        "12": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru yürüyün.",
+        "13": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru <LENGTH> boyunca yürüyün.",
+        "14": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne doğru yürüyün.",
         "15": "<CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
         "16": "<CARDINAL_DIRECTION> yönüne <LENGTH> boyunca bisikletinizle ilerleyin.",
-        "17": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
-        "18": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönünde <LENGTH> boyunca bisikletinizle ilerleyin.",
-        "19": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
+        "17": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
+        "18": "<STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönünde <LENGTH> boyunca bisikletinizle ilerleyin.",
+        "19": "<BEGIN_STREET_NAMES> üzerinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
       },
       "cardinal_directions": [
         "kuzey",
@@ -841,13 +841,13 @@
         "kuzeybatı"
       ],
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "metric_lengths": [
         "<KILOMETERS>kilometre",
@@ -866,8 +866,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Merdiveni kullanın.",
+        "1": "Merdivenle <LEVEL> seviyesine gidin."
       }
     },
     "transit": {
@@ -894,7 +894,7 @@
       "phrases": {
         "0": "İstasyondan çıkın.",
         "1": "<TRANSIT_STOP> istasyonundan çıkın.",
-        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonundan çıkın."
+        "2": "<TRANSIT_STOP> <STATION_LABEL>undan çıkın."
       },
       "station_label": "İstasyon"
     },
@@ -902,39 +902,39 @@
       "phrases": {
         "0": "İstasyondan çıkın.",
         "1": "<TRANSIT_STOP> istasyonundan çıkın.",
-        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonundan çıkın."
+        "2": "<TRANSIT_STOP> <STATION_LABEL>undan çıkın."
       },
       "station_label": "İstasyon"
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "İstasyonuna girin.",
+        "0": "İstasyona girin.",
         "1": "<TRANSIT_STOP> durağına girin.",
-        "2": "<TRANSIT_STOP> <STATION_LABEL>durağına girin."
+        "2": "<TRANSIT_STOP> <STATION_LABEL>una girin."
       },
       "station_label": "İstasyon"
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "İstasyonuna girin.",
+        "0": "İstasyona girin.",
         "1": "<TRANSIT_STOP> durağına girin.",
-        "2": "<TRANSIT_STOP> <STATION_LABEL>durağına girin."
+        "2": "<TRANSIT_STOP> <STATION_LABEL>una girin."
       },
       "station_label": "İstasyon"
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "İstasyonunda aktarma yapın.",
+        "0": "İstasyonda aktarma yapın.",
         "1": "<TRANSIT_STOP> istasyonunda aktarma yapın.",
-        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonunda aktarma yapın."
+        "2": "<TRANSIT_STOP> <STATION_LABEL>unda aktarma yapın."
       },
       "station_label": "İstasyon"
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "İstasyonunda aktarma yapın.",
+        "0": "İstasyonda aktarma yapın.",
         "1": "<TRANSIT_STOP> istasyonunda aktarma yapın.",
-        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonunda aktarma yapın."
+        "2": "<TRANSIT_STOP> <STATION_LABEL>unda aktarma yapın."
       },
       "station_label": "İstasyon"
     },
@@ -1029,20 +1029,20 @@
     "turn": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>a dönün.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.<STREET_NAMES> caddesine devam edin.",
-        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a dönün.",
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün.",
+        "2": "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün.<STREET_NAMES> üzerinde devam edin.",
+        "3": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a dönün.",
         "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a dönün.",
         "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a dönün."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -1052,20 +1052,20 @@
     "turn_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>a dönün.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.",
-        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.",
-        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a dönün.",
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün.",
+        "2": "<BEGIN_STREET_NAMES> yönüne <RELATIVE_DIRECTION>a dönün.",
+        "3": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a dönün.",
         "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a dönün.",
         "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a dönün."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -1075,22 +1075,22 @@
     "uturn": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "1": "<STREET_NAMES> caddesi üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "2": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "3": "<CROSS_STREET_NAMES> caddesinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "4": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "5": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "1": "<STREET_NAMES> üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "2": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "3": "<CROSS_STREET_NAMES> üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "4": "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> yönüne <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "5": "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "6": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",
@@ -1100,22 +1100,22 @@
     "uturn_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "2": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "3": "<CROSS_STREET_NAMES> caddesinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "4": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "5": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "1": "<STREET_NAMES> yönüne <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "2": "<STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "3": "<CROSS_STREET_NAMES> üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "4": "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> yönüne <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "5": "<CROSS_STREET_NAMES> üzerinde <STREET_NAMES> üzerinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "6": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
       },
       "empty_street_name_labels": [
-        "yaya geçidi",
+        "yaya yolu",
         "bisiklet yolu",
         "dağ bisikleti yolu",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "yaya geçidi",
+        "merdiven",
+        "köprü",
+        "tünel"
       ],
       "relative_directions": [
         "sol",

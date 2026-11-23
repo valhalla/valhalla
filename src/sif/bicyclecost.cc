@@ -407,6 +407,7 @@ public:
   float road_factor_;         // Road factor based on use_roads_
   float sidepath_factor_;     // Factor to use when use_sidepath is set on an edge
   float livingstreet_factor_; // Factor to use for living streets
+  float cyclestreet_factor_;  // factor to use for cycle streets
   float track_factor_;        // Factor to use tracks
   float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
   float steps_factor_;        // Cost factor for steps, applied on top of a 1 kph pace
@@ -446,8 +447,12 @@ protected:
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
+               const baldr::GraphId& edgeid,
                uint16_t disallow_mask = kDisallowNone) const override {
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+    if (AllowedLinearFeature(edgeid)) {
+      return true;
+    }
+    return DynamicCost::Allowed(edge, tile, edgeid, disallow_mask) && !edge->bss_connection() &&
            (avoid_bad_surfaces_ != 1.0f || edge->surface() <= worst_allowed_surface_);
   }
 };
@@ -510,6 +515,7 @@ BicycleCost::BicycleCost(const Costing& costing)
   // Set edge costing factors
   sidepath_factor_ = 3.0f * (1.0f - use_roads_);
   livingstreet_factor_ = 0.2f + use_roads_ * 0.8f;
+  cyclestreet_factor_ = 0.2f + use_roads_ * 0.5f;
   track_factor_ = 0.5f + use_roads_;
   cyclelane_factor_[0] = 1.0f;                          // No shoulder or cycle lane
   cyclelane_factor_[1] = 0.9f + use_roads_ * 0.05f;     // No shoulder, shared cycle lane
@@ -675,6 +681,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     accommodation_factor = 0.3f + use_roads_;
   } else if (edge->use() == Use::kLivingStreet) {
     roadway_stress = livingstreet_factor_;
+  } else if (edge->use() == Use::kCycleStreet) {
+    roadway_stress = cyclestreet_factor_;
   } else if (edge->use() == Use::kTrack) {
     roadway_stress = track_factor_;
   } else {

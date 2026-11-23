@@ -4,7 +4,5 @@ coverage:
     # executables (not library code)
     - src/valhalla_*
     - src/mjolnir/valhalla_*
-    # bindings (separate test suites)
-    - src/bindings/.*
 
 comment: off

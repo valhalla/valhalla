@@ -464,11 +464,11 @@ msgstr "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
 
 msgctxt "instructions.destination.replacement.relative_directions.0"
 msgid "left"
-msgstr "trái"
+msgstr "bên trái"
 
 msgctxt "instructions.destination.replacement.relative_directions.1"
 msgid "right"
-msgstr "phải"
+msgstr "bên phải"
 
 #. e.g. You have arrived at your destination.
 msgctxt "instructions.destination_verbal.phrases.0"
@@ -493,11 +493,11 @@ msgstr "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
 
 msgctxt "instructions.destination_verbal.replacement.relative_directions.0"
 msgid "left"
-msgstr "trái"
+msgstr "bên trái"
 
 msgctxt "instructions.destination_verbal.replacement.relative_directions.1"
 msgid "right"
-msgstr "phải"
+msgstr "bên phải"
 
 #. e.g. You will arrive at your destination.
 msgctxt "instructions.destination_verbal_alert.phrases.0"
@@ -522,11 +522,11 @@ msgstr "<DESTINATION> sẽ nằm ở <RELATIVE_DIRECTION>."
 
 msgctxt "instructions.destination_verbal_alert.replacement.relative_directions.0"
 msgid "left"
-msgstr "trái"
+msgstr "bên trái"
 
 msgctxt "instructions.destination_verbal_alert.replacement.relative_directions.1"
 msgid "right"
-msgstr "phải"
+msgstr "bên phải"
 
 #. e.g. Take the elevator.
 msgctxt "instructions.elevator.phrases.0"

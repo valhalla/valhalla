@@ -499,6 +499,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kElevatorUse;
     case baldr::Use::kSteps:
       return TripLeg_Use_kStepsUse;
+    case baldr::Use::kLadder:
+      return TripLeg_Use_kLadderUse;
     case baldr::Use::kEscalator:
       return TripLeg_Use_kEscalatorUse;
     case baldr::Use::kPath:
