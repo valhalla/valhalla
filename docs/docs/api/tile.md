@@ -121,15 +121,19 @@ incident.iso_3166_1_alpha3
 
 Each feature in `turn_restrictions` is one prohibited path from an edge onto another edge, as the router evaluates it. A restriction is a `LineString` reaching a few meters into the "from" and "to" edges, plus a `Point` at its end (same feature id) for drawing an arrow head. `only_*` restrictions become one prohibited path per edge which isn't the allowed one.
 
-All attributes are always present, `filters` don't apply to this layer:
+`filters` don't apply to this layer. Attributes marked "complex only" are only present on complex restrictions:
 
 | Attribute | Description |
 | :-------- | :---------- |
-| `complex` | `false` for simple restrictions (from way, via node, to way, all vehicle modes, no time condition). |
+| `complex` | `false` for simple restrictions (from way, via node, to way, all vehicle modes, no time condition), `true` for all others. |
 | `modes` | Access bit mask of the modes the restriction applies to, see `access` above. |
 | `from_edge_id` | GraphId of the "from" edge. |
 | `to_edge_id` | GraphId of the "to" edge, which is the prohibited one. |
 | `bearing` | Only on the `Point` features: the direction of the "to" edge at the arrow head, in degrees clockwise from north. |
+| `type` | Complex only: the restriction type, see `RestrictionType` in [graphconstants.h](https://github.com/valhalla/valhalla/blob/master/valhalla/baldr/graphconstants.h). For `only_*` types the feature is one of the prohibited paths derived from it. |
+| `via_edge_ids` | Complex only, if it has via ways: GraphIds of the via edges in travel order, comma separated and wrapped in commas (e.g. `",123,456,"`), so `["in", ",123,", ["get", "via_edge_ids"]]` matches exactly. |
+
+Time dependent restrictions are included, but without their time condition for now. One with several time ranges shows up as identical features.
 
 ## Integration into MVT compatible clients/SDKs etc
 

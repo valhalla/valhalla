@@ -162,6 +162,19 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
   return {tile_x, tile_y};
 }
 
+// all the parts identifying a complex restriction, cut to the 53 bit integer precision of JS numbers
+uint64_t complex_restriction_id(const ComplexRestriction& cr, const std::vector<GraphId>& vias) {
+  std::size_t seed = 0;
+  hash_combine(seed, cr.from_graphid().value);
+  for (const auto& via : vias) {
+    hash_combine(seed, via.value);
+  }
+  hash_combine(seed, cr.to_graphid().value);
+  hash_combine(seed, static_cast<uint32_t>(cr.type()));
+  hash_combine(seed, cr.modes());
+  return seed & ((1ull << 53) - 1);
+}
+
 // appends the first or last few meters of an edge's shape in travel direction to the path
 void append_partial_shape(std::vector<PointLL>& path,
                           const DirectedEdge* edge,
@@ -452,80 +465,146 @@ void add_turn_restriction(TurnRestrictionLayerBuilder& tr_builder,
   }
 }
 
+// adds the simple restrictions starting at this edge and the complex ones ending at it
 void build_turn_restrictions_layer(TurnRestrictionLayerBuilder& tr_builder,
                                    GraphReader& reader,
-                                   const GraphId from_edge_id,
-                                   const DirectedEdge* from_edge,
-                                   const graph_tile_ptr& from_edge_tile,
+                                   const GraphId edge_id,
+                                   const DirectedEdge* edge,
+                                   const graph_tile_ptr& edge_tile,
                                    uint32_t z,
                                    bg::linestring_2d_t& mercator_line,
                                    const box_vtzero_t& clip_box,
                                    double generalize,
                                    const TileProjection& projection) {
-  // simple restrictions are a mask of the forbidden edges' local indices at the end node
-  const uint32_t mask = from_edge->restrictions();
-  if (!mask) {
-    return;
-  }
-
-  auto add_simple_restrictions = [&](const GraphId node_id, const NodeInfo* node,
-                                     const graph_tile_ptr& node_tile) {
-    const auto out_edges = node_tile->GetDirectedEdges(node);
-    for (uint32_t i = 0; i < out_edges.size(); ++i) {
-      const auto& to_edge = out_edges[i];
-      const auto local_idx = to_edge.localedgeidx();
-
-      // is this actually a turn restriction?
-      if (to_edge.is_shortcut() || local_idx >= kMaxTurnRestrictionEdges ||
-          !(mask & (1 << local_idx))) {
-        continue;
-      }
-      const GraphId to_edge_id(node_id.tileid(), node_id.level(), node->edge_index() + i);
-
-      // we'll keep the first 20 m for vis, or half the edge length, whichever is less
-      std::vector<PointLL> path;
-      append_partial_shape(path, from_edge, from_edge_tile, true);
-      const size_t via_idx = path.size() - 1;
-      append_partial_shape(path, &to_edge, node_tile, false);
-
-      bool leaves_bbox = false;
-      const auto mvt_line =
-          shape_to_mercator(path, mercator_line, clip_box, leaves_bbox, generalize, z, projection);
-      if (mvt_line.size() < 2) {
-        continue;
-      }
-
-      // smooth the head's direction over its last 10 meters, without sampling past the via node
-      const auto bearing =
-          static_cast<uint32_t>(
-              std::round(tangent_angle(path.size() - 1, path.back(), path, 10.f, true, via_idx))) %
-          360;
-
-      const TurnRestrictionProps props{
-          .id = (from_edge_id.value << 6) | local_idx,
-          .from_edge_id = from_edge_id,
-          .to_edge_id = to_edge_id,
-      };
-      add_turn_restriction(tr_builder, props, mvt_line, leaves_bbox, clip_box, bearing);
+  // head_start is the path index where the to edge begins
+  auto add_restriction = [&](const TurnRestrictionProps& props, const std::vector<PointLL>& path,
+                             size_t head_start) {
+    bool leaves_bbox = false;
+    const auto mvt_line =
+        shape_to_mercator(path, mercator_line, clip_box, leaves_bbox, generalize, z, projection);
+    if (mvt_line.size() < 2) {
+      return;
     }
+
+    // smooth the head's direction over its last 10 meters, without sampling past the to edge
+    const float angle = tangent_angle(path.size() - 1, path.back(), path, 10.f, true, head_start);
+    const auto bearing = static_cast<uint32_t>(std::round(angle)) % 360;
+    add_turn_restriction(tr_builder, props, mvt_line, leaves_bbox, clip_box, bearing);
   };
 
-  // get the from edge's end node if available
-  const GraphId end_node_id = from_edge->endnode();
-  graph_tile_ptr end_node_tile = from_edge_tile;
-  const NodeInfo* end_node = reader.nodeinfo(end_node_id, end_node_tile);
-  if (!end_node) {
+  // simple restrictions are a mask of the forbidden edges' local indices at the end node
+  if (const uint32_t mask = edge->restrictions()) {
+    auto add_simple_restrictions = [&](const GraphId node_id, const NodeInfo* node,
+                                       const graph_tile_ptr& node_tile) {
+      const auto out_edges = node_tile->GetDirectedEdges(node);
+      for (uint32_t i = 0; i < out_edges.size(); ++i) {
+        const auto& to_edge = out_edges[i];
+        const auto local_idx = to_edge.localedgeidx();
+
+        // is this actually a turn restriction?
+        if (to_edge.is_shortcut() || local_idx >= kMaxTurnRestrictionEdges ||
+            !(mask & (1 << local_idx))) {
+          continue;
+        }
+
+        // we'll keep the first 20 m for vis, or half the edge length, whichever is less
+        std::vector<PointLL> partial_shapes;
+        append_partial_shape(partial_shapes, edge, edge_tile, true);
+        const size_t head_start = partial_shapes.size() - 1;
+        append_partial_shape(partial_shapes, &to_edge, node_tile, false);
+
+        const TurnRestrictionProps props{
+            .id = edge_id.value * kMaxTurnRestrictionEdges + local_idx,
+            .from_edge_id = edge_id,
+            .to_edge_id = GraphId(node_id.tileid(), node_id.level(), node->edge_index() + i),
+        };
+        add_restriction(props, partial_shapes, head_start);
+      }
+    };
+
+    // get the edge's end node if available
+    const GraphId end_node_id = edge->endnode();
+    graph_tile_ptr end_node_tile = edge_tile;
+    if (const NodeInfo* end_node = reader.nodeinfo(end_node_id, end_node_tile)) {
+      add_simple_restrictions(end_node_id, end_node, end_node_tile);
+
+      // the to edges can be on any hierarchy level of the end node
+      for (const auto& trans : end_node_tile->GetNodeTransitions(end_node)) {
+        graph_tile_ptr trans_tile;
+        if (const NodeInfo* trans_node = reader.nodeinfo(trans.endnode(), trans_tile)) {
+          add_simple_restrictions(trans.endnode(), trans_node, trans_tile);
+        }
+      }
+    }
+  }
+
+  // complex restrictions are stored in the to edge's tile, in travel direction
+  if (!edge->end_restriction()) {
     return;
   }
 
-  add_simple_restrictions(end_node_id, end_node, end_node_tile);
+  // get all complex ones for every mode
+  for (const auto& cr : edge_tile->GetComplexRestrictions(true, edge_id, kAllAccess)) {
+    // vias are stored from the to edge backwards
+    std::vector<GraphId> vias;
+    vias.reserve(cr.via_count());
 
-  // the restricted edges can be on any hierarchy level of the end node
-  for (const auto& trans : end_node_tile->GetNodeTransitions(end_node)) {
-    graph_tile_ptr trans_tile;
-    if (const NodeInfo* trans_node = reader.nodeinfo(trans.endnode(), trans_tile)) {
-      add_simple_restrictions(trans.endnode(), trans_node, trans_tile);
+    cr.WalkVias([&vias](const GraphId* via) {
+      vias.push_back(*via);
+      return WalkingVia::KeepWalking;
+    });
+    std::reverse(vias.begin(), vias.end());
+
+    // get the from_edge and its tile
+    graph_tile_ptr tile = edge_tile;
+    const DirectedEdge* from_edge = reader.directededge(cr.from_graphid(), tile);
+    if (!from_edge) {
+      continue;
     }
+
+    // add the from edge's partial geometry
+    std::vector<PointLL> partial_shape;
+    append_partial_shape(partial_shape, from_edge, tile, true);
+
+    // add via graph ids as strings, MVT doesn't support arrays
+    std::string via_edge_ids;
+    bool vias_complete = true;
+    for (const auto& via_id : vias) {
+      const DirectedEdge* via_edge = reader.directededge(via_id, tile);
+      if (!via_edge) {
+        vias_complete = false;
+        break;
+      }
+
+      auto via_shape = tile->edgeinfo(via_edge).shape();
+      if (!via_edge->forward()) {
+        std::reverse(via_shape.begin(), via_shape.end());
+      }
+      // consecutive edges share their connecting node
+      partial_shape.insert(partial_shape.end(), std::next(via_shape.begin()), via_shape.end());
+
+      // keeps a leading & trailing comma, so a style.json can match whole IDs
+      via_edge_ids += "," + std::to_string(via_id.value);
+    }
+    if (!vias_complete) {
+      continue;
+    }
+    if (!via_edge_ids.empty()) {
+      via_edge_ids += ",";
+    }
+
+    // only include the to edge in the bearing computation
+    const size_t head_start = partial_shape.size() - 1;
+    append_partial_shape(partial_shape, edge, edge_tile, false);
+
+    const TurnRestrictionProps props{
+        .id = complex_restriction_id(cr, vias),
+        .from_edge_id = cr.from_graphid(),
+        .to_edge_id = cr.to_graphid(),
+        .complex = &cr,
+        .via_edge_ids = std::move(via_edge_ids),
+    };
+    add_restriction(props, partial_shape, head_start);
   }
 }
 
@@ -874,15 +953,28 @@ TurnRestrictionLayerBuilder::TurnRestrictionLayerBuilder(vtzero::tile_builder& t
   key_from_edge_id_ = add_key_without_dup_check("from_edge_id");
   key_to_edge_id_ = add_key_without_dup_check("to_edge_id");
   key_bearing_ = add_key_without_dup_check("bearing");
+  key_type_ = add_key_without_dup_check("type");
+  key_via_edge_ids_ = add_key_without_dup_check("via_edge_ids");
 }
 
 void TurnRestrictionLayerBuilder::add_properties(vtzero::feature_builder& feature,
                                                  const TurnRestrictionProps& props) {
-  feature.add_property(key_complex_, vtzero::encoded_property_value(false));
-  feature.add_property(key_modes_, vtzero::encoded_property_value(
-                                       static_cast<uint32_t>(kSimpleTurnRestrictionAccess)));
+  const auto* is_complex = props.complex;
+  const uint32_t modes = is_complex ? is_complex->modes() : kSimpleTurnRestrictionAccess;
+  feature.add_property(key_complex_, vtzero::encoded_property_value(is_complex != nullptr));
+  feature.add_property(key_modes_, vtzero::encoded_property_value(modes));
   feature.add_property(key_from_edge_id_, vtzero::encoded_property_value(props.from_edge_id.value));
   feature.add_property(key_to_edge_id_, vtzero::encoded_property_value(props.to_edge_id.value));
+
+  // simple restrictions don't keep their type
+  if (!is_complex) {
+    return;
+  }
+  feature.add_property(key_type_,
+                       vtzero::encoded_property_value(static_cast<uint32_t>(is_complex->type())));
+  if (!props.via_edge_ids.empty()) {
+    feature.add_property(key_via_edge_ids_, vtzero::encoded_property_value(props.via_edge_ids));
+  }
 }
 
 void TurnRestrictionLayerBuilder::add_line_feature(const TurnRestrictionProps& props,

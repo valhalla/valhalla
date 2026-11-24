@@ -4,6 +4,7 @@
 #include "baldr/accessrestriction.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
+#include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
@@ -17,6 +18,7 @@
 
 #include <cassert>
 #include <random>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 
@@ -60,6 +62,10 @@ struct TurnRestrictionProps {
   uint64_t id;
   baldr::GraphId from_edge_id;
   baldr::GraphId to_edge_id;
+  // only set for complex restrictions
+  const baldr::ComplexRestriction* complex = nullptr;
+  // comma-wrapped, e.g. ",1,2,", so clients can match a single edge id exactly
+  std::string via_edge_ids;
 };
 
 // Each restriction is a line along the path plus a point at its end for the arrow head
@@ -79,6 +85,8 @@ protected:
   vtzero::index_value key_from_edge_id_;
   vtzero::index_value key_to_edge_id_;
   vtzero::index_value key_bearing_;
+  vtzero::index_value key_type_;
+  vtzero::index_value key_via_edge_ids_;
 };
 
 class IncidentLayersBuilder;
