@@ -450,6 +450,67 @@ TEST(VectorTilesTurnRestrictions, Complex) {
   EXPECT_NEAR(heads.at({edge_id("A", "B"), edge_id("D", "E")}).bearing, 90, 1);
 }
 
+TEST(VectorTilesTurnRestrictions, TileSeam) {
+  // N sits just west of a z14 seam, B east of it: the "from AN" and the "to NA" restrictions
+  // are only found via their other edge in the eastern tile
+  const std::string ascii_map = R"(
+    A-----N-----B
+  )";
+  const gurka::ways ways = {
+      {"AN", {{"highway", "residential"}}},
+      {"NB", {{"highway", "residential"}}},
+  };
+  const gurka::relations relations = {
+      {{{gurka::way_member, "AN", "from"},
+        {gurka::node_member, "N", "via"},
+        {gurka::way_member, "NB", "to"}},
+       {{"type", "restriction"}, {"restriction", "no_straight_on"}}},
+      {{{gurka::way_member, "NB", "from"},
+        {gurka::node_member, "N", "via"},
+        {gurka::way_member, "AN", "to"}},
+       {{"type", "restriction"}, {"restriction:hgv", "no_straight_on"}}},
+  };
+
+  // move the map so N is 5 m west of its tile's eastern edge
+  constexpr uint32_t z = 14;
+  const double tiles_per_degree = (1 << z) / 360.;
+  PointLL topleft{2.315260, 48.869168};
+  const auto initial_n = gurka::detail::map_to_coordinates(ascii_map, 10, topleft).at("N");
+  const double seam_lng =
+      (std::floor((initial_n.lng() + 180.) * tiles_per_degree) + 1.) / tiles_per_degree - 180.;
+  const double five_meters = 5. / (kMetersPerDegreeLat * std::cos(initial_n.lat() * kRadPerDegD));
+  topleft.set_x(topleft.lng() + seam_lng - initial_n.lng() - five_meters);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, topleft);
+  ASSERT_LT(layout.at("N").lng(), seam_lng);
+  ASSERT_GT(layout.at("B").lng(), seam_lng);
+
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/gurka_vt_turn_restrictions_seam");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto edge_id = [&](const std::string& from, const std::string& to) {
+    return std::get<0>(gurka::findEdgeByNodes(*reader, layout, from, to)).value;
+  };
+  const std::set<std::pair<uint64_t, uint64_t>> expected = {
+      {edge_id("A", "N"), edge_id("N", "B")},
+      {edge_id("B", "N"), edge_id("N", "A")},
+  };
+
+  // both tiles have both restrictions, the eastern one only thanks to their other edge
+  for (const auto& node : {"A", "B"}) {
+    SCOPED_TRACE(std::format("tile at {}", node));
+    std::string tile_data;
+    gurka::do_action(Options::tile, map, node, z, "auto", {}, nullptr, &tile_data);
+
+    std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature> lines, heads;
+    parse_turn_restrictions(tile_data, lines, heads);
+    std::set<std::pair<uint64_t, uint64_t>> found;
+    for (const auto& [key, tr] : lines) {
+      found.insert(key);
+    }
+    EXPECT_EQ(found, expected);
+  }
+}
+
 class VectorTiles : public ::testing::Test {
 protected:
   static gurka::map map;

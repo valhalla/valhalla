@@ -21,6 +21,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace valhalla::loki {
 
@@ -77,7 +78,14 @@ public:
   void
   add_point_feature(const TurnRestrictionProps& props, const vtzero::point& head, uint32_t bearing);
 
+  // drop duplicates inside a single mvt
+  bool add_unique_id(uint64_t id) {
+    return unique_ids_.insert(id).second;
+  }
+
 protected:
+  std::unordered_set<uint64_t> unique_ids_;
+
   void add_properties(vtzero::feature_builder& feature, const TurnRestrictionProps& props);
 
   vtzero::index_value key_complex_;

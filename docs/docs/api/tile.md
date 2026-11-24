@@ -133,7 +133,7 @@ Each feature in `turn_restrictions` is one prohibited path from an edge onto ano
 | `type` | Complex only: the restriction type, see `RestrictionType` in [graphconstants.h](https://github.com/valhalla/valhalla/blob/master/valhalla/baldr/graphconstants.h). For `only_*` types the feature is one of the prohibited paths derived from it. |
 | `via_edge_ids` | Complex only, if it has via ways: GraphIds of the via edges in travel order, comma separated and wrapped in commas (e.g. `",123,456,"`), so `["in", ",123,", ["get", "via_edge_ids"]]` matches exactly. |
 
-Time dependent restrictions are included, but without their time condition for now. One with several time ranges shows up as identical features.
+Time dependent restrictions are included, but without their time condition for now. A restriction is in every tile its "from" or "to" edge is in; one whose via ways alone cross into a tile is missing there.
 
 ## Integration into MVT compatible clients/SDKs etc
 
