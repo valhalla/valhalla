@@ -138,7 +138,7 @@ struct writable_tile {
 };
 
 float decode(const uint8_t* row, const CustomAttributeDef& def) {
-  return decode_custom_attribute(row, def.offset, def.type) * def.scale;
+  return decode_custom_attribute(row, def.offset, def.type, def.scale);
 }
 
 // tiles of the tar keyed by tile base id, plus the attribute definitions from attributes.json

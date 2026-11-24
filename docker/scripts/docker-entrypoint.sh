@@ -51,6 +51,7 @@ do_build_custom_attributes() {
     --attribute-defs "${custom_attributes_defs}" \
     --default-values "${custom_attributes_default_values}" || exit 1
 
+  # only run the script that modifies the extract if a lua file arg was passed and the file is present
   if [[ -z "${custom_attributes_lua}" ]]; then
     return
   fi

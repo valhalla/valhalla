@@ -90,10 +90,9 @@ TEST(CustomAttributesTile, WeightedSum) {
   auto testdata = make_test_tile();
   auto tile = make_tile(testdata, 3);
 
-  // weights are pre-multiplied by the scale
   const std::array<WeightedCustomAttribute, 2> weights = {{
-      {kDefs[0].offset, kDefs[0].type, 0.8f * kDefs[0].scale},
-      {kDefs[1].offset, kDefs[1].type, 0.01f * kDefs[1].scale},
+      {kDefs[0].offset, kDefs[0].type, kDefs[0].scale, 0.8f},
+      {kDefs[1].offset, kDefs[1].type, kDefs[1].scale, 0.01f},
   }};
   // edge0: 0.1 * 0.8 + 20 * 0.01 = 0.28
   EXPECT_FLOAT_EQ(tile.weighted_sum(0, weights), 0.28f);
@@ -114,7 +113,8 @@ TEST(CustomAttributesTile, OutOfBoundsReturnsZero) {
   // a column past the tile's row_size
   const CustomAttributeDef past_row{"past", CustomAttributeType::kUint8, 1.0f, 16};
   EXPECT_FLOAT_EQ(tile.value(0, past_row), 0.0f);
-  const std::array<WeightedCustomAttribute, 1> weights = {{{16, CustomAttributeType::kUint8, 1.0f}}};
+  const std::array<WeightedCustomAttribute, 1> weights = {
+      {{16, CustomAttributeType::kUint8, 1.0f, 1.0f}}};
   EXPECT_FLOAT_EQ(tile.weighted_sum(0, weights), 0.0f);
 }
 

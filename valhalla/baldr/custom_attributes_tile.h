@@ -29,7 +29,7 @@ struct CustomAttributesTileHeader {
 static_assert(sizeof(CustomAttributesTileHeader) == 32,
               "CustomAttributesTileHeader size is different than expected");
 
-// values are stored as raw integers, decoded as raw * scale
+// allows us to store more than unsigned integers in the future
 enum class CustomAttributeType : uint8_t {
   kUint8 = 0,
 };
@@ -42,7 +42,7 @@ constexpr uint32_t custom_attribute_bits(CustomAttributeType type) {
   return 0;
 }
 
-// one entry of the extract's attributes.json
+// a single entry of the extract's attributes.json
 struct CustomAttributeDef {
   std::string name;
   CustomAttributeType type;
@@ -50,19 +50,31 @@ struct CustomAttributeDef {
   uint32_t offset; // bit offset within an edge's row, byte-sized types start on a byte boundary
 };
 
-// a column the costing reads, with the request weight already multiplied by the scale
+// the information stored in costing needed to retrieve the value and turn it into a factor
 struct WeightedCustomAttribute {
-  uint32_t offset; // in bits
+  uint32_t offset; // in bits from the row start
   CustomAttributeType type;
+  float scale;
   float weight;
 };
 
-// raw value of the column at the bit offset of an edge's row, without the scale
-inline float
-decode_custom_attribute(const volatile uint8_t* row, uint32_t offset, CustomAttributeType type) {
+/**
+ * value of the column at the bit offset of an edge's row
+ *
+ * @param row    the row to read from
+ * @param offset the column offset in the row
+ * @param type   the column's data type
+ * @param scale  the column's scale
+ *
+ * @return the stored value times the scale
+ */
+inline float decode_custom_attribute(const volatile uint8_t* row,
+                                     uint32_t offset,
+                                     CustomAttributeType type,
+                                     float scale) {
   switch (type) {
     case CustomAttributeType::kUint8:
-      return static_cast<float>(row[offset / 8]);
+      return static_cast<float>(row[offset / 8]) * scale;
   }
   return 0.0f;
 }
@@ -153,15 +165,15 @@ public:
     if (!row || def.offset + custom_attribute_bits(def.type) > header_->row_size * 8u) {
       return 0.0f;
     }
-    return decode_custom_attribute(row, def.offset, def.type) * def.scale;
+    return decode_custom_attribute(row, def.offset, def.type, def.scale);
   }
 
   /**
    * Compute the weighted sum of the given attributes for an edge.
    *
    * @param  edge_index  Index of the directed edge (0-based)
-   * @param  attributes  Columns to read, with weights already multiplied by their scale
-   * @return sum of (raw_i * weight_i) weighted over the number of attributes, or 0.0f if no data
+   * @param  attributes  Columns to read, with their scale and weight
+   * @return sum of (value_i * weight_i), or 0.0f if no data
    */
   float weighted_sum(uint32_t edge_index, std::span<const WeightedCustomAttribute> attributes) const
       volatile {
@@ -173,7 +185,8 @@ public:
     float sum = 0.0f;
     for (const auto& attribute : attributes) {
       if (attribute.offset + custom_attribute_bits(attribute.type) <= row_bits) {
-        sum += decode_custom_attribute(row, attribute.offset, attribute.type) * attribute.weight;
+        sum += decode_custom_attribute(row, attribute.offset, attribute.type, attribute.scale) *
+               attribute.weight;
       }
     }
     return sum;

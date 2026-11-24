@@ -238,7 +238,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     if (it != weights.end() && it->second != 0.0f) {
       custom_attribute_weights_.push_back({def.offset(),
                                            static_cast<baldr::CustomAttributeType>(def.type()),
-                                           it->second * def.scale()});
+                                           def.scale(), it->second});
     }
   }
 }
