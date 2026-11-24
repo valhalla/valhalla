@@ -711,27 +711,46 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
 }
 
 TEST(StandAlone, ExcludePolygonWithMissingTile) {
-  // four level 2 tiles meet at (0.25, 1.0). PQ and TU run from the NW to the SE tile and cut
-  // through the NE tile, so the NE tile's bin holds edges of the other two tiles
-  const gurka::nodelayout layout = {
-      {"P", {0.2490, 1.0010}}, {"Q", {0.2510, 0.9994}}, {"T", {0.2492, 1.0012}},
-      {"U", {0.2512, 0.9996}}, {"R", {0.2503, 1.0008}}, {"S", {0.2509, 1.0008}},
-  };
+  // the topleft offset puts the corner of four level 2 tiles between columns 3/4 and rows 6/7:
+  // P and T are in the NW tile, Q and U in the SE tile, PQ and TU cut through the NE tile
+  // which also holds the polygon
+  const std::string ascii_map = R"(
+    P T       1-------2
+     \ \      |       |
+      \ \     |       |
+       \ \    | R---S |
+        \ \   |       |
+         \ \  4-------3
+          \ \
+           \ \
+            \ \
+             Q U
+  )";
   const gurka::ways ways = {
       {"PQ", {{"highway", "residential"}}},
       {"TU", {{"highway", "residential"}}},
       {"RS", {{"highway", "residential"}}},
   };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {0.2494, 1.0012});
   auto map = gurka::buildtiles(layout, ways, {}, {},
                                VALHALLA_BUILD_DIR "test/data/exclude_polygon_missing_tile");
 
-  // remove the NW and SE tiles
+  const auto tile_of = [&](const std::string& node) {
+    return TileHierarchy::GetGraphId(map.nodes[node], 2);
+  };
+  const auto ne_tile = tile_of("R");
+  ASSERT_EQ(tile_of("1"), ne_tile);
+  ASSERT_EQ(tile_of("3"), ne_tile);
+  ASSERT_NE(tile_of("P"), ne_tile);
+  ASSERT_NE(tile_of("Q"), ne_tile);
+  ASSERT_NE(tile_of("P"), tile_of("Q"));
+  ASSERT_EQ(tile_of("T"), tile_of("P"));
+  ASSERT_EQ(tile_of("U"), tile_of("Q"));
+
+  // remove the tiles PQ and TU start and end in
   const auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
-  const auto ne_tile = TileHierarchy::GetGraphId(map.nodes["R"], 2);
   for (const auto& node : {"P", "Q"}) {
-    const auto tile_id = TileHierarchy::GetGraphId(map.nodes[node], 2);
-    ASSERT_NE(tile_id, ne_tile);
-    ASSERT_TRUE(std::filesystem::remove(tile_dir + "/" + GraphTile::FileSuffix(tile_id)));
+    ASSERT_TRUE(std::filesystem::remove(tile_dir + "/" + GraphTile::FileSuffix(tile_of(node))));
   }
 
   valhalla::Options options;
@@ -739,14 +758,10 @@ TEST(StandAlone, ExcludePolygonWithMissingTile) {
   auto& co = (*options.mutable_costings())[Costing::auto_];
   co.set_type(valhalla::Costing::auto_);
   auto* ring = options.mutable_exclude_polygons()->Add();
-  for (const auto& coord : std::vector<PointLL>{{0.2501, 1.0001},
-                                                {0.2515, 1.0001},
-                                                {0.2515, 1.0015},
-                                                {0.2501, 1.0015},
-                                                {0.2501, 1.0001}}) {
+  for (const auto& node : {"1", "2", "3", "4", "1"}) {
     auto* ll = ring->add_coords();
-    ll->set_lat(coord.lat());
-    ll->set_lng(coord.lng());
+    ll->set_lat(map.nodes[node].lat());
+    ll->set_lng(map.nodes[node].lng());
   }
 
   const auto costing = valhalla::sif::CostFactory{}.Create(co);
