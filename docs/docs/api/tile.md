@@ -135,6 +135,12 @@ Each feature in `turn_restrictions` is one prohibited path from an edge onto ano
 
 Time dependent restrictions are included, but without their time condition for now. A restriction is in every tile its "from" or "to" edge is in; one whose via ways alone cross into a tile is missing there.
 
+The [example style](https://github.com/valhalla/valhalla/blob/master/docs/docs/api/tile/default_style.json) draws them from zoom 16 as lines offset to the right of the travel direction, with chevrons along the line and an arrow head rotated by `bearing`, in purple if they only apply to some modes. Style expressions have no bitwise operators, so to e.g. show only the restrictions for trucks (`8`), test the bit arithmetically:
+
+```json
+["==", ["%", ["floor", ["/", ["get", "modes"], 8]], 2], 1]
+```
+
 ## Integration into MVT compatible clients/SDKs etc
 
 Most often software supporting MVT lets you specify a URL pattern expecting placeholders like `{z}/{x}/{y}?<query_params>`. For consistency's sake, we use our common `/?json=<post_json>` notation. Sadly that inteferes with placeholder parsing and the `<post_json>` usually has to be URL encoded for use in Maplibre/QGIS et al, e.g. `http://localhost:8002/tile?json=%7B%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D`. Note how x/y/z `{}` placeholders aren't encoded.

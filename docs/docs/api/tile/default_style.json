@@ -126,6 +126,77 @@
         "circle-stroke-width": 1,
         "circle-opacity": 0.8
       }
+    },
+    {
+      "id": "turn_restrictions",
+      "type": "line",
+      "source": "valhalla",
+      "source-layer": "turn_restrictions",
+      "minzoom": 16,
+      "maxzoom": 22,
+      "filter": ["==", ["geometry-type"], "LineString"],
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {
+        "line-color": [
+          "case",
+          ["!=", ["get", "modes"], 1661],
+          "#7b1fa2",
+          "#e6007e"
+        ],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 16, 2, 20, 4],
+        "line-offset": 3,
+        "line-opacity": 0.9
+      }
+    },
+    {
+      "id": "turn_restrictions_chevrons",
+      "type": "symbol",
+      "source": "valhalla",
+      "source-layer": "turn_restrictions",
+      "minzoom": 17,
+      "maxzoom": 22,
+      "filter": ["==", ["geometry-type"], "LineString"],
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 24,
+        "text-field": "›",
+        "text-font": ["Open Sans Bold"],
+        "text-size": 12,
+        "text-offset": [0, 0.25],
+        "text-keep-upright": false,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true
+      },
+      "paint": {"text-color": "#ffffff"}
+    },
+    {
+      "id": "turn_restrictions_heads",
+      "type": "symbol",
+      "source": "valhalla",
+      "source-layer": "turn_restrictions",
+      "minzoom": 16,
+      "maxzoom": 22,
+      "filter": ["==", ["geometry-type"], "Point"],
+      "layout": {
+        "text-field": ">",
+        "text-font": ["Open Sans Bold"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 16, 12, 20, 20],
+        "text-rotate": ["-", ["get", "bearing"], 90],
+        "text-rotation-alignment": "map",
+        "text-offset": [0, 0.25],
+        "text-allow-overlap": true,
+        "text-ignore-placement": true
+      },
+      "paint": {
+        "text-color": [
+          "case",
+          ["!=", ["get", "modes"], 1661],
+          "#7b1fa2",
+          "#e6007e"
+        ],
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1
+      }
     }
   ]
 }
