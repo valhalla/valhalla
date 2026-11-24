@@ -1,11 +1,12 @@
 # Valhalla tile service API reference [BETA]
 
-Valhalla's `/tile` service provides a graph representation as [Mapbox Vector Tiles](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-introduction/) (MVT). Currently the tiles contain 5 layers:
+Valhalla's `/tile` service provides a graph representation as [Mapbox Vector Tiles](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-introduction/) (MVT). Currently the tiles contain 6 layers:
  - edges
  - nodes
  - shortcuts
  - access restrictions
  - incidents
+ - turn restrictions
 
 with a lot of attributes (akin to [`verbose` /locate](locate.md) requests). It's under active development, hence the BETA label.
 
@@ -22,7 +23,7 @@ We support the usual GET & POST with the common "Slippy Map"/XYZ request pattern
 | `tile.z` | The zoom level, max 30. Which zoom levels render which road classes depends on the `loki.service_defaults.mvt_min_zoom_road_class` server configuration. |
 | `tile.x` | The "slippy map" X coordinate. |
 | `tile.y` | The "slippy map" Y coordinate. |
-| `tile_options.exclude_layers` |  An array of layers to exclude in the response, one of ["edges", "nodes", "shortcuts", "access_restrictions"]. Default none. |
+| `tile_options.exclude_layers` |  An array of layers to exclude in the response, one of ["edges", "nodes", "shortcuts", "access_restrictions", "incidents", "turn_restrictions"]. Default none. |
 | `filters` |  By default, the tiles only contain a small subset of attributes. Use `filters` to include more attributes:<ul><li>`attributes`: an array of edge/node attributes to include/exclude, see below for a list</li><li>`action`: either `include` or `exclude`. If `include`, we'll add the provided attributes to the default attributes. If `exclude`, we'll remove the provided attributes from the full list.</li></ul> |
 | `verbose` | If `true`, it'll enable _all_ attributes, regardless of `filters`. Default `false`. Note, that the service setting `service_limits.tile.allow_verbose` (default `false`) has to be enabled for this to take effect. |
 | `generalize` | A factor which scales the default (Douglas-Peucker) generalization, akin to tippecanoe's `simplification` argument. 1.0 returns the highest possible resolution, values > 1.0 more aggressively generalize the line features. Default is 4.0 |
@@ -115,6 +116,20 @@ incident.length
 incident.iso_3166_1_alpha2
 incident.iso_3166_1_alpha3
 ```
+
+### Turn restrictions layer
+
+Each feature in `turn_restrictions` is one prohibited path from an edge onto another edge, as the router evaluates it. A restriction is a `LineString` reaching a few meters into the "from" and "to" edges, plus a `Point` at its end (same feature id) for drawing an arrow head. `only_*` restrictions become one prohibited path per edge which isn't the allowed one.
+
+All attributes are always present, `filters` don't apply to this layer:
+
+| Attribute | Description |
+| :-------- | :---------- |
+| `complex` | `false` for simple restrictions (from way, via node, to way, all vehicle modes, no time condition). |
+| `modes` | Access bit mask of the modes the restriction applies to, see `access` above. |
+| `from_edge_id` | GraphId of the "from" edge. |
+| `to_edge_id` | GraphId of the "to" edge, which is the prohibited one. |
+| `bearing` | Only on the `Point` features: the direction of the "to" edge at the arrow head, in degrees clockwise from north. |
 
 ## Integration into MVT compatible clients/SDKs etc
 

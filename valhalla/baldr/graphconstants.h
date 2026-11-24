@@ -55,6 +55,11 @@ constexpr uint16_t kAllAccess = 4095;
 constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
                                       kTaxiAccess | kBusAccess | kHOVAccess;
 
+// Represents the modes a simple turn restriction applies to
+constexpr uint16_t kSimpleTurnRestrictionAccess = kAutoAccess | kMopedAccess | kTaxiAccess |
+                                                  kBusAccess | kBicycleAccess | kTruckAccess |
+                                                  kEmergencyAccess | kMotorcycleAccess;
+
 // Maximum number of transit records per tile and other max. transit
 // field values.
 constexpr uint32_t kMaxTransitDepartures = 16777215;

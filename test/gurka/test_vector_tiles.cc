@@ -12,6 +12,7 @@
 #include <vtzero/vector_tile.hpp>
 
 #include <format>
+#include <map>
 #include <set>
 #include <span>
 
@@ -228,6 +229,117 @@ A-B-C
       FAIL() << "Unexpected layer: " << layer_name;
     }
   }
+}
+
+namespace {
+struct TurnRestrictionFeature {
+  uint64_t from_edge_id = 0;
+  uint64_t to_edge_id = 0;
+  bool complex = true;
+  uint32_t modes = 0;
+  uint32_t bearing = 0;
+};
+
+// parses lines and heads of the turn restriction layer, keyed by (from, to)
+void parse_turn_restrictions(const std::string& tile_data,
+                             std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature>& lines,
+                             std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature>& heads) {
+  vtzero::vector_tile tile{tile_data};
+  auto layer = tile.get_layer_by_name(kTurnRestrictionLayerName.data());
+  ASSERT_TRUE(layer.valid());
+  while (auto feature = layer.next_feature()) {
+    EXPECT_TRUE(feature.has_id());
+    TurnRestrictionFeature tr;
+    while (auto property = feature.next_property()) {
+      const std::string_view key{property.key().data(), property.key().size()};
+      if (key == "from_edge_id") {
+        tr.from_edge_id = property.value().uint_value();
+      } else if (key == "to_edge_id") {
+        tr.to_edge_id = property.value().uint_value();
+      } else if (key == "complex") {
+        tr.complex = property.value().bool_value();
+      } else if (key == "modes") {
+        tr.modes = static_cast<uint32_t>(property.value().uint_value());
+      } else if (key == "bearing") {
+        tr.bearing = static_cast<uint32_t>(property.value().uint_value());
+      }
+    }
+    auto& features = feature.geometry_type() == vtzero::GeomType::POINT ? heads : lines;
+    EXPECT_TRUE(features.emplace(std::make_pair(tr.from_edge_id, tr.to_edge_id), tr).second)
+        << "duplicate feature " << tr.from_edge_id << " -> " << tr.to_edge_id;
+  }
+}
+} // namespace
+
+TEST(VectorTilesTurnRestrictions, Simple) {
+  const std::string ascii_map = R"(
+        F
+        |
+    A---B---C
+        |
+        H
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"FB", {{"highway", "residential"}}},
+      {"BH", {{"highway", "residential"}}},
+  };
+  const gurka::relations relations = {
+      {{{gurka::way_member, "AB", "from"},
+        {gurka::node_member, "B", "via"},
+        {gurka::way_member, "FB", "to"}},
+       {{"type", "restriction"}, {"restriction", "no_left_turn"}}},
+      // becomes a prohibition onto every other edge at B, including the U-turn
+      {{{gurka::way_member, "BH", "from"},
+        {gurka::node_member, "B", "via"},
+        {gurka::way_member, "FB", "to"}},
+       {{"type", "restriction"}, {"restriction", "only_straight_on"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {2.315260, 48.869168});
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/gurka_vt_turn_restrictions_simple");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto edge_id = [&](const std::string& from, const std::string& to) {
+    return std::get<0>(gurka::findEdgeByNodes(*reader, layout, from, to)).value;
+  };
+
+  std::string tile_data;
+  gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
+
+  std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature> lines, heads;
+  parse_turn_restrictions(tile_data, lines, heads);
+
+  const std::set<std::pair<uint64_t, uint64_t>> expected = {
+      {edge_id("A", "B"), edge_id("B", "F")},
+      {edge_id("H", "B"), edge_id("B", "A")},
+      {edge_id("H", "B"), edge_id("B", "C")},
+      {edge_id("H", "B"), edge_id("B", "H")},
+  };
+  for (const auto* features : {&lines, &heads}) {
+    std::set<std::pair<uint64_t, uint64_t>> found;
+    for (const auto& [key, tr] : *features) {
+      found.insert(key);
+      EXPECT_FALSE(tr.complex);
+      EXPECT_EQ(tr.modes, baldr::kSimpleTurnRestrictionAccess);
+    }
+    EXPECT_EQ(found, expected);
+  }
+
+  // arrow heads point along the restricted edge
+  const auto north = heads.at({edge_id("A", "B"), edge_id("B", "F")}).bearing;
+  EXPECT_TRUE(north <= 1 || north >= 359) << north;
+  EXPECT_NEAR(heads.at({edge_id("H", "B"), edge_id("B", "C")}).bearing, 90, 1);
+  EXPECT_NEAR(heads.at({edge_id("H", "B"), edge_id("B", "H")}).bearing, 180, 1);
+
+  // and the layer can be excluded
+  std::string tile_data_excluded;
+  gurka::do_action(Options::tile, map, "B", 14, "auto",
+                   {{"/tile_options/exclude_layers/-", std::string(kTurnRestrictionLayerName)}},
+                   nullptr, &tile_data_excluded);
+  vtzero::vector_tile tile_excluded{tile_data_excluded};
+  EXPECT_FALSE(tile_excluded.get_layer_by_name(kTurnRestrictionLayerName.data()).valid());
+  EXPECT_TRUE(tile_excluded.get_layer_by_name(kEdgeLayerName.data()).valid());
 }
 
 class VectorTiles : public ::testing::Test {

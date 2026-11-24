@@ -55,6 +55,32 @@ protected:
   vtzero::index_value key_value_;
 };
 
+// One prohibited path: from -> vias -> to, all edge ids in travel direction
+struct TurnRestrictionProps {
+  uint64_t id;
+  baldr::GraphId from_edge_id;
+  baldr::GraphId to_edge_id;
+};
+
+// Each restriction is a line along the path plus a point at its end for the arrow head
+class TurnRestrictionLayerBuilder : vtzero::layer_builder {
+public:
+  explicit TurnRestrictionLayerBuilder(vtzero::tile_builder& tile, const char* name);
+
+  void add_line_feature(const TurnRestrictionProps& props, const std::vector<vtzero::point>& line);
+  void
+  add_point_feature(const TurnRestrictionProps& props, const vtzero::point& head, uint32_t bearing);
+
+protected:
+  void add_properties(vtzero::feature_builder& feature, const TurnRestrictionProps& props);
+
+  vtzero::index_value key_complex_;
+  vtzero::index_value key_modes_;
+  vtzero::index_value key_from_edge_id_;
+  vtzero::index_value key_to_edge_id_;
+  vtzero::index_value key_bearing_;
+};
+
 class IncidentLayersBuilder;
 struct IncidentsAttributeTile {
   const char* key_name;

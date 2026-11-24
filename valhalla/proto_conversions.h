@@ -15,6 +15,7 @@ constexpr std::string_view kNodeLayerName = "nodes";
 constexpr std::string_view kAccessRestrictionLayerName = "access_restrictions";
 constexpr std::string_view kShortcutLayerName = "shortcuts";
 constexpr std::string_view kIncidentLayerName = "incidents";
+constexpr std::string_view kTurnRestrictionLayerName = "turn_restrictions";
 
 // Associate RoadClass values to TripLeg proto
 constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
