@@ -24,7 +24,7 @@ The extract also contains a single `attributes.json` file at its root:
 
 This JSON array declares the attribute names in column order (column 0 = first name, column 1 = second name, etc.).
 
-`GraphReader` loads the extract at startup (read-only mmap). The archive is held open so an external process can update it while the service runs, analogous to how live traffic works. 
+`GraphReader` loads the extract at startup. The archive is memory mapped with `MAP_SHARED` so an external process can update it while the service runs, analogous to how live traffic works. 
 
 ## Building the extract
 
@@ -43,7 +43,7 @@ After writing the initial extract, replace individual entries in-place to popula
 
 ## Filling the extract from OSM tags
 
-`valhalla_add_custom_attributes` writes values derived from OSM way tags into an existing sidecar. It reads the graph and the sidecar from the config (`mjolnir.tile_extract` or `mjolnir.tile_dir`, and `mjolnir.custom_attributes_extract`), then streams the ways of the PBF the graph was built from.
+`valhalla_add_custom_attributes` writes values derived from OSM way tags into an existing extract. It reads the graph and custom attribute extract locations from the config (`mjolnir.tile_extract` or `mjolnir.tile_dir`, and `mjolnir.custom_attributes_extract`), then uses valhalla's ways to edges mapping to associate OSM tags of a way to its edges. 
 
 ```bash
 valhalla_add_custom_attributes -c valhalla.json \
@@ -52,7 +52,7 @@ valhalla_add_custom_attributes -c valhalla.json \
     planet.osm.pbf
 ```
 
-Ways that have none of the `--tag-keys` are skipped before Lua runs. Each value is written to every edge of that way. Names missing from `attributes.json` are reported once and ignored, and unused attributes are not touched.
+The lua file needs a `custom_attributes` function which receives a way's tags as a table and must return one or two table (one per direction) holding the custom attributes. 
 
 ```lua
 local smoothness = { excellent = 0.0, good = 0.1, intermediate = 0.3, bad = 0.6, very_bad = 1.0 }
@@ -87,7 +87,7 @@ Add `custom_attributes_extract` to the `mjolnir` section of your config.
 
 ## Using custom attributes in a route request
 
-Set `use_custom_attributes` in the costing options as a JSON object mapping attribute names to weights. Valid weight range: `[-1.0, 1.0]`. Default: empty (disabled).
+Set `use_custom_attributes` in the costing options as a JSON object mapping attribute names to weights. Valid weight range: `[0.0, 1.0]`. Default: empty (disabled).
 
 ```json
 {
@@ -107,7 +107,7 @@ Set `use_custom_attributes` in the costing options as a JSON object mapping attr
 }
 ```
 
-Only names declared in `attributes.json` inside the tar are recognized. Unknown names are silently ignored. Omitted names default to weight `0.0` (no effect). The request fails gracefully if no sidecar is loaded — the weights are simply never applied.
+Only names declared in `attributes.json` inside the tar are recognized. Unknown names are ignored. Omitted names default to weight `0.0` (no effect). 
 
 Supported costing models: `auto`, `bus`, `taxi`, `truck`, `motorcycle`, `motor_scooter`, `bicycle`, `pedestrian`.
 
@@ -119,7 +119,7 @@ The custom attributes contribute additively to the edge cost factor:
 factor += weighted sum of (attr_i * weight_i) for all i where weight_i ≠ 0
 ```
 
-`factor` is then multiplied by the base edge cost, along with the costing's other factors. An attribute value of `1.0` with `weight=1.0` adds `1.0` to `factor`. A higher factor makes an edge more costly.
+`factor` is then multiplied by the base edge cost, along with the costing's other factors. An attribute value of `1.0` with `weight=1.0` adds `1.0` to `factor`. A higher factor makes an edge more costly. Note that this does not influence the actual estimated time.
 
 ## Custom attributes in `trace_attributes`
 
@@ -145,3 +145,4 @@ Enable it by adding `"edge.custom_attribute": true` to the `filters.attributes` 
 ## Custom attributes in `tile`
 
 The `edges` and `shortcuts` layers of the [tile endpoint](api/tile.md) carry one property per attribute and direction, named `custom:<name>:fwd` and `custom:<name>:bwd`, e.g. `custom:scenic:fwd`. Enable them with `"edge.custom_attribute"` in `filters.attributes` or with `verbose`.
+
