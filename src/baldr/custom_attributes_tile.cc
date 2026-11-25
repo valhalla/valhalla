@@ -13,14 +13,16 @@ namespace baldr {
 std::vector<CustomAttributeDef> ParseCustomAttributeDefs(std::string_view json) {
   rapidjson::Document doc;
   doc.Parse(json.data(), json.size());
-  if (doc.HasParseError() || !doc.IsArray()) {
-    throw std::runtime_error("Custom attribute definitions must be a JSON array");
+  if (doc.HasParseError() || !doc.IsObject() || !doc.HasMember("definitions") ||
+      !doc["definitions"].IsArray()) {
+    throw std::runtime_error("Custom attribute definitions must be a JSON object with a "
+                             "\"definitions\" array");
   }
 
   std::vector<CustomAttributeDef> defs;
   std::unordered_set<std::string> names;
   uint32_t offset = 0;
-  for (const auto& v : doc.GetArray()) {
+  for (const auto& v : doc["definitions"].GetArray()) {
     if (!v.IsObject() || !v.HasMember("name") || !v["name"].IsString() || !v.HasMember("type") ||
         !v["type"].IsString()) {
       throw std::runtime_error("Each custom attribute needs a string name and type");

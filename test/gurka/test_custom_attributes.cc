@@ -23,8 +23,9 @@ using namespace valhalla::baldr;
 
 namespace {
 
-const std::string kAttributeDefs = R"([{"name": "scenic", "type": "uint8", "scale": 0.01},
-                                       {"name": "quality", "type": "uint8"}])";
+const std::string kAttributeDefs = R"({"definitions": [
+                                         {"name": "scenic", "type": "uint8", "scale": 0.01},
+                                         {"name": "quality", "type": "uint8"}]})";
 
 // raw stored values of an edge, one per attribute in kAttributeDefs
 using RowFunc = std::function<std::vector<uint8_t>(uint32_t edge_index)>;

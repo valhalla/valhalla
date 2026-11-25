@@ -49,7 +49,7 @@ def _tile_id(tile_bytes: bytes) -> int:
 
 
 def _parse_attribute_defs(raw: str) -> list[dict]:
-    """Parse and validate the attributes.json array, filling in the default scale."""
+    """Parse and validate the attributes.json definitions, filling in the default scale."""
     defs = json.loads(raw)
     if not isinstance(defs, list) or not defs:
         raise ValueError("must be a non-empty JSON array")
@@ -167,7 +167,7 @@ def build(
 
     with tarfile.open(output_tar, "w:") as dst_tf:
         _add_bytes_to_tar(dst_tf, INDEX_FILE, bytes(INDEX_BIN_SIZE * len(tiles)))
-        manifest = json.dumps(attribute_defs, ensure_ascii=False).encode()
+        manifest = json.dumps({"definitions": attribute_defs}, ensure_ascii=False).encode()
         _add_bytes_to_tar(dst_tf, "attributes.json", manifest)
 
         for tiles_processed, (out_path, tile_id, edge_count) in enumerate(tiles, 1):
@@ -216,7 +216,8 @@ def main() -> None:
         "--attribute-defs",
         type=str,
         required=True,
-        help="JSON array of attribute definitions written to attributes.json inside the tar, e.g. "
+        help='JSON array of attribute definitions, written to the "definitions" array of '
+        "attributes.json inside the tar, e.g. "
         '\'[{"name": "scenic", "type": "uint8", "scale": 0.01}]\'. '
         "Supported types: uint8. Values are stored as round(value / scale), scale defaults to 1.",
     )

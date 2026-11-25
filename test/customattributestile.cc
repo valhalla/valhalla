@@ -25,10 +25,10 @@ struct TestTile {
 };
 #pragma pack(pop)
 
-CustomAttributesTile make_tile(TestTile& testdata, uint32_t expected_edge_count) {
+CustomAttributesTile make_tile(TestTile& testdata) {
   auto memory =
       std::make_unique<UnmanagedGraphMemory>(reinterpret_cast<char*>(&testdata), sizeof(TestTile));
-  return CustomAttributesTile(std::move(memory), expected_edge_count);
+  return CustomAttributesTile(std::move(memory));
 }
 
 TestTile make_test_tile() {
@@ -43,8 +43,8 @@ TestTile make_test_tile() {
 }
 
 const std::vector<CustomAttributeDef> kDefs =
-    ParseCustomAttributeDefs(R"([{"name": "scenic", "type": "uint8", "scale": 0.01},
-                                 {"name": "walkability", "type": "uint8"}])");
+    ParseCustomAttributeDefs(R"({"definitions": [{"name": "scenic", "type": "uint8", "scale": 0.01},
+                                                 {"name": "walkability", "type": "uint8"}]})");
 } // namespace
 
 TEST(CustomAttributesTile, ParseDefs) {
@@ -60,20 +60,26 @@ TEST(CustomAttributesTile, ParseDefs) {
 }
 
 TEST(CustomAttributesTile, ParseDefsRejectsInvalid) {
-  EXPECT_THROW(ParseCustomAttributeDefs(R"(["scenic"])"), std::runtime_error);
+  // the definitions must be wrapped in an object
+  EXPECT_THROW(ParseCustomAttributeDefs(R"([{"name": "a", "type": "uint8"}])"), std::runtime_error);
   EXPECT_THROW(ParseCustomAttributeDefs(R"({"name": "a", "type": "uint8"})"), std::runtime_error);
-  EXPECT_THROW(ParseCustomAttributeDefs(R"([{"name": "a"}])"), std::runtime_error);
-  EXPECT_THROW(ParseCustomAttributeDefs(R"([{"name": "a", "type": "float"}])"), std::runtime_error);
-  EXPECT_THROW(ParseCustomAttributeDefs(R"([{"name": "a", "type": "uint8", "scale": 0}])"),
+  EXPECT_THROW(ParseCustomAttributeDefs(R"({"definitions": {"name": "a", "type": "uint8"}})"),
+               std::runtime_error);
+  EXPECT_THROW(ParseCustomAttributeDefs(R"({"definitions": ["scenic"]})"), std::runtime_error);
+  EXPECT_THROW(ParseCustomAttributeDefs(R"({"definitions": [{"name": "a"}]})"), std::runtime_error);
+  EXPECT_THROW(ParseCustomAttributeDefs(R"({"definitions": [{"name": "a", "type": "float"}]})"),
                std::runtime_error);
   EXPECT_THROW(ParseCustomAttributeDefs(
-                   R"([{"name": "a", "type": "uint8"}, {"name": "a", "type": "uint8"}])"),
+                   R"({"definitions": [{"name": "a", "type": "uint8", "scale": 0}]})"),
+               std::runtime_error);
+  EXPECT_THROW(ParseCustomAttributeDefs(R"({"definitions": [{"name": "a", "type": "uint8"},
+                                                          {"name": "a", "type": "uint8"}]})"),
                std::runtime_error);
 }
 
 TEST(CustomAttributesTile, TileConstruction) {
   auto testdata = make_test_tile();
-  auto tile = make_tile(testdata, 3);
+  auto tile = make_tile(testdata);
 
   EXPECT_EQ(tile.edge_count(), 3u);
   EXPECT_EQ(tile.num_attributes(), 2u);
@@ -88,7 +94,7 @@ TEST(CustomAttributesTile, TileConstruction) {
 
 TEST(CustomAttributesTile, WeightedSum) {
   auto testdata = make_test_tile();
-  auto tile = make_tile(testdata, 3);
+  auto tile = make_tile(testdata);
 
   const std::array<WeightedCustomAttribute, 2> weights = {{
       {kDefs[0].offset, kDefs[0].type, kDefs[0].scale, 0.8f},
@@ -106,7 +112,7 @@ TEST(CustomAttributesTile, WeightedSum) {
 
 TEST(CustomAttributesTile, OutOfBoundsReturnsZero) {
   auto testdata = make_test_tile();
-  auto tile = make_tile(testdata, 3);
+  auto tile = make_tile(testdata);
 
   EXPECT_FLOAT_EQ(tile.value(3, kDefs[0]), 0.0f);
   EXPECT_FLOAT_EQ(tile.value(999, kDefs[0]), 0.0f);
@@ -121,28 +127,28 @@ TEST(CustomAttributesTile, OutOfBoundsReturnsZero) {
 TEST(CustomAttributesTile, VersionMismatchReturnsZero) {
   auto testdata = make_test_tile();
   testdata.header.custom_attributes_tile_version = CUSTOM_ATTRIBUTES_TILE_VERSION - 1;
-  auto tile = make_tile(testdata, 3);
+  auto tile = make_tile(testdata);
 
   EXPECT_FLOAT_EQ(tile.value(0, kDefs[1]), 0.0f);
 }
 
 TEST(CustomAttributesTile, NullTileConstruction) {
-  CustomAttributesTile tile(nullptr, 0);
+  CustomAttributesTile tile(nullptr);
 
   EXPECT_FALSE(tile);
   EXPECT_FLOAT_EQ(tile.value(0, kDefs[0]), 0.0f);
   EXPECT_FLOAT_EQ(tile.value(99, kDefs[0]), 0.0f);
 }
 
-TEST(CustomAttributesTile, EdgeCountMismatchThrows) {
+TEST(CustomAttributesTile, TooSmallForRowSizeIsInvalid) {
   auto testdata = make_test_tile();
-  EXPECT_THROW(make_tile(testdata, 5), std::runtime_error);
-}
+  EXPECT_TRUE(make_tile(testdata));
 
-TEST(CustomAttributesTile, TooSmallForRowSizeThrows) {
-  auto testdata = make_test_tile();
   testdata.header.row_size = 3;
-  EXPECT_THROW(make_tile(testdata, 3), std::runtime_error);
+  auto tile = make_tile(testdata);
+  EXPECT_FALSE(tile);
+  EXPECT_EQ(tile.edge_count(), 0u);
+  EXPECT_FLOAT_EQ(tile.value(0, kDefs[0]), 0.0f);
 }
 
 int main(int argc, char* argv[]) {

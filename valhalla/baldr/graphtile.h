@@ -961,7 +961,7 @@ public:
   }
 
   const CustomAttributesTile* custom_attributes_tile() const {
-    return custom_attributes_tile_.get();
+    return custom_attributes_tile_ ? &custom_attributes_tile_ : nullptr;
   }
 
 protected:
@@ -1074,7 +1074,7 @@ protected:
   TrafficTile traffic_tile{nullptr};
 
   // Per-edge custom attribute data from sidecar tar (can be nullptr if not loaded)
-  std::unique_ptr<CustomAttributesTile> custom_attributes_tile_;
+  CustomAttributesTile custom_attributes_tile_{nullptr};
 
   // GraphTiles are noncopyable.
   GraphTile(const GraphTile&) = delete;

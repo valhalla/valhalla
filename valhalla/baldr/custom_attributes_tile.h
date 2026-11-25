@@ -84,7 +84,7 @@ inline float decode_custom_attribute(const volatile uint8_t* row,
 bool encode_custom_attribute(uint8_t* row, const CustomAttributeDef& def, float value);
 
 /**
- * Parse attributes.json: [{"name": "scenic", "type": "uint8", "scale": 0.01}, ...].
+ * Parse attributes.json: {"definitions": [{"name": "scenic", "type": "uint8", "scale": 0.01}, ...]}.
  * Columns are laid out in array order, padded only to put byte-sized types on a byte boundary;
  * scale defaults to 1.
  *
@@ -110,45 +110,20 @@ public:
   CustomAttributesTile(CustomAttributesTile&&) = default;
   CustomAttributesTile& operator=(CustomAttributesTile&&) = default;
 
-  CustomAttributesTile(std::nullptr_t) : memory_(nullptr), header_(nullptr), data_(nullptr) {
-  }
-
-  /**
-   * Construct from raw memory, validating edge_count against the tile.
-   *
-   * @param memory               Unique pointer to raw data in memory to take ownership of
-   * @param expected_edge_count  Expected number of directed edges in this tile
-   *
-   * @throws std::runtime_error  if header edge_count doesn't match or memory is too small
-   */
-  CustomAttributesTile(std::unique_ptr<const GraphMemory> memory, uint32_t expected_edge_count)
+  // memory too small for its header's edges leaves the tile invalid
+  CustomAttributesTile(std::unique_ptr<const GraphMemory> memory)
       : memory_(std::move(memory)), header_(nullptr), data_(nullptr) {
-    if (!memory_) {
+    if (!memory_ || memory_->size < sizeof(CustomAttributesTileHeader)) {
       return;
     }
-
-    if (memory_->size < sizeof(CustomAttributesTileHeader)) {
-      throw std::runtime_error("CustomAttributesTile: memory too small for header (size=" +
-                               std::to_string(memory_->size) + ")");
-    }
-
     header_ = reinterpret_cast<const volatile CustomAttributesTileHeader*>(memory_->data);
-
-    if (header_->directed_edge_count != expected_edge_count) {
-      throw std::runtime_error("CustomAttributesTile: edge_count mismatch (expected=" +
-                               std::to_string(expected_edge_count) +
-                               ", got=" + std::to_string(header_->directed_edge_count) + ")");
-    }
-
     const size_t required_size =
         sizeof(CustomAttributesTileHeader) +
         static_cast<size_t>(header_->directed_edge_count) * static_cast<size_t>(header_->row_size);
     if (memory_->size < required_size) {
-      throw std::runtime_error("CustomAttributesTile: memory too small for data (required=" +
-                               std::to_string(required_size) +
-                               ", got=" + std::to_string(memory_->size) + ")");
+      header_ = nullptr;
+      return;
     }
-
     data_ =
         reinterpret_cast<const volatile uint8_t*>(memory_->data + sizeof(CustomAttributesTileHeader));
   }

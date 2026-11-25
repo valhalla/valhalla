@@ -19,10 +19,10 @@ The data is row-major by edge: all attributes for edge 0, then all attributes fo
 The extract also contains a single `attributes.json` file at its root:
 
 ```json
-[{"name": "scenic", "type": "uint8"}, {"name": "walkability", "type": "uint8"}]
+{"definitions": [{"name": "scenic", "type": "uint8"}, {"name": "walkability", "type": "uint8"}]}
 ```
 
-This JSON array declares the attribute names in column order (column 0 = first name, column 1 = second name, etc.).
+The `definitions` JSON array declares the attribute names in column order (column 0 = first name, column 1 = second name, etc.).
 
 `GraphReader` loads the extract at startup. The archive is memory mapped with `MAP_SHARED` so an external process can update it while the service runs, analogous to how live traffic works. 
 

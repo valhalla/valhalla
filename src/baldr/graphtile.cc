@@ -166,18 +166,10 @@ GraphTile::GraphTile(const GraphId& graphid,
                      std::unique_ptr<const GraphMemory> memory,
                      std::unique_ptr<const GraphMemory> traffic_memory,
                      std::unique_ptr<const GraphMemory> custom_attributes_memory)
-    : header_(nullptr), traffic_tile(std::move(traffic_memory)) {
+    : header_(nullptr), traffic_tile(std::move(traffic_memory)),
+      custom_attributes_tile_(std::move(custom_attributes_memory)) {
   memory_ = std::move(memory);
   Initialize(graphid);
-  if (custom_attributes_memory && header_) {
-    try {
-      custom_attributes_tile_ =
-          std::make_unique<CustomAttributesTile>(std::move(custom_attributes_memory),
-                                                 header_->directededgecount());
-    } catch (const std::exception& e) {
-      LOG_ERROR("Failed to load custom attributes tile: {}", e.what());
-    }
-  }
 }
 
 GraphTile::GraphTile(const std::string& tile_dir,
