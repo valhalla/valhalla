@@ -198,7 +198,7 @@ def _parse_default_values(raw: str, num_attributes: int) -> list[float]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Build a custom_attributes.tar sidecar from an existing valhalla_tiles.tar."
+        description="Build a custom_attributes.tar extract from an existing valhalla_tiles.tar."
     )
     parser.add_argument(
         "-c",

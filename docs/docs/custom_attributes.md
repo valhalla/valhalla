@@ -4,7 +4,7 @@ Valhalla allows custom attributes to be set per edge via a separate extract refe
 
 ## How it works
 
-The extract is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding sidecar tile `2/001/234/567.gph`. A `.gph` file is a compact binary:
+The extract is a tar archive (`custom_attributes.tar`) with the same directory structure as `valhalla_tiles.tar`. For each routing tile `2/001/234/567.gph` there is a corresponding custom attributes extract tile `2/001/234/567.gph`. A `.gph` file is a compact binary:
 
 ```
 [CustomAttributesTileHeader (see `custom_attributes_tile.h`)]
@@ -39,7 +39,7 @@ python3 scripts/valhalla_build_custom_attributes_extract \
 
 After writing the initial extract, replace individual entries in-place to populate real values. The in-memory format is simple enough to update with any language that supports `struct.pack` or equivalent. The extract is memory mapped read-write by the update process, read-only by the routing service — the same arrangement as `traffic.tar`.
 
-**Important:** Always regenerate or update the extract from the same tile set it was built against. Edge indices are stable within a tileset version but will shift if tiles are rebuilt from new OSM data. There is no cross-check between the sidecar and the main tileset at load time; a mismatched sidecar silently applies values to the wrong edges.
+**Important:** Always regenerate or update the extract from the same tile set it was built against. 
 
 ## Filling the extract from OSM tags
 

@@ -1073,7 +1073,7 @@ protected:
   // Pointer to live traffic data (can be nullptr if not active)
   TrafficTile traffic_tile{nullptr};
 
-  // Per-edge custom attribute data from sidecar tar (can be nullptr if not loaded)
+  // pointer to custom attributes tile data (can be nullptr if not active)
   CustomAttributesTile custom_attributes_tile_{nullptr};
 
   // GraphTiles are noncopyable.
