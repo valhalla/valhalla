@@ -119,7 +119,7 @@ constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPe
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
 
-constexpr ranged_default_t<float> kCustomAttributeWeightRange{-1.0f, 0.0f, 1.0f};
+constexpr ranged_default_t<float> kCustomAttributeWeightRange{0.0f, 0.0f, 1.0f};
 
 // Default dimension
 constexpr float kDefaultHeight = 1.6f; // Meters (62.9921 inches)
@@ -652,7 +652,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.length_, json, "/length", length, warnings);
   JSON_PBF_RANGED_DEFAULT(co, cfg.weight_, json, "/weight", weight, warnings);
 
-  // use_custom_attributes: {"attr_name": weight, ...}, json entries override pbf ones
   auto* weights = co->mutable_use_custom_attributes();
   if (const auto attrs = rapidjson::get_child_optional(json, "/use_custom_attributes")) {
     if (attrs->IsObject()) {
