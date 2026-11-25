@@ -13,19 +13,18 @@ namespace mjolnir {
 enum class ShortcutStrategy { kNone, kMin, kMax, kMean };
 
 /**
- * Writes per-way values from a user Lua script into the existing custom attributes tar at
- * mjolnir.custom_attributes_extract. Ways without any of tag_keys are skipped before Lua runs.
- * The script must define custom_attributes(tags) returning a table of attribute name -> number
- * for both directions of the way, or a forward and a backward table, relative to the OSM way.
- * Afterwards every shortcut gets its values from the edges it replaces, unless the strategy is
- * kNone; kMean weights them by edge length.
+ * Allows custom attributes be derived from osm way tags via a user-supplied Lua script. The script
+ * must define custom_attributes(tags) returning a table of attribute name -> number for both
+ * directions of the way, or a forward and a backward table, relative to the OSM way.
  *
- * @param config             Valhalla config, mjolnir section is used to read the graph and the tar
+ * @param config             Valhalla config
  * @param input_files        OSM PBF files the graph was built from
- * @param tag_keys           OSM tag keys a way needs at least one of to be passed to Lua
+ * @param tag_keys           list of tag keys to pre-filter ways by; if none is present, the way gets
+ * skipped
  * @param lua_script         Lua source code
- * @param shortcut_strategy  How shortcut values are derived from their edges
- * @return number of (edge, attribute) values written from Lua
+ * @param shortcut_strategy  How shortcut values are derived from their base edges
+ *
+ * @return number of values written
  */
 size_t add_custom_attributes(const boost::property_tree::ptree& config,
                              const std::vector<std::string>& input_files,
