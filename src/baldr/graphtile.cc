@@ -242,17 +242,15 @@ void store(const std::string& cache_location,
   }
 }
 
-graph_tile_ptr
-GraphTile::CacheTileURL(const std::string& tile_url,
-                        const GraphId& graphid,
-                        tile_getter_t* tile_getter,
-                        const std::string& tile_dir,
-                        uint64_t range_offset,
-                        uint64_t range_size,
-                        const std::filesystem::path& id_txt_path,
-                        std::optional<uint64_t> id_checksum,
-                        long* http_code,
-                        std::unique_ptr<const GraphMemory>&& custom_attributes_memory) {
+graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
+                                       const GraphId& graphid,
+                                       tile_getter_t* tile_getter,
+                                       const std::string& tile_dir,
+                                       uint64_t range_offset,
+                                       uint64_t range_size,
+                                       const std::filesystem::path& id_txt_path,
+                                       std::optional<uint64_t> id_checksum,
+                                       long* http_code) {
   // Don't bother with invalid ids
   if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
@@ -309,10 +307,8 @@ GraphTile::CacheTileURL(const std::string& tile_url,
   try {
     tile = tile_getter->gzipped()
                ? DecompressTile(graphid, result.bytes_)
-               : graph_tile_ptr{new GraphTile(graphid,
-                                              std::make_unique<const VectorGraphMemory>(
-                                                  std::vector<char>(result.bytes_)),
-                                              nullptr, std::move(custom_attributes_memory))};
+               : graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(
+                                                           std::vector<char>(result.bytes_)))};
   } catch (const std::runtime_error& e) {
     LOG_WARN("Downloaded tile " + std::to_string(graphid) + " is invalid: " + e.what());
   }

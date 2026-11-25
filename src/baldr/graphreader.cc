@@ -691,21 +691,16 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
           ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive, traffic_ptr->second)
           : nullptr;
 
-  // Build custom_attributes_memory for a given tile base id; cheap — just a span into a mmap'd tar.
-  auto make_custom_attributes_memory = [this, &base]() -> std::unique_ptr<TarballGraphMemory> {
-    if (!tile_extract_->custom_attributes_tiles.empty()) {
-      auto ca_ptr = tile_extract_->custom_attributes_tiles.find(base);
-      if (ca_ptr != tile_extract_->custom_attributes_tiles.end()) {
-        return std::make_unique<TarballGraphMemory>(tile_extract_->custom_attributes_archive,
-                                                    ca_ptr->second);
-      }
-    }
-    return nullptr;
-  };
+  auto ca_ptr = tile_extract_->custom_attributes_tiles.find(base);
+  auto custom_attributes_memory =
+      ca_ptr != tile_extract_->custom_attributes_tiles.end()
+          ? std::make_unique<TarballGraphMemory>(tile_extract_->custom_attributes_archive,
+                                                 ca_ptr->second)
+          : nullptr;
 
   // Try to get it from tile_dir and if we cant, try URL
-  graph_tile_ptr tile =
-      GraphTile::Create(tile_dir_, base, std::move(traffic_memory), make_custom_attributes_memory());
+  graph_tile_ptr tile = GraphTile::Create(tile_dir_, base, std::move(traffic_memory),
+                                          std::move(custom_attributes_memory));
   if (!tile || !tile->header()) {
     if (!tile_getter_) {
       return nullptr;
@@ -730,8 +725,7 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
     // either we find its tar offset or it's a plain tiles URL
     if (tar_has_tile || !is_tar_url_) {
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, tar_offset,
-                                     tar_size, url_id_txt_path_, url_id_txt_checksum_, &http_code,
-                                     make_custom_attributes_memory());
+                                     tar_size, url_id_txt_path_, url_id_txt_checksum_, &http_code);
     }
 
     if (!tile) {

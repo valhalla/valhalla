@@ -194,17 +194,15 @@ public:
    * @return the graph tile or nullptr
    */
 
-  static graph_tile_ptr
-  CacheTileURL(const std::string& tile_url,
-               const GraphId& graphid,
-               tile_getter_t* tile_getter,
-               const std::string& tile_dir,
-               uint64_t range_offset = 0,
-               uint64_t range_size = 0,
-               const std::filesystem::path& id_txt_path = "",
-               std::optional<uint64_t> id_checksum = std::nullopt,
-               long* http_code = nullptr,
-               std::unique_ptr<const GraphMemory>&& custom_attributes_memory = nullptr);
+  static graph_tile_ptr CacheTileURL(const std::string& tile_url,
+                                     const GraphId& graphid,
+                                     tile_getter_t* tile_getter,
+                                     const std::string& tile_dir,
+                                     uint64_t range_offset = 0,
+                                     uint64_t range_size = 0,
+                                     const std::filesystem::path& id_txt_path = "",
+                                     std::optional<uint64_t> id_checksum = std::nullopt,
+                                     long* http_code = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl
