@@ -193,8 +193,9 @@ TEST(AddCustomAttributes, LuaValuesPerDirection) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, workdir, {{"mjolnir.concurrency", "1"}});
 
   // every edge starts out with scenic 0.07 and quality 9
-  build_custom_attributes_extract(map, kAttributeDefs,
-                                  [](uint32_t) { return std::vector<uint8_t>{7, 9}; });
+  build_custom_attributes_extract(map, kAttributeDefs, [](uint32_t) {
+    return std::vector<uint8_t>{7, 9};
+  });
 
   const std::string lua = R"(
     function custom_attributes(tags)
@@ -261,8 +262,9 @@ protected:
 
   // rebuilds the extract with scenic 0.07 and quality 9 everywhere, then runs the Lua script
   void add_attributes(mjolnir::ShortcutStrategy strategy) {
-    build_custom_attributes_extract(map, kAttributeDefs,
-                                    [](uint32_t) { return std::vector<uint8_t>{7, 9}; });
+    build_custom_attributes_extract(map, kAttributeDefs, [](uint32_t) {
+      return std::vector<uint8_t>{7, 9};
+    });
     const std::string lua = R"(
       function custom_attributes(tags)
         return {scenic = tonumber(tags.test_scenic)}
