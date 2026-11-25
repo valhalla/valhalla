@@ -85,7 +85,7 @@ constexpr float kMaxUrbanNodeDensity = 900.0f;
 // - 15: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
 // - 14: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
 // - 13: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
-template <uint32_t kGridLevel> struct GridCellId {
+template <uint32_t kGridLevel> struct DensityCellId {
   // Cell size in degrees
   static constexpr float kSizeDeg = static_cast<float>(1 << kGridLevel) / 1e7;
 
@@ -106,10 +106,10 @@ template <uint32_t kGridLevel> struct GridCellId {
   static constexpr uint32_t kComponentBits = sizeof(id_) * 8 / 2;
   static constexpr uint32_t kComponentMask = (1 << kComponentBits) - 1;
 
-  GridCellId(uint32_t id) : id_(id) {
+  DensityCellId(uint32_t id) : id_(id) {
   }
 
-  GridCellId(const PointLL& ll) {
+  DensityCellId(const PointLL& ll) {
     uint32_t x = static_cast<uint32_t>((ll.lng() + 180.0) * 1e7);
     uint32_t y = static_cast<uint32_t>((ll.lat() + 90.0) * 1e7);
 
@@ -120,7 +120,7 @@ template <uint32_t kGridLevel> struct GridCellId {
   }
 
   // Neighboring cells ids within the given radius in degrees
-  std::vector<GridCellId> neighbors(float radius_lng_deg, float radius_lat_deg) const {
+  std::vector<DensityCellId> neighbors(float radius_lng_deg, float radius_lat_deg) const {
     const int x_neighbors = std::ceil(radius_lng_deg / kSizeDeg);
     const int y_neighbors = std::ceil(radius_lat_deg / kSizeDeg);
 
@@ -128,7 +128,7 @@ template <uint32_t kGridLevel> struct GridCellId {
     const int x = id_ & kComponentMask;
     const int y = (id_ >> kComponentBits) & kComponentMask;
 
-    std::vector<GridCellId> neighbors;
+    std::vector<DensityCellId> neighbors;
     neighbors.reserve(4 * x_neighbors * y_neighbors);
     for (int nx = -x_neighbors; nx <= x_neighbors; nx++) {
       for (int ny = -y_neighbors; ny <= y_neighbors; ny++) {
@@ -143,25 +143,25 @@ template <uint32_t kGridLevel> struct GridCellId {
     return neighbors;
   }
 
-  bool operator==(const GridCellId& other) const {
+  bool operator==(const DensityCellId& other) const {
     return id_ == other.id_;
   }
 
-  bool operator!=(const GridCellId& other) const {
+  bool operator!=(const DensityCellId& other) const {
     return !(*this == other);
   }
 };
 
-using LocalDensityCellId = GridCellId<12>;
-using CoarseDensityCellId = GridCellId<14>;
+using LocalDensityCellId = DensityCellId<12>;
+using CoarseDensityCellId = DensityCellId<14>;
 
 using DensityIndexV1 = ankerl::unordered_dense::map<CoarseDensityCellId, uint32_t>;
 using DensityIndexV2 = ankerl::unordered_dense::map<LocalDensityCellId, uint32_t>;
 } // namespace
 
 namespace std {
-template <uint32_t kGridLevel> struct hash<GridCellId<kGridLevel>> {
-  size_t operator()(const GridCellId<kGridLevel>& cell) const {
+template <uint32_t kGridLevel> struct hash<DensityCellId<kGridLevel>> {
+  size_t operator()(const DensityCellId<kGridLevel>& cell) const {
     return cell.id_;
   }
 };
