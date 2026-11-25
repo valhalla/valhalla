@@ -111,12 +111,14 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
     {"sl-SI", "Zavijte desno na Main Street."},
     {"sv", "Sväng höger in på Main Street."},
     {"sv-SE", "Sväng höger in på Main Street."},
-    {"tr", "Main Street caddesine doğru sağa dönün."},
-    {"tr-TR", "Main Street caddesine doğru sağa dönün."},
+    {"tr", "Main Street yönüne sağa dönün."},
+    {"tr-TR", "Main Street yönüne sağa dönün."},
     {"uk", "Поверніть праворуч на Main Street."},
     {"uk-UA", "Поверніть праворуч на Main Street."},
     {"vi", "Rẽ phải vào Main Street."},
     {"vi-VN", "Rẽ phải vào Main Street."},
+    {"zh", "右转进入Main Street。"},
+    {"zh-CN", "右转进入Main Street。"},
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,22 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: protect PointLL::PointAlongSegment against very close points [#6532](https://github.com/valhalla/valhalla/pull/6532)
+   * FIXED: Turkish (tr-TR) narrative: remaining English phrases and grammar [#6525](https://github.com/valhalla/valhalla/pull/6525)
+* **Enhancement**
+
+## Release Date: 2026-11-16 Valhalla 3.9.3
+* **Removed**
+* **Bug Fix**
+   * FIXED: Turkish (tr-TR) narrative grammar [#6444](https://github.com/valhalla/valhalla/pull/6444)
+   * FIXED: raise MACOSX_DEPLOYMENT_TARGET to 15 for OSX python wheels [#6518](https://github.com/valhalla/valhalla/pull/6518)
+* **Enhancement**
+   * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
+   * CHANGED: Multithreaded `GraphFilter` [#6374](https://github.com/valhalla/valhalla/pull/6374)
+
+## Release Date: 2026-11-12 Valhalla 3.9.2
+* **Removed**
+* **Bug Fix**
    * FIXED: Fix flatbush find_path [#6385](https://github.com/valhalla/valhalla/pull/6385)
    * FIXED: Use correct dimension in `GriddedData::MinExtent()` [#6284](https://github.com/valhalla/valhalla/pull/6284)
    * FIXED: area relations can share ways [#6392](https://github.com/valhalla/valhalla/pull/6392)
@@ -22,6 +38,7 @@
    * FIXED: ETA were off by 27 secs _per leg_ due to faulty clock usage [#6486](https://github.com/valhalla/valhalla/pull/6486)
    * FIXED: respect time-dependent `private` roads [#6498](https://github.com/valhalla/valhalla/pull/6498)
    * FIXED: `ignore_oneways` is respected by reverse unidir A* (`arrive_by`), isochrones, bidirectional A* and CostMatrix, and allowed `linear_cost_factors` in reverse unidir A* [#6484](https://github.com/valhalla/valhalla/pull/6484)
+   * FIXED: isochrone GeoTIFF tiepoint was one row too far north [#6516](https://github.com/valhalla/valhalla/pull/6516)
 * **Enhancement**
    * ADDED: more surface types [#6337](https://github.com/valhalla/valhalla/pull/6337)
    * ADDED: `steps_factor` bicycle costing option and `exclude_steps` location search filter [#6394](https://github.com/valhalla/valhalla/pull/6394)
