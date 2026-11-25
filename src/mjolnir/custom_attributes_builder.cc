@@ -28,16 +28,14 @@ extern "C" {
 }
 
 using namespace valhalla::baldr;
-
-namespace valhalla {
-namespace mjolnir {
+using namespace valhalla::mjolnir;
 
 namespace {
 
 constexpr const char* kLuaFunction = "custom_attributes";
 
 // which edges of a way, relative to the OSM way direction, a value returned by Lua applies to
-enum class edge_direction { kBoth, kForward, kBackward };
+enum class edge_direction : uint8_t { kBoth, kForward, kBackward };
 
 class custom_attributes_lua {
 public:
@@ -143,7 +141,7 @@ float decode(const uint8_t* row, const CustomAttributeDef& def) {
 
 // tiles of the tar keyed by tile base id, plus the attribute definitions from attributes.json
 struct writable_extract {
-  midgard::tar archive;
+  valhalla::midgard::tar archive;
   std::unordered_map<uint64_t, writable_tile> tiles;
   std::vector<CustomAttributeDef> defs;
 
@@ -199,15 +197,17 @@ struct writable_extract {
   }
 };
 
-// Writes every shortcut's values from the edges it replaces. Returns the number of shortcuts
-// written and adds their tiles to touched_tiles.
+// Determine every shortcut's custom attribute values from its base edges. Returns the number of
+// shortcuts written and adds their tiles to touched_tiles.
 size_t write_shortcuts(GraphReader& reader,
                        writable_extract& ca_extract,
                        ShortcutStrategy strategy,
                        std::unordered_set<uint64_t>& touched_tiles) {
   size_t written = 0, skipped = 0;
   std::vector<float> values(ca_extract.defs.size());
-  std::vector<std::pair<uint8_t*, uint32_t>> edge_rows; // row and length of each replaced edge
+
+  // a place to collect a shortcut's base edges' row pointers and length in meters for averaging
+  std::vector<std::pair<uint8_t*, uint32_t>> edge_rows;
 
   // shortcuts only exist on the levels above the local level
   for (uint8_t level = 0; level < TileHierarchy::levels().back().level; ++level) {
@@ -265,11 +265,16 @@ size_t write_shortcuts(GraphReader& reader,
                 break;
             }
           }
+          // if the user wants the mean we average the weighted sum over the total length in meters
           if (strategy == ShortcutStrategy::kMean) {
             value = static_cast<float>(weighted_sum / total_length);
           }
+
+          // otherwise value already has what we want (e.g. min/max)
           values[i] = value;
         }
+
+        // write all the values to a shortcut
         for (size_t i = 0; i < ca_extract.defs.size(); ++i) {
           encode_custom_attribute(shortcut_row, ca_extract.defs[i], values[i]);
         }
@@ -286,6 +291,9 @@ size_t write_shortcuts(GraphReader& reader,
 }
 
 } // namespace
+
+namespace valhalla {
+namespace mjolnir {
 
 size_t add_custom_attributes(const boost::property_tree::ptree& config,
                              const std::vector<std::string>& input_files,

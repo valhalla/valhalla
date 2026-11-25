@@ -3,12 +3,16 @@
 #include "baldr/graphtile.h"
 #include "gurka.h"
 #include "microtar.h"
+#include "mjolnir/custom_attributes_builder.h"
 
 #include <gtest/gtest.h>
 #include <vtzero/vector_tile.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <functional>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -51,7 +55,10 @@ void build_custom_attributes_extract(gurka::map& map,
   }
   write_tar_entry(tar, "attributes.json", attribute_defs);
 
-  GraphReader reader(map.config.get_child("mjolnir"));
+  // the tar being rewritten must not be mapped by this reader
+  auto mjolnir_config = map.config.get_child("mjolnir");
+  mjolnir_config.erase("custom_attributes_extract");
+  GraphReader reader(mjolnir_config);
   for (const auto tile_id : reader.GetTileSet()) {
     const auto tile = reader.GetGraphTile(tile_id);
     CustomAttributesTileHeader header{};
@@ -167,3 +174,189 @@ TEST_F(CustomAttributes, MVTProperties) {
     EXPECT_GT(checked_features, 0u);
   }
 }
+
+TEST(AddCustomAttributes, LuaValuesPerDirection) {
+  const std::string ascii_map = R"(
+      A-----B-----C
+            |
+            |
+            D-----E
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"smoothness", "good"}}},
+      {"BC", {{"highway", "residential"}, {"smoothness", "bad"}}},
+      {"BD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}, {"smoothness", "excellent"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887254});
+  const std::string workdir = VALHALLA_BUILD_DIR "test/data/gurka_add_custom_attributes";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, workdir, {{"mjolnir.concurrency", "1"}});
+
+  // every edge starts out with scenic 0.07 and quality 9
+  build_custom_attributes_extract(map, kAttributeDefs,
+                                  [](uint32_t) { return std::vector<uint8_t>{7, 9}; });
+
+  const std::string lua = R"(
+    function custom_attributes(tags)
+      if tags.smoothness == "good" then
+        return {scenic = 0.5, quality = 3, unknown = 1}
+      elseif tags.smoothness == "bad" then
+        return {scenic = 0.2}, {scenic = 0.8}
+      elseif tags.smoothness == "excellent" then
+        return {quality = 999}
+      end
+    end
+  )";
+  // AB: 2 attributes on 2 edges, BC: 1 attribute per direction, DE: 1 attribute on 2 edges
+  EXPECT_EQ(mjolnir::add_custom_attributes(map.config, {workdir + "/map.pbf"}, {"smoothness"}, lua,
+                                           mjolnir::ShortcutStrategy::kNone),
+            8u);
+
+  GraphReader reader(map.config.get_child("mjolnir"));
+  const auto& defs = reader.GetCustomAttributeDefs();
+  ASSERT_EQ(defs.size(), 2u);
+  auto expect_values = [&](const std::string& from, const std::string& to, float scenic,
+                           float quality) {
+    SCOPED_TRACE(from + to);
+    const auto [edge_id, edge] = gurka::findEdgeByNodes(reader, map.nodes, from, to);
+    const auto tile = reader.GetGraphTile(edge_id);
+    ASSERT_NE(tile->custom_attributes_tile(), nullptr);
+    EXPECT_NEAR(tile->custom_attributes_tile()->value(edge_id.id(), defs[0]), scenic, 1e-4);
+    EXPECT_NEAR(tile->custom_attributes_tile()->value(edge_id.id(), defs[1]), quality, 1e-4);
+  };
+
+  expect_values("A", "B", 0.5f, 3.f);
+  expect_values("B", "A", 0.5f, 3.f);
+  expect_values("B", "C", 0.2f, 9.f);
+  expect_values("C", "B", 0.8f, 9.f);
+
+  // no smoothness tag
+  expect_values("B", "D", 0.07f, 9.f);
+  expect_values("D", "B", 0.07f, 9.f);
+
+  // clamped to the maximum
+  expect_values("D", "E", 0.07f, 255.f);
+  expect_values("E", "D", 0.07f, 255.f);
+}
+
+class ShortcutStrategies : public ::testing::TestWithParam<mjolnir::ShortcutStrategy> {
+protected:
+  static gurka::map map;
+  static std::string pbf;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+      A-B-----C--D
+    )";
+    const gurka::ways ways = {
+        {"AB", {{"highway", "motorway"}, {"name", "A1"}, {"test_scenic", "0.2"}}},
+        {"BC", {{"highway", "motorway"}, {"name", "A1"}, {"test_scenic", "0.6"}}},
+        {"CD", {{"highway", "motorway"}, {"name", "A1"}, {"test_scenic", "0.4"}}},
+    };
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887254});
+    const std::string workdir = VALHALLA_BUILD_DIR "test/data/gurka_custom_attributes_shortcuts";
+    map = gurka::buildtiles(layout, ways, {}, {}, workdir, {{"mjolnir.concurrency", "1"}});
+    pbf = workdir + "/map.pbf";
+  }
+
+  // rebuilds the extract with scenic 0.07 and quality 9 everywhere, then runs the Lua script
+  void add_attributes(mjolnir::ShortcutStrategy strategy) {
+    build_custom_attributes_extract(map, kAttributeDefs,
+                                    [](uint32_t) { return std::vector<uint8_t>{7, 9}; });
+    const std::string lua = R"(
+      function custom_attributes(tags)
+        return {scenic = tonumber(tags.test_scenic)}
+      end
+    )";
+    mjolnir::add_custom_attributes(map.config, {pbf}, {"test_scenic"}, lua, strategy);
+  }
+};
+gurka::map ShortcutStrategies::map = {};
+std::string ShortcutStrategies::pbf = {};
+
+// scenic and quality of an edge
+std::pair<float, float> edge_values(GraphReader& reader, const GraphId& edge_id) {
+  const auto tile = reader.GetGraphTile(edge_id);
+  const auto* ca_tile = tile->custom_attributes_tile();
+  if (!ca_tile) {
+    ADD_FAILURE() << "no custom attributes tile for " << edge_id;
+    return {};
+  }
+  const auto& defs = reader.GetCustomAttributeDefs();
+  return {ca_tile->value(edge_id.id(), defs[0]), ca_tile->value(edge_id.id(), defs[1])};
+}
+
+TEST_F(ShortcutStrategies, NoneKeepsShortcutDefaults) {
+  add_attributes(mjolnir::ShortcutStrategy::kNone);
+
+  GraphReader reader(map.config.get_child("mjolnir"));
+  const auto [shortcut_id, shortcut] = gurka::findEdgeByNodes(reader, map.nodes, "A", "D");
+  ASSERT_TRUE(shortcut && shortcut->is_shortcut());
+
+  // the base edges got their Lua values, the shortcut kept the extract's defaults
+  EXPECT_NEAR(edge_values(reader, std::get<0>(gurka::findEdgeByNodes(reader, map.nodes, "B", "C")))
+                  .first,
+              0.6f, 1e-4);
+  const auto [scenic, quality] = edge_values(reader, shortcut_id);
+  EXPECT_NEAR(scenic, 0.07f, 1e-4);
+  EXPECT_NEAR(quality, 9.f, 1e-4);
+}
+
+TEST_P(ShortcutStrategies, ShortcutFromBaseEdges) {
+  add_attributes(GetParam());
+
+  GraphReader reader(map.config.get_child("mjolnir"));
+  const auto [shortcut_id, shortcut] = gurka::findEdgeByNodes(reader, map.nodes, "A", "D");
+  ASSERT_TRUE(shortcut && shortcut->is_shortcut());
+
+  const auto edges = reader.RecoverShortcut(shortcut_id);
+  ASSERT_EQ(edges.size(), 3u);
+  float min = std::numeric_limits<float>::max(), max = 0.f;
+  double weighted_sum = 0.0, total_length = 0.0;
+  for (const auto& edge_id : edges) {
+    const float scenic = edge_values(reader, edge_id).first;
+    const auto length = reader.directededge(edge_id)->length();
+    min = std::min(min, scenic);
+    max = std::max(max, scenic);
+    weighted_sum += scenic * length;
+    total_length += length;
+  }
+  ASSERT_NEAR(min, 0.2f, 1e-4);
+  ASSERT_NEAR(max, 0.6f, 1e-4);
+  // the edges differ in length, so the weighted mean is not the plain mean of 0.4
+  ASSERT_GT(std::abs(weighted_sum / total_length - 0.4), 0.02);
+
+  float expected = 0.f;
+  switch (GetParam()) {
+    case mjolnir::ShortcutStrategy::kMin:
+      expected = min;
+      break;
+    case mjolnir::ShortcutStrategy::kMax:
+      expected = max;
+      break;
+    default:
+      expected = static_cast<float>(weighted_sum / total_length);
+      break;
+  }
+  const auto [scenic, quality] = edge_values(reader, shortcut_id);
+  // the stored value is rounded to the attribute's scale of 0.01
+  EXPECT_NEAR(scenic, expected, 0.005 + 1e-4);
+  // Lua never set quality, so every base edge and the shortcut keep the default
+  EXPECT_NEAR(quality, 9.f, 1e-4);
+}
+
+INSTANTIATE_TEST_SUITE_P(Strategies,
+                         ShortcutStrategies,
+                         ::testing::Values(mjolnir::ShortcutStrategy::kMin,
+                                           mjolnir::ShortcutStrategy::kMax,
+                                           mjolnir::ShortcutStrategy::kMean),
+                         [](const auto& info) {
+                           switch (info.param) {
+                             case mjolnir::ShortcutStrategy::kMin:
+                               return "Min";
+                             case mjolnir::ShortcutStrategy::kMax:
+                               return "Max";
+                             default:
+                               return "Mean";
+                           }
+                         });
