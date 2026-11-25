@@ -543,6 +543,59 @@ TEST(LokiService, test_osrm_failure_requests) {
   run_requests(osrm_requests, osrm_responses);
 }
 
+// Verify UTF-8 validation across all JSON request entry points.
+TEST(LokiService, test_invalid_utf8_request) {
+  const std::string prefix =
+      R"({"locations":[{"lat":37.701,"lon":-122.399},{"lat":37.706,"lon":-122.394}],)"
+      R"("costing":"auto","units":"kilometers","id":")";
+  const auto check = [&](const auto& parse) {
+    for (const std::string id :
+         {"fixture", "fixture-caf\xc3\xa9", "\xe2\x82\xac", "\xf0\x9f\x8c\x8d"}) {
+      Api valid;
+      ASSERT_NO_THROW(parse(prefix + id + "\"}", valid));
+      EXPECT_EQ(valid.options().id(), id);
+    }
+    const std::vector<std::string> malformed{prefix + "\xff\"}",         // invalid leading byte
+                                             prefix + "\x80\"}",         // stray continuation byte
+                                             prefix + "\xc0\xaf\"}",     // overlong encoding
+                                             prefix + "\xed\xa0\x80\"}", // surrogate code point
+                                             prefix + "\xf4\x90\x80\x80\"}", // above U+10FFFF
+                                             prefix + "\xc2\"}", // missing continuation before quote
+                                             prefix + "\xe2",    // truncated at end of input
+                                             prefix +
+                                                 "\xf0\x9f\x8c"}; // truncated four-byte character
+    for (const auto& body : malformed) {
+      SCOPED_TRACE(::testing::PrintToString(body));
+      Api invalid;
+      try {
+        parse(body, invalid);
+        FAIL() << "Accepted an invalid UTF-8 byte in the request ID";
+      } catch (const valhalla_exception_t& e) {
+        EXPECT_EQ(e.code, 100u);
+        EXPECT_EQ(e.http_code, 400u);
+      }
+    }
+  };
+  {
+    SCOPED_TRACE("POST body");
+    check([](const std::string& body, Api& api) {
+      ParseApi(http_request_t(POST, "/route", body), api);
+    });
+  }
+  {
+    SCOPED_TRACE("GET JSON query");
+    check([](const std::string& body, Api& api) {
+      http_request_t request(GET, "/route");
+      request.query["json"] = {body};
+      ParseApi(request, api);
+    });
+  }
+  {
+    SCOPED_TRACE("Direct JSON request");
+    check([](const std::string& body, Api& api) { ParseApi(body, Options::route, api); });
+  }
+}
+
 TEST(LokiService, test_actions_whitelist) {
   http_request_info_t info{};
 
