@@ -4170,8 +4170,7 @@ struct graph_parser {
         // restriction key
         if (!isTypeRestriction) {
 
-          modes = (kAutoAccess | kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
-                   kTruckAccess | kEmergencyAccess | kMotorcycleAccess);
+          modes = kSimpleTurnRestrictionAccess;
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens = GetTagTokens(except);
           for (const auto& t : tokens) {

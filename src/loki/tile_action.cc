@@ -162,6 +162,50 @@ vtzero::point merc_to_tile_coords(const midgard::Point2d merc_xy, const TileProj
   return {tile_x, tile_y};
 }
 
+// all the parts identifying a comple restriction, cut to the 53 bit integer precision of JS numbers
+// NOTE: time domain is explicitly not part of it
+uint64_t complex_restriction_id(const ComplexRestriction& cr,
+                                const GraphId from_edge_id,
+                                const std::vector<GraphId>& via_edge_ids,
+                                const GraphId to_edge_id) {
+  std::size_t seed = 0;
+  hash_combine(seed, from_edge_id.value);
+  for (const auto& via : via_edge_ids) {
+    hash_combine(seed, via.value);
+  }
+  hash_combine(seed, to_edge_id.value);
+  hash_combine(seed, static_cast<uint32_t>(cr.type()));
+  hash_combine(seed, cr.modes());
+  return seed & ((1ull << 53) - 1);
+}
+
+// appends the first or last few meters of an edge's shape in travel direction to the path
+void append_partial_shape(std::vector<PointLL>& path,
+                          const DirectedEdge* edge,
+                          const graph_tile_ptr& tile,
+                          const bool keep_end) {
+  constexpr double kTurnRestrictionRenderMeters = 20.;
+
+  auto shape = tile->edgeinfo(edge).shape();
+
+  // trim_shape keeps the front, so put the end we want first
+  if (edge->forward() == keep_end) {
+    std::reverse(shape.begin(), shape.end());
+  }
+  // we don't (yet) skip 0 length segments of an edge
+  if (const double length = midgard::length(shape); length > 0.) {
+    trim_shape(0.f, static_cast<float>(std::min(kTurnRestrictionRenderMeters, length / 2.) / length),
+               shape);
+  }
+  // back to travel direction
+  if (keep_end) {
+    std::reverse(shape.begin(), shape.end());
+  }
+
+  // consecutive edges share their connecting node
+  path.insert(path.end(), path.empty() ? shape.begin() : std::next(shape.begin()), shape.end());
+}
+
 linestring_vtzero_t shape_to_mercator(const std::vector<midgard::PointLL>& shape,
                                       bg::linestring_2d_t& mercator_line,
                                       const box_vtzero_t& clip_box,
@@ -223,6 +267,7 @@ void filter_tile(const std::string& tile_bytes,
   const bool exclude_shortcut_layer = exclude_layers.contains(kShortcutLayerName);
   const bool exclude_access_restrictions_layer = exclude_layers.contains(kAccessRestrictionLayerName);
   const bool exclude_incidents_layer = exclude_layers.contains(kIncidentLayerName);
+  const bool exclude_turn_restrictions_layer = exclude_layers.contains(kTurnRestrictionLayerName);
 
   auto build_filtered_layer = [&](vtzero::layer& full_layer) {
     const std::string_view layer_name{full_layer.name().data(), full_layer.name().size()};
@@ -230,7 +275,8 @@ void filter_tile(const std::string& tile_bytes,
         (layer_name == kEdgeLayerName && exclude_edge_layer) ||
         (layer_name == kShortcutLayerName && exclude_shortcut_layer) ||
         (layer_name == kAccessRestrictionLayerName && exclude_access_restrictions_layer) ||
-        (layer_name == kIncidentLayerName && exclude_incidents_layer)) {
+        (layer_name == kIncidentLayerName && exclude_incidents_layer) ||
+        (layer_name == kTurnRestrictionLayerName && exclude_turn_restrictions_layer)) {
       return;
     }
 
@@ -397,6 +443,243 @@ void build_access_restrictions_layer(AccessRestrictionLayerBuilder& ar_builder,
   ar_builder.add_feature(line, edge_id, opp_edge_id, fwd_restrictions, bwd_restrictions);
 }
 
+void add_turn_restriction(TurnRestrictionLayerBuilder& tr_builder,
+                          const TurnRestrictionProps& props,
+                          const linestring_vtzero_t& mvt_line,
+                          bool leaves_bbox,
+                          const box_vtzero_t& clip_box,
+                          uint32_t bearing) {
+  if (!leaves_bbox) {
+    tr_builder.add_line_feature(props, mvt_line);
+  } else {
+    multilinestring_vtzero_t clipped_lines;
+    boost::geometry::intersection(clip_box, mvt_line, clipped_lines);
+    std::erase_if(clipped_lines,
+                  [](const auto& ls) { return ls.size() < 2 || (ls.size() == 2 && ls[0] == ls[1]); });
+    for (const auto& clipped_line : clipped_lines) {
+      tr_builder.add_line_feature(props, clipped_line);
+    }
+  }
+
+  // add the turn restriction's end point with its bearing over its last 10 m to e.g. draw an arrow
+  const auto& head_pt = mvt_line.back();
+  if (head_pt.x >= clip_box.min_corner().x && head_pt.x <= clip_box.max_corner().x &&
+      head_pt.y >= clip_box.min_corner().y && head_pt.y <= clip_box.max_corner().y) {
+    tr_builder.add_point_feature(props, head_pt, bearing);
+  }
+}
+
+// adds the restrictions whose from or to edge is this edge or its opposing edge, so every tile
+// with either of them has the restriction
+void build_turn_restrictions_layer(TurnRestrictionLayerBuilder& tr_builder,
+                                   GraphReader& reader,
+                                   const GraphId edge_id,
+                                   const DirectedEdge* edge,
+                                   const graph_tile_ptr& edge_tile,
+                                   uint32_t z,
+                                   bg::linestring_2d_t& mercator_line,
+                                   const box_vtzero_t& clip_box,
+                                   double generalize,
+                                   const TileProjection& projection) {
+  // head_start is the path index where the to edge begins
+  auto add_restriction = [&](const TurnRestrictionProps& props, const std::vector<PointLL>& shape,
+                             size_t head_start) {
+    bool leaves_bbox = false;
+    const auto mvt_line =
+        shape_to_mercator(shape, mercator_line, clip_box, leaves_bbox, generalize, z, projection);
+    if (mvt_line.size() < 2) {
+      return;
+    }
+
+    // smooth the head's direction over its last 10 meters, without sampling past the to edge
+    const float angle = tangent_angle(shape.size() - 1, shape.back(), shape, 10.f, true, head_start);
+    const auto bearing = static_cast<uint32_t>(std::round(angle)) % 360;
+    add_turn_restriction(tr_builder, props, mvt_line, leaves_bbox, clip_box, bearing);
+  };
+
+  auto add_simple_restriction = [&](const GraphId from_edge_id, const DirectedEdge* from_edge,
+                                    const graph_tile_ptr& from_tile, const GraphId to_edge_id,
+                                    const DirectedEdge* to_edge, const graph_tile_ptr& to_tile) {
+    const TurnRestrictionProps props{
+        .id = from_edge_id.value * kMaxTurnRestrictionEdges + to_edge->localedgeidx(),
+        .from_edge_id = from_edge_id,
+        .to_edge_id = to_edge_id,
+    };
+    if (!tr_builder.add_unique_id(props.id)) {
+      return;
+    }
+
+    // we'll keep the first 20 m for vis, or half the edge length, whichever is less
+    std::vector<PointLL> partial_shapes;
+    append_partial_shape(partial_shapes, from_edge, from_tile, true);
+    const size_t head_start = partial_shapes.size() - 1;
+    append_partial_shape(partial_shapes, to_edge, to_tile, false);
+    add_restriction(props, partial_shapes, head_start);
+  };
+
+  // vias in travel order
+  auto add_complex_restriction = [&](const ComplexRestriction& cr, const GraphId from_edge_id,
+                                     const std::vector<GraphId>& vias, const GraphId to_edge_id) {
+    const auto id = complex_restriction_id(cr, from_edge_id, vias, to_edge_id);
+    if (!tr_builder.add_unique_id(id)) {
+      return;
+    }
+
+    // add the from edge's partial geometry
+    graph_tile_ptr tile = edge_tile;
+    const DirectedEdge* from_edge = reader.directededge(from_edge_id, tile);
+    if (!from_edge) {
+      return;
+    }
+    std::vector<PointLL> full_shape;
+    append_partial_shape(full_shape, from_edge, tile, true);
+
+    // add via graph ids as strings, MVT doesn't support arrays
+    std::string via_edge_ids;
+    for (const auto& via_id : vias) {
+      const DirectedEdge* via_edge = reader.directededge(via_id, tile);
+      if (!via_edge) {
+        return;
+      }
+
+      auto via_shape = tile->edgeinfo(via_edge).shape();
+      if (!via_edge->forward()) {
+        std::reverse(via_shape.begin(), via_shape.end());
+      }
+      // consecutive edges share their connecting node
+      full_shape.insert(full_shape.end(), std::next(via_shape.begin()), via_shape.end());
+
+      // keeps a leading & trailing comma, so a style.json can match whole IDs
+      via_edge_ids += "," + std::to_string(via_id.value);
+    }
+    if (!via_edge_ids.empty()) {
+      via_edge_ids += ",";
+    }
+
+    // only include the to edge in the bearing computation
+    const size_t head_start = full_shape.size() - 1;
+    const DirectedEdge* to_edge = reader.directededge(to_edge_id, tile);
+    if (!to_edge) {
+      return;
+    }
+    append_partial_shape(full_shape, to_edge, tile, false);
+
+    const TurnRestrictionProps props{
+        .id = id,
+        .from_edge_id = from_edge_id,
+        .to_edge_id = to_edge_id,
+        .complex = &cr,
+        .via_edge_ids = std::move(via_edge_ids),
+    };
+    add_restriction(props, full_shape, head_start);
+  };
+
+  // simple restrictions are a mask of the forbidden edges' local indices at the end node. if that
+  // node is outside the tile, also add the ones onto our opposing edge whose from edges might not be
+  // in the tile, i.e. we'd miss them otherwise
+  const uint32_t mask = edge->restrictions();
+  const GraphId via_node_id = edge->endnode();
+  graph_tile_ptr via_node_tile = edge_tile;
+  const NodeInfo* via_node = reader.nodeinfo(via_node_id, via_node_tile);
+  if (via_node) {
+    const auto via_node_ll = via_node->latlng(via_node_tile->header()->base_ll());
+    const auto via_node_pt =
+        merc_to_tile_coords({lon_to_merc_x(via_node_ll.lng()), lat_to_merc_y(via_node_ll.lat())},
+                            projection);
+    // strict, so a node rounded onto the tile's border counts as outside
+    const bool node_in_tile = via_node_pt.x > 0 && via_node_pt.x < projection.tile_extent &&
+                              via_node_pt.y > 0 && via_node_pt.y < projection.tile_extent;
+
+    // if the node is not in the tile, get the opposing edge, there might be a turn restriction from
+    // the other tile
+    graph_tile_ptr opp_tile = edge_tile;
+    const DirectedEdge* opp_edge = nullptr;
+    GraphId opp_edge_id;
+    if (!node_in_tile) {
+      opp_edge_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+      if (opp_edge && opp_edge->localedgeidx() >= kMaxTurnRestrictionEdges) {
+        opp_edge = nullptr;
+      }
+    }
+
+    auto add_simple_restrictions = [&](const GraphId node_id, const NodeInfo* node,
+                                       const graph_tile_ptr& node_tile) {
+      const auto out_edges = node_tile->GetDirectedEdges(node);
+      for (uint32_t i = 0; i < out_edges.size(); ++i) {
+        const auto& out_edge = out_edges[i];
+        if (out_edge.is_shortcut()) {
+          continue;
+        }
+        const GraphId out_edge_id(node_id.tileid(), node_id.level(), node->edge_index() + i);
+
+        // turning from our edge onto this one
+        const auto local_idx = out_edge.localedgeidx();
+        if (local_idx < kMaxTurnRestrictionEdges && (mask & (1 << local_idx))) {
+          add_simple_restriction(edge_id, edge, edge_tile, out_edge_id, &out_edge, node_tile);
+        }
+
+        // turning from this outgoing's opposing edge onto our opposing edge
+        if (opp_edge) {
+          graph_tile_ptr in_tile = node_tile;
+          const DirectedEdge* in_edge = nullptr;
+          const GraphId in_edge_id = reader.GetOpposingEdgeId(out_edge_id, in_edge, in_tile);
+          if (in_edge && (in_edge->restrictions() & (1 << opp_edge->localedgeidx()))) {
+            add_simple_restriction(in_edge_id, in_edge, in_tile, opp_edge_id, opp_edge, opp_tile);
+          }
+        }
+      }
+    };
+
+    // either we're on a from edge, or we test if the opposing is the to edge
+    if (mask || opp_edge) {
+      add_simple_restrictions(via_node_id, via_node, via_node_tile);
+
+      // the to edges can be on any hierarchy level of the end node
+      for (const auto& trans : via_node_tile->GetNodeTransitions(via_node)) {
+        graph_tile_ptr trans_tile;
+        if (const NodeInfo* trans_node = reader.nodeinfo(trans.endnode(), trans_tile)) {
+          add_simple_restrictions(trans.endnode(), trans_node, trans_tile);
+        }
+      }
+    }
+  }
+
+  // complex restrictions are stored in the "to" edge's tile, vias from the to edge backwards
+  if (edge->end_restriction()) {
+    for (const auto& cr : edge_tile->GetComplexRestrictions(true, edge_id, kAllAccess)) {
+      std::vector<GraphId> vias;
+      vias.reserve(cr.via_count());
+      cr.WalkVias([&vias](const GraphId* via) {
+        vias.push_back(*via);
+        return WalkingVia::KeepWalking;
+      });
+      std::reverse(vias.begin(), vias.end());
+      add_complex_restriction(cr, cr.from_graphid(), vias, edge_id);
+    }
+  }
+
+  // also get the reverse complex restrictions so we can find the ones stored in another tile
+  // and reaching into this tile
+  if (edge->start_restriction()) {
+    for (const auto& cr : edge_tile->GetComplexRestrictions(false, edge_id, kAllAccess)) {
+      std::vector<GraphId> vias;
+      vias.reserve(cr.via_count());
+      bool vias_complete = true;
+      cr.WalkVias([&](const GraphId* via) {
+        const GraphId opp_via = reader.GetOpposingEdgeId(*via);
+        vias_complete = opp_via.is_valid();
+        vias.push_back(opp_via);
+        return vias_complete ? WalkingVia::KeepWalking : WalkingVia::StopWalking;
+      });
+      const GraphId from_edge_id = reader.GetOpposingEdgeId(edge_id);
+      const GraphId to_edge_id = reader.GetOpposingEdgeId(cr.to_graphid());
+      if (vias_complete && from_edge_id.is_valid() && to_edge_id.is_valid()) {
+        add_complex_restriction(cr, from_edge_id, vias, to_edge_id);
+      }
+    }
+  }
+}
+
 void build_layers(const std::shared_ptr<GraphReader>& reader,
                   vtzero::tile_builder& tile,
                   const midgard::AABB2<midgard::PointLL>& bounds,
@@ -417,6 +700,7 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
   NodesLayerBuilder nodes_builder(tile, kNodeLayerName.data(), controller);
   AccessRestrictionLayerBuilder access_restriction_builder(tile, kAccessRestrictionLayerName.data());
   IncidentLayersBuilder incidents_builder(tile, kIncidentLayerName.data(), controller);
+  TurnRestrictionLayerBuilder turn_restriction_builder(tile, kTurnRestrictionLayerName.data());
 
   std::unordered_set<GraphId> unique_nodes;
   unique_nodes.reserve(edge_ids.size());
@@ -456,14 +740,22 @@ void build_layers(const std::shared_ptr<GraphReader>& reader,
     const DirectedEdge* opp_edge = nullptr;
     GraphId opp_edge_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
 
+    // add turn restrictions
+    if (!edge->is_shortcut()) {
+      build_turn_restrictions_layer(turn_restriction_builder, *reader, edge_id, edge, edge_tile, z,
+                                    mercator_line, clip_box, generalize, projection);
+      if (opp_edge) {
+        build_turn_restrictions_layer(turn_restriction_builder, *reader, opp_edge_id, opp_edge,
+                                      opp_tile, z, mercator_line, clip_box, generalize, projection);
+      }
+    }
+
     const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
     const volatile baldr::TrafficSpeed* reverse_traffic =
         opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
     // lambda to add VT line & nodes features
     auto process_single_line = [&](const linestring_vtzero_t& line) {
-      // Check for opposing edge
-
       if (edge->is_shortcut()) {
         shortcuts_builder.add_feature(line, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
                                       reverse_traffic, edge_info);
@@ -724,6 +1016,57 @@ void AccessRestrictionLayerBuilder::add_feature(
 
   add_feature(forward_edge_id, forward_restrictions);
   add_feature(reverse_edge_id, reverse_restrictions);
+}
+
+TurnRestrictionLayerBuilder::TurnRestrictionLayerBuilder(vtzero::tile_builder& tile, const char* name)
+    : vtzero::layer_builder(tile, name) {
+  key_complex_ = add_key_without_dup_check("complex");
+  key_modes_ = add_key_without_dup_check("modes");
+  key_from_edge_id_ = add_key_without_dup_check("from_edge_id");
+  key_to_edge_id_ = add_key_without_dup_check("to_edge_id");
+  key_bearing_ = add_key_without_dup_check("bearing");
+  key_type_ = add_key_without_dup_check("type");
+  key_via_edge_ids_ = add_key_without_dup_check("via_edge_ids");
+}
+
+void TurnRestrictionLayerBuilder::add_properties(vtzero::feature_builder& feature,
+                                                 const TurnRestrictionProps& props) {
+  const auto* complex_tr = props.complex;
+  const uint32_t modes = complex_tr ? complex_tr->modes() : kSimpleTurnRestrictionAccess;
+  feature.add_property(key_complex_, vtzero::encoded_property_value(complex_tr != nullptr));
+  feature.add_property(key_modes_, vtzero::encoded_property_value(modes));
+  feature.add_property(key_from_edge_id_, vtzero::encoded_property_value(props.from_edge_id.value));
+  feature.add_property(key_to_edge_id_, vtzero::encoded_property_value(props.to_edge_id.value));
+
+  // simple restrictions don't have a type
+  if (!complex_tr) {
+    return;
+  }
+  feature.add_property(key_type_,
+                       vtzero::encoded_property_value(static_cast<uint32_t>(complex_tr->type())));
+  if (!props.via_edge_ids.empty()) {
+    feature.add_property(key_via_edge_ids_, vtzero::encoded_property_value(props.via_edge_ids));
+  }
+}
+
+void TurnRestrictionLayerBuilder::add_line_feature(const TurnRestrictionProps& props,
+                                                   const std::vector<vtzero::point>& line) {
+  vtzero::linestring_feature_builder feature{*this};
+  feature.set_id(props.id);
+  feature.add_linestring_from_container(line);
+  add_properties(feature, props);
+  feature.commit();
+}
+
+void TurnRestrictionLayerBuilder::add_point_feature(const TurnRestrictionProps& props,
+                                                    const vtzero::point& head,
+                                                    uint32_t bearing) {
+  vtzero::point_feature_builder feature{*this};
+  feature.set_id(props.id);
+  feature.add_point(head);
+  add_properties(feature, props);
+  feature.add_property(key_bearing_, vtzero::encoded_property_value(bearing));
+  feature.commit();
 }
 
 IncidentLayersBuilder::IncidentLayersBuilder(vtzero::tile_builder& tile,

@@ -12,6 +12,8 @@
 #include <vtzero/vector_tile.hpp>
 
 #include <format>
+#include <map>
+#include <optional>
 #include <set>
 #include <span>
 
@@ -227,6 +229,285 @@ A-B-C
     } else {
       FAIL() << "Unexpected layer: " << layer_name;
     }
+  }
+}
+
+namespace {
+struct TurnRestrictionFeature {
+  uint64_t from_edge_id = 0;
+  uint64_t to_edge_id = 0;
+  bool complex = true;
+  uint32_t modes = 0;
+  uint32_t bearing = 0;
+  std::optional<uint32_t> type;
+  std::string via_edge_ids;
+};
+
+// parses lines and heads of the turn restriction layer, keyed by (from, to)
+void parse_turn_restrictions(const std::string& tile_data,
+                             std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature>& lines,
+                             std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature>& heads) {
+  vtzero::vector_tile tile{tile_data};
+  auto layer = tile.get_layer_by_name(kTurnRestrictionLayerName.data());
+  ASSERT_TRUE(layer.valid());
+  while (auto feature = layer.next_feature()) {
+    EXPECT_TRUE(feature.has_id());
+    TurnRestrictionFeature tr;
+    while (auto property = feature.next_property()) {
+      const std::string_view key{property.key().data(), property.key().size()};
+      if (key == "from_edge_id") {
+        tr.from_edge_id = property.value().uint_value();
+      } else if (key == "to_edge_id") {
+        tr.to_edge_id = property.value().uint_value();
+      } else if (key == "complex") {
+        tr.complex = property.value().bool_value();
+      } else if (key == "modes") {
+        tr.modes = static_cast<uint32_t>(property.value().uint_value());
+      } else if (key == "bearing") {
+        tr.bearing = static_cast<uint32_t>(property.value().uint_value());
+      } else if (key == "type") {
+        tr.type = static_cast<uint32_t>(property.value().uint_value());
+      } else if (key == "via_edge_ids") {
+        const auto value = property.value().string_value();
+        tr.via_edge_ids = std::string(value.data(), value.size());
+      }
+    }
+    auto& features = feature.geometry_type() == vtzero::GeomType::POINT ? heads : lines;
+    EXPECT_TRUE(features.emplace(std::make_pair(tr.from_edge_id, tr.to_edge_id), tr).second)
+        << "duplicate feature " << tr.from_edge_id << " -> " << tr.to_edge_id;
+  }
+}
+} // namespace
+
+TEST(VectorTilesTurnRestrictions, Simple) {
+  const std::string ascii_map = R"(
+        F
+        |
+    A---B---C
+        |
+        H
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"FB", {{"highway", "residential"}}},
+      {"BH", {{"highway", "residential"}}},
+  };
+  const gurka::relations relations = {
+      {{{gurka::way_member, "AB", "from"},
+        {gurka::node_member, "B", "via"},
+        {gurka::way_member, "FB", "to"}},
+       {{"type", "restriction"}, {"restriction", "no_left_turn"}}},
+      // becomes a prohibition onto every other edge at B, including the U-turn
+      {{{gurka::way_member, "BH", "from"},
+        {gurka::node_member, "B", "via"},
+        {gurka::way_member, "FB", "to"}},
+       {{"type", "restriction"}, {"restriction", "only_straight_on"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {2.315260, 48.869168});
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/gurka_vt_turn_restrictions_simple");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto edge_id = [&](const std::string& from, const std::string& to) {
+    return std::get<0>(gurka::findEdgeByNodes(*reader, layout, from, to)).value;
+  };
+
+  std::string tile_data;
+  gurka::do_action(Options::tile, map, "B", 14, "auto", {}, nullptr, &tile_data);
+
+  std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature> lines, heads;
+  parse_turn_restrictions(tile_data, lines, heads);
+
+  const std::set<std::pair<uint64_t, uint64_t>> expected = {
+      {edge_id("A", "B"), edge_id("B", "F")},
+      {edge_id("H", "B"), edge_id("B", "A")},
+      {edge_id("H", "B"), edge_id("B", "C")},
+      {edge_id("H", "B"), edge_id("B", "H")},
+  };
+  for (const auto* features : {&lines, &heads}) {
+    std::set<std::pair<uint64_t, uint64_t>> found;
+    for (const auto& [key, tr] : *features) {
+      found.insert(key);
+      EXPECT_FALSE(tr.complex);
+      EXPECT_EQ(tr.modes, baldr::kSimpleTurnRestrictionAccess);
+    }
+    EXPECT_EQ(found, expected);
+  }
+
+  // arrow heads point along the restricted edge
+  const auto north = heads.at({edge_id("A", "B"), edge_id("B", "F")}).bearing;
+  EXPECT_TRUE(north <= 1 || north >= 359) << north;
+  EXPECT_NEAR(heads.at({edge_id("H", "B"), edge_id("B", "C")}).bearing, 90, 1);
+  EXPECT_NEAR(heads.at({edge_id("H", "B"), edge_id("B", "H")}).bearing, 180, 1);
+
+  // and the layer can be excluded
+  std::string tile_data_excluded;
+  gurka::do_action(Options::tile, map, "B", 14, "auto",
+                   {{"/tile_options/exclude_layers/-", std::string(kTurnRestrictionLayerName)}},
+                   nullptr, &tile_data_excluded);
+  vtzero::vector_tile tile_excluded{tile_data_excluded};
+  EXPECT_FALSE(tile_excluded.get_layer_by_name(kTurnRestrictionLayerName.data()).valid());
+  EXPECT_TRUE(tile_excluded.get_layer_by_name(kEdgeLayerName.data()).valid());
+}
+
+TEST(VectorTilesTurnRestrictions, Complex) {
+  const std::string ascii_map = R"(
+        F   G
+        |   |
+    A---B---C---D---E
+        |   |
+        H   I---J
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
+      {"FB", {{"highway", "residential"}}}, {"BH", {{"highway", "residential"}}},
+      {"GC", {{"highway", "residential"}}}, {"CI", {{"highway", "residential"}}},
+      {"IJ", {{"highway", "residential"}}},
+  };
+  const gurka::relations relations = {
+      // via way
+      {{{gurka::way_member, "AB", "from"},
+        {gurka::way_member, "BC", "via"},
+        {gurka::way_member, "CD", "via"},
+        {gurka::way_member, "DE", "to"}},
+       {{"type", "restriction"}, {"restriction", "no_straight_on"}}},
+      // via node, but only for trucks
+      {{{gurka::way_member, "FB", "from"},
+        {gurka::node_member, "B", "via"},
+        {gurka::way_member, "BH", "to"}},
+       {{"type", "restriction"}, {"restriction:hgv", "no_straight_on"}}},
+      // via node, but time dependent
+      {{{gurka::way_member, "GC", "from"},
+        {gurka::node_member, "C", "via"},
+        {gurka::way_member, "CI", "to"}},
+       {{"type", "restriction"},
+        {"restriction:conditional", "no_straight_on @ (Mo-Fr 07:00-09:00)"}}},
+      // via way only_*, becomes a prohibition onto every other edge along the via
+      {{{gurka::way_member, "DE", "from"},
+        {gurka::way_member, "CD", "via"},
+        {gurka::way_member, "CI", "to"}},
+       {{"type", "restriction"}, {"restriction", "only_left_turn"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {2.315260, 48.869168});
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/gurka_vt_turn_restrictions_complex");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto edge_id = [&](const std::string& from, const std::string& to) {
+    return std::get<0>(gurka::findEdgeByNodes(*reader, layout, from, to)).value;
+  };
+
+  std::string tile_data;
+  gurka::do_action(Options::tile, map, "C", 14, "auto", {}, nullptr, &tile_data);
+
+  std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature> lines, heads;
+  parse_turn_restrictions(tile_data, lines, heads);
+
+  struct Expected {
+    uint32_t type;
+    uint32_t modes;
+    std::string via_edge_ids;
+  };
+  const auto vias = [&](const std::vector<std::pair<std::string, std::string>>& edges) {
+    std::string ids;
+    for (const auto& [from, to] : edges) {
+      ids += "," + std::to_string(edge_id(from, to));
+    }
+    return ids.empty() ? ids : ids + ",";
+  };
+  constexpr auto kOnlyLeft = static_cast<uint32_t>(baldr::RestrictionType::kOnlyLeftTurn);
+  constexpr auto kNoStraight = static_cast<uint32_t>(baldr::RestrictionType::kNoStraightOn);
+  const std::map<std::pair<uint64_t, uint64_t>, Expected> expected = {
+      {{edge_id("A", "B"), edge_id("D", "E")},
+       {kNoStraight, baldr::kSimpleTurnRestrictionAccess, vias({{"B", "C"}, {"C", "D"}})}},
+      {{edge_id("F", "B"), edge_id("B", "H")}, {kNoStraight, baldr::kTruckAccess, ""}},
+      {{edge_id("G", "C"), edge_id("C", "I")},
+       {kNoStraight, baldr::kSimpleTurnRestrictionAccess, ""}},
+      // the only_left_turn from E prohibits everything but turning into CI at C, incl. U-turns
+      {{edge_id("E", "D"), edge_id("D", "E")}, {kOnlyLeft, baldr::kSimpleTurnRestrictionAccess, ""}},
+      {{edge_id("E", "D"), edge_id("C", "B")},
+       {kOnlyLeft, baldr::kSimpleTurnRestrictionAccess, vias({{"D", "C"}})}},
+      {{edge_id("E", "D"), edge_id("C", "G")},
+       {kOnlyLeft, baldr::kSimpleTurnRestrictionAccess, vias({{"D", "C"}})}},
+      {{edge_id("E", "D"), edge_id("C", "D")},
+       {kOnlyLeft, baldr::kSimpleTurnRestrictionAccess, vias({{"D", "C"}})}},
+  };
+
+  for (const auto* features : {&lines, &heads}) {
+    EXPECT_EQ(features->size(), expected.size());
+    for (const auto& [key, exp] : expected) {
+      const auto found = features->find(key);
+      ASSERT_NE(found, features->end()) << key.first << " -> " << key.second;
+      const auto& tr = found->second;
+      EXPECT_TRUE(tr.complex);
+      EXPECT_EQ(tr.type, exp.type);
+      EXPECT_EQ(tr.modes, exp.modes);
+      EXPECT_EQ(tr.via_edge_ids, exp.via_edge_ids);
+    }
+  }
+
+  // the via way restriction's head points along DE, i.e. east
+  EXPECT_NEAR(heads.at({edge_id("A", "B"), edge_id("D", "E")}).bearing, 90, 1);
+}
+
+TEST(VectorTilesTurnRestrictions, TileSeam) {
+  // N sits just west of a z14 seam, B east of it: the "from AN" and the "to NA" restrictions
+  // are only found via their other edge in the eastern tile
+  const std::string ascii_map = R"(
+    A-----N-----B
+  )";
+  const gurka::ways ways = {
+      {"AN", {{"highway", "residential"}}},
+      {"NB", {{"highway", "residential"}}},
+  };
+  const gurka::relations relations = {
+      {{{gurka::way_member, "AN", "from"},
+        {gurka::node_member, "N", "via"},
+        {gurka::way_member, "NB", "to"}},
+       {{"type", "restriction"}, {"restriction", "no_straight_on"}}},
+      {{{gurka::way_member, "NB", "from"},
+        {gurka::node_member, "N", "via"},
+        {gurka::way_member, "AN", "to"}},
+       {{"type", "restriction"}, {"restriction:hgv", "no_straight_on"}}},
+  };
+
+  // move the map so N is 5 m west of its tile's eastern edge
+  constexpr uint32_t z = 14;
+  const double tiles_per_degree = (1 << z) / 360.;
+  PointLL topleft{2.315260, 48.869168};
+  const auto initial_n = gurka::detail::map_to_coordinates(ascii_map, 10, topleft).at("N");
+  const double seam_lng =
+      (std::floor((initial_n.lng() + 180.) * tiles_per_degree) + 1.) / tiles_per_degree - 180.;
+  const double five_meters = 5. / (kMetersPerDegreeLat * std::cos(initial_n.lat() * kRadPerDegD));
+  topleft.set_x(topleft.lng() + seam_lng - initial_n.lng() - five_meters);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, topleft);
+  ASSERT_LT(layout.at("N").lng(), seam_lng);
+  ASSERT_GT(layout.at("B").lng(), seam_lng);
+
+  auto map = gurka::buildtiles(layout, ways, {}, relations,
+                               VALHALLA_BUILD_DIR "test/data/gurka_vt_turn_restrictions_seam");
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto edge_id = [&](const std::string& from, const std::string& to) {
+    return std::get<0>(gurka::findEdgeByNodes(*reader, layout, from, to)).value;
+  };
+  const std::set<std::pair<uint64_t, uint64_t>> expected = {
+      {edge_id("A", "N"), edge_id("N", "B")},
+      {edge_id("B", "N"), edge_id("N", "A")},
+  };
+
+  // both tiles have both restrictions, the eastern one only thanks to their other edge
+  for (const auto& node : {"A", "B"}) {
+    SCOPED_TRACE(std::format("tile at {}", node));
+    std::string tile_data;
+    gurka::do_action(Options::tile, map, node, z, "auto", {}, nullptr, &tile_data);
+
+    std::map<std::pair<uint64_t, uint64_t>, TurnRestrictionFeature> lines, heads;
+    parse_turn_restrictions(tile_data, lines, heads);
+    std::set<std::pair<uint64_t, uint64_t>> found;
+    for (const auto& [key, tr] : lines) {
+      found.insert(key);
+    }
+    EXPECT_EQ(found, expected);
   }
 }
 

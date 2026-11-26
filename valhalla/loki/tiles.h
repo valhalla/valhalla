@@ -4,6 +4,7 @@
 #include "baldr/accessrestriction.h"
 #include "baldr/admininfo.h"
 #include "baldr/attributes_controller.h"
+#include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
@@ -17,8 +18,10 @@
 
 #include <cassert>
 #include <random>
+#include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace valhalla::loki {
 
@@ -53,6 +56,45 @@ protected:
   vtzero::index_value key_modes_;
   vtzero::index_value key_except_destination_;
   vtzero::index_value key_value_;
+};
+
+// One prohibited path: from -> vias -> to, all edge ids in travel direction
+struct TurnRestrictionProps {
+  uint64_t id;
+  baldr::GraphId from_edge_id;
+  baldr::GraphId to_edge_id;
+  // only set for complex restrictions
+  const baldr::ComplexRestriction* complex = nullptr;
+  // comma-wrapped, e.g. ",1,2,", so clients can match a single edge id exactly
+  std::string via_edge_ids;
+};
+
+// Each restriction is a line along the path plus a point at its end for the arrow head
+class TurnRestrictionLayerBuilder : vtzero::layer_builder {
+public:
+  explicit TurnRestrictionLayerBuilder(vtzero::tile_builder& tile, const char* name);
+
+  void add_line_feature(const TurnRestrictionProps& props, const std::vector<vtzero::point>& line);
+  void
+  add_point_feature(const TurnRestrictionProps& props, const vtzero::point& head, uint32_t bearing);
+
+  // drop duplicates inside a single mvt
+  bool add_unique_id(uint64_t id) {
+    return unique_ids_.insert(id).second;
+  }
+
+protected:
+  std::unordered_set<uint64_t> unique_ids_;
+
+  void add_properties(vtzero::feature_builder& feature, const TurnRestrictionProps& props);
+
+  vtzero::index_value key_complex_;
+  vtzero::index_value key_modes_;
+  vtzero::index_value key_from_edge_id_;
+  vtzero::index_value key_to_edge_id_;
+  vtzero::index_value key_bearing_;
+  vtzero::index_value key_type_;
+  vtzero::index_value key_via_edge_ids_;
 };
 
 class IncidentLayersBuilder;
