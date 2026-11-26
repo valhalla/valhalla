@@ -378,18 +378,19 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
         radius_sq = midgard::sqr(radius);
       }
 
+      graph_tile_ptr edge_tile = tile;
       if (edge_id.tile_base() != tile->header()->graphid().tile_base() &&
-          !reader.GetGraphTile(edge_id, tile)) {
+          !reader.GetGraphTile(edge_id, edge_tile)) {
         continue;
       }
 
-      const auto edge = tile->directededge(edge_id);
-      auto opp_tile = tile;
+      const auto edge = edge_tile->directededge(edge_id);
+      auto opp_tile = edge_tile;
       const baldr::DirectedEdge* opp_edge = nullptr;
       baldr::GraphId opp_id;
 
       // bail if we wouldnt be allowed on this edge anyway, nor its opposing
-      if (!costing->Allowed(edge, tile, edge_id) &&
+      if (!costing->Allowed(edge, edge_tile, edge_id) &&
           (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).is_valid() ||
            !costing->Allowed(opp_edge, opp_tile, opp_id))) {
         continue;
@@ -413,7 +414,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
           if (!intersects) {
             // either we have no circle or we do but it intersected the ring boundary
             if (!edgeinfo)
-              edgeinfo = tile->edgeinfo(edge);
+              edgeinfo = edge_tile->edgeinfo(edge);
 
             intersects = line_intersects_ring(edgeinfo->shape(), ring.first, rtree);
           }
@@ -426,7 +427,7 @@ std::unordered_set<GraphId> edges_in_rings(const Options& options,
             // the user passed levels, so only exclude the edges if they run on
             // (not across) that level
             if (!edgeinfo)
-              edgeinfo = tile->edgeinfo(edge);
+              edgeinfo = edge_tile->edgeinfo(edge);
             const auto& levels = edgeinfo->levels();
             // the edge runs on this level (i.e. does not merely traverse it)
             if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second &&

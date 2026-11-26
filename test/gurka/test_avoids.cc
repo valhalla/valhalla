@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 #include <test.h>
 
+#include <filesystem>
 #include <format>
 #include <string_view>
 
@@ -707,4 +708,66 @@ TEST(StandAlone, SuperTrivialExcludedConnection) {
     auto res = gurka::do_action(valhalla::Options::sources_to_targets, map, req);
     EXPECT_EQ(res.matrix().distances(0), 100000000); // kMaxCost
   }
+}
+
+TEST(StandAlone, ExcludePolygonWithMissingTile) {
+  // the topleft offset puts the corner of four level 2 tiles between columns 3/4 and rows 6/7:
+  // P and T are in the NW tile, Q and U in the SE tile, PQ and TU cut through the NE tile
+  // which also holds the polygon
+  const std::string ascii_map = R"(
+    P T       1-------2
+     \ \      |       |
+      \ \     |       |
+       \ \    | R---S |
+        \ \   |       |
+         \ \  4-------3
+          \ \
+           \ \
+            \ \
+             Q U
+  )";
+  const gurka::ways ways = {
+      {"PQ", {{"highway", "residential"}}},
+      {"TU", {{"highway", "residential"}}},
+      {"RS", {{"highway", "residential"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {0.2494, 1.0012});
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/exclude_polygon_missing_tile");
+
+  const auto tile_of = [&](const std::string& node) {
+    return TileHierarchy::GetGraphId(map.nodes[node], 2);
+  };
+  const auto ne_tile = tile_of("R");
+  ASSERT_EQ(tile_of("1"), ne_tile);
+  ASSERT_EQ(tile_of("3"), ne_tile);
+  ASSERT_NE(tile_of("P"), ne_tile);
+  ASSERT_NE(tile_of("Q"), ne_tile);
+  ASSERT_NE(tile_of("P"), tile_of("Q"));
+  ASSERT_EQ(tile_of("T"), tile_of("P"));
+  ASSERT_EQ(tile_of("U"), tile_of("Q"));
+
+  // remove the tiles PQ and TU start and end in
+  const auto tile_dir = map.config.get<std::string>("mjolnir.tile_dir");
+  for (const auto& node : {"P", "Q"}) {
+    ASSERT_TRUE(std::filesystem::remove(tile_dir + "/" + GraphTile::FileSuffix(tile_of(node))));
+  }
+
+  valhalla::Options options;
+  options.set_costing_type(valhalla::Costing::auto_);
+  auto& co = (*options.mutable_costings())[Costing::auto_];
+  co.set_type(valhalla::Costing::auto_);
+  auto* ring = options.mutable_exclude_polygons()->Add();
+  for (const auto& node : {"1", "2", "3", "4", "1"}) {
+    auto* ll = ring->add_coords();
+    ll->set_lat(map.nodes[node].lat());
+    ll->set_lng(map.nodes[node].lng());
+  }
+
+  const auto costing = valhalla::sif::CostFactory{}.Create(co);
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  const auto edges = edges_in_rings(options, *reader, costing, 100000, 1000);
+  const auto rs_edge = std::get<0>(gurka::findEdgeByNodes(*reader, layout, "R", "S"));
+  EXPECT_EQ(edges.count(rs_edge), 1);
 }

@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: segfault in `exclude_polygons` search when a bin references an edge in a missing tile [#6534](https://github.com/valhalla/valhalla/pull/6534)
    * FIXED: protect PointLL::PointAlongSegment against very close points [#6532](https://github.com/valhalla/valhalla/pull/6532)
    * FIXED: Turkish (tr-TR) narrative: remaining English phrases and grammar [#6525](https://github.com/valhalla/valhalla/pull/6525)
 * **Enhancement**
