@@ -87,6 +87,12 @@
         "0": "<PREVIOUS_STREET_NAMES> devient <STREET_NAMES>."
       }
     },
+    "bike_share_verbal": {
+      "phrases": {
+        "0": "Louez un vélo à la station de vélos en libre-service.",
+        "1": "Remettez le vélo à la station de vélos en libre-service."
+      }
+    },
     "continue": {
       "phrases": {
         "0": "Continuez.",

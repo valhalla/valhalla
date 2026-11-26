@@ -85,6 +85,7 @@ constexpr auto kExitBuildingKey = "instructions.exit_building";
 constexpr auto kPosixLocaleKey = "posix_locale";
 constexpr auto kLevelChangeKey = "instructions.level_change";
 constexpr auto kParkVehicleKey = "instructions.park_vehicle";
+constexpr auto kBikeShareVerbalKey = "instructions.bike_share_verbal";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -115,6 +116,10 @@ constexpr auto kPedestrianCrossingIndex = 3;
 constexpr auto kStepsIndex = 4;
 constexpr auto kBridgeIndex = 5;
 constexpr auto kTunnelIndex = 6;
+
+// Bike Share Verbal indexes
+constexpr auto kBikeShareRentIndex = 0;
+constexpr auto kBikeShareReturnIndex = 1;
 
 // object label indexes
 constexpr auto kGateIndex = 0;
@@ -406,6 +411,9 @@ public:
 
   // Level Change
   PhraseSet level_change_subset;
+
+  // Bike Share Verbal
+  PhraseSet bike_share_verbal;
 
   // Enter Building
   EnterBuildingSubset enter_building_subset;

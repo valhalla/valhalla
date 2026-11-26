@@ -495,7 +495,7 @@ public:
   }
 
   virtual Cost BSSCost() const override {
-    return {kDefaultBssCost, kDefaultBssPenalty};
+    return bike_share_cost_;
   };
 
 public:

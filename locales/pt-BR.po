@@ -217,6 +217,16 @@ msgctxt "instructions.becomes_verbal.phrases.0"
 msgid "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
 msgstr "<PREVIOUS_STREET_NAMES> agora é <STREET_NAMES>."
 
+#. e.g. Rent a bike.
+msgctxt "instructions.bike_share_verbal.phrases.0"
+msgid "Rent a bike from bike share station."
+msgstr "Rent a bike from bike share station."
+
+#. e.g. Return a bike.
+msgctxt "instructions.bike_share_verbal.phrases.1"
+msgid "Return a bike at the bike share station."
+msgstr "Return a bike at the bike share station."
+
 #. e.g. Continue.
 msgctxt "instructions.continue.phrases.0"
 msgid "Continue."

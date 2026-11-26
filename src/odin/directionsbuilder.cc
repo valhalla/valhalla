@@ -375,9 +375,6 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     // Travel mode
     trip_maneuver->set_travel_mode(maneuver.travel_mode());
 
-    // Bss maneuver type
-    trip_maneuver->set_bss_maneuver_type(maneuver.bss_maneuver_type());
-
     // Bss info
     auto* trip_bss_info = trip_maneuver->mutable_bss_info();
     trip_bss_info->CopyFrom(maneuver.bss_info());
