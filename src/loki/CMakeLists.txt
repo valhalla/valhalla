@@ -16,7 +16,6 @@ set(sources
   route_action.cc
   search.cc
   street_name.cc
-  street_name_extra.h
   tile_action.cc
   trace_route_action.cc
   worker.cc)
