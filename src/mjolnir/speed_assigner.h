@@ -61,8 +61,11 @@ The json basically looks like this:
 }]
  */
 
+// relative density bounds of the suburban band for the default and the density_v2 classification
 constexpr uint32_t kMinSuburbanDensity = 5;
 constexpr uint32_t kMaxSuburbanDensity = 10;
+constexpr uint32_t kMinSuburbanDensityV2 = 4;
+constexpr uint32_t kMaxSuburbanDensityV2 = 7;
 constexpr uint32_t kUnconfiguredSpeed = 0;
 
 /**
@@ -113,6 +116,9 @@ protected:
   // 2 letter country and 2 letter state as key with urban and rural speed tables as value
   std::unordered_map<std::string, std::array<SpeedTable, 3>> tables;
 
+  uint32_t min_suburban_density_ = kMinSuburbanDensity;
+  uint32_t max_suburban_density_ = kMaxSuburbanDensity;
+
   /**
    * This function determines the speed of an edge based on the json configuration provided to the
    * classes constructor. If the edge is one of the types that cannot be assigned via config the
@@ -152,7 +158,7 @@ protected:
 
     // rural, suburban or urban
     const auto& speed_table =
-        found->second[(density > kMinSuburbanDensity) + (density > kMaxSuburbanDensity)];
+        found->second[(density > min_suburban_density_) + (density > max_suburban_density_)];
     size_t rc = static_cast<size_t>(directededge.classification());
 
     // some kind of special use
@@ -191,7 +197,9 @@ protected:
   }
 
 public:
-  SpeedAssigner(const boost::optional<std::string>& config_file) {
+  SpeedAssigner(const boost::optional<std::string>& config_file, bool density_v2 = false)
+      : min_suburban_density_(density_v2 ? kMinSuburbanDensityV2 : kMinSuburbanDensity),
+        max_suburban_density_(density_v2 ? kMaxSuburbanDensityV2 : kMaxSuburbanDensity) {
     if (!config_file) {
       LOG_INFO("Disabled default speeds assignment from config");
       return;
