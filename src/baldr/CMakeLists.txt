@@ -57,6 +57,7 @@ set(sources
     boundingcircle.cc
     compression_utils.cc
     connectivity_map.cc
+    custom_attributes_tile.cc
     curler.cc
     datetime.cc
     directededge.cc
