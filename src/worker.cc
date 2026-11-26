@@ -16,6 +16,7 @@
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
+#include <rapidjson/memorystream.h>
 
 #include <sstream>
 
@@ -101,7 +102,9 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
     d.SetObject();
     return d;
   }
-  d.Parse(json.c_str());
+  // Bound reads even when using an older system RapidJSON with an unsafe UTF-8 validator.
+  rapidjson::MemoryStream input(json.data(), json.size());
+  d.ParseStream<rapidjson::kParseDefaultFlags | rapidjson::kParseValidateEncodingFlag>(input);
   if (d.HasParseError()) {
     throw e;
   }
@@ -1588,24 +1591,14 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
     return;
   }
 
-  // parse the json input
-  rapidjson::Document document;
-  auto& allocator = document.GetAllocator();
+  // Prefer the JSON query parameter over the request body and validate encoding.
   const auto& json = request.query.find("json");
-  if (json != request.query.end() && json->second.size() && json->second.front().size()) {
-    document.Parse(json->second.front().c_str());
-  } // no json parameter, check the body
-  else if (!request.body.empty()) {
-    document.Parse(request.body.c_str());
-  } // no json at all
-  else {
-    document.SetObject();
-  }
-
-  // if parsing failed
-  if (document.HasParseError()) {
-    throw valhalla_exception_t{100};
-  };
+  const auto& body =
+      json != request.query.end() && !json->second.empty() && !json->second.front().empty()
+          ? json->second.front()
+          : request.body;
+  auto document = from_string(body, valhalla_exception_t{100});
+  auto& allocator = document.GetAllocator();
 
   // throw the query params into the rapidjson doc
   for (const auto& kv : request.query) {
