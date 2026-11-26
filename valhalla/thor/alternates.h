@@ -8,7 +8,9 @@ namespace valhalla {
 namespace thor {
 float get_max_sharing(const valhalla::Location& origin, const valhalla::Location& destination);
 
-void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections);
+// a stretch threshold of 0 uses one that depends on the optimal cost
+void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections,
+                                  float at_most_longer = 0.f);
 
 bool validate_alternate_by_stretch(const std::vector<PathInfo>& optimal_path,
                                    const std::vector<PathInfo>& candidate_path);

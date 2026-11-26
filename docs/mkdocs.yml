@@ -176,6 +176,7 @@ nav:
           - Overview: api/route/overview.md
           - API reference: api/route/api-reference.md
       - Optimized: api/optimized.md
+      - Round trip: api/round_trip.md
       - Matrix: api/matrix.md
       - Isochrone: api/isochrone.md
       - Map matching: api/map-matching.md

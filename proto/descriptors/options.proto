@@ -371,6 +371,10 @@ message Costing {
     oneof has_use_curvature {
       float use_curvature = 100;
     }
+
+    oneof has_uturn_penalty {
+      float uturn_penalty = 101;
+    }
   }
 
   oneof has_options {
@@ -427,6 +431,7 @@ message Options {
     centroid = 11;
     status = 12;
     tile = 13;
+    round_trip = 14;
   }
 
   enum DateTimeType {
@@ -563,4 +568,22 @@ message Options {
   TileOptions tile_options = 64;                                   // additional /tile specific options
   repeated Levels exclude_levels = 65;                             // Levels to exclude within the exclude_polygon at the same index
   uint32 expansion_max_distance = 66;                              // Maximum path distance in meters for expansion. 0 = disabled.
+
+  message RoundTripOptions {
+    oneof has_heading {
+      double heading = 1;
+    }
+
+    oneof has_heading_tolerance {
+      double heading_tolerance = 2;
+    }
+
+    double distance = 3;  // desired round trip distance in meters
+
+    oneof has_distance_tolerance {
+      double distance_tolerance = 7;  // accepted relative deviation from distance
+    }
+  }
+
+  RoundTripOptions round_trip_options = 67;
 }

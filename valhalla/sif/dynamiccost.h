@@ -1008,7 +1008,7 @@ public:
         seconds += kTCNameInconsistentUturn;
       } else if (has_reverse ||
                  (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left)) {
-        seconds += kTCUnfavorableUturn;
+        seconds += uturn_penalty_;
         // Did we make a pencil point uturn?
       } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
                  !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
@@ -1019,7 +1019,7 @@ public:
         seconds += kTCNameInconsistentUturn;
       } else if (has_reverse || (penalize_internal_uturns &&
                                  internal_turn == InternalTurn::kRightTurn && has_right)) {
-        seconds += kTCUnfavorableUturn;
+        seconds += uturn_penalty_;
         // Did we make a pencil point uturn?
       } else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
                  edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
@@ -1440,6 +1440,7 @@ protected:
   uint32_t curvature_step_;    // Index into kCurvatureFactor[curvature_step_][curvature].
   float suburban_curvature_factor_;
   float urban_curvature_factor_;
+  float uturn_penalty_; // Seconds added for a u-turn.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1703,6 +1704,7 @@ struct BaseCostingOptionsConfig {
 
   ranged_default_t<float> dest_only_penalty_;
   ranged_default_t<float> maneuver_penalty_;
+  ranged_default_t<float> uturn_penalty_;
   ranged_default_t<float> alley_penalty_;
   ranged_default_t<float> gate_cost_;
   ranged_default_t<float> gate_penalty_;

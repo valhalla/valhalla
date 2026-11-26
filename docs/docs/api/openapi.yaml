@@ -64,6 +64,25 @@ paths:
         "429":
           $ref: '#/components/responses/RateLimited'
 
+  /round_trip:
+    post:
+      operationId: roundTrip
+      summary: /round_trip
+      description: Round trip route of approximately a given distance, leading out from and back to a single location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundTripRequest'
+      responses:
+        "200":
+          description: Round trip result, same format as a route result with a single leg
+        "400":
+          $ref: '#/components/responses/Error'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+
   /sources_to_targets:
     post:
       operationId: sourcesToTargets
@@ -841,6 +860,14 @@ components:
               description: >
                 A penalty applied when transitioning between roads that do not have consistent naming — in other words, no road names in common. 
                 This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.
+            uturn_penalty:
+              type: number
+              minimum: 0
+              maximum: 43200
+              description: >
+                A penalty in seconds applied to u-turns. Only applies to costings that penalize u-turns (`auto`, `taxi`, `bus`, `truck`, `motorcycle` and `motor_scooter`).
+                The default is 600 seconds, and 3600 seconds for round trips. Note that a u-turn is defined here as reversing the direction _at an intersection_.
+                Reversing the direction via roundabouts or turnarounds is not a u-turn.
             alley_penalty:
               type: number
               minimum: 0
@@ -1754,6 +1781,60 @@ components:
               items:
                 $ref: '#/components/schemas/BaseCostingOptions'
               description: Re-score the found path under additional named costings.
+
+    RoundTripRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+        - type: object
+          required: [locations, costing, round_trip_options]
+          properties:
+            locations:
+              type: array
+              minItems: 1
+              maxItems: 1
+              items:
+                $ref: '#/components/schemas/Location'
+              description: Exactly one location, the start and end of the round trip.
+            costing:
+              type: string
+              enum: [auto, bicycle, pedestrian, truck, bus, taxi, motor_scooter, motorcycle]
+              description: Multimodal costings (`multimodal`, `transit`, `bikeshare`, `auto_pedestrian`) are not supported.
+            directions_type:
+              $ref: '#/components/schemas/DirectionsType'
+            round_trip_options:
+              type: object
+              required: [distance]
+              description: >
+                Shapes the round trip. The round trip runs clockwise: it goes out on the left side of `heading` and comes back on the right side.
+                Apart from the first and last stretch near the start, the service avoids using the same road twice.
+              properties:
+                distance:
+                  type: number
+                  exclusiveMinimum: 0
+                  description: >
+                    The desired length of the round trip in meters. It is capped by the server's `max_round_trip_distance` for the chosen costing.
+                heading:
+                  type: number
+                  default: 0
+                  description: >
+                    The direction in degrees from north that the round trip should lead into. Values outside 0–360 are wrapped.
+                heading_tolerance:
+                  type: number
+                  minimum: 10
+                  maximum: 180
+                  default: 45
+                  description: >
+                    The width in degrees of the sector around `heading` that the turning points of the round trip are searched in.
+                    A higher tolerance extends the search for intermediate locations to a wider direction but follows the `heading` less closely.
+                    A more narrow tolerance will produce a more narrow round trip, but reduces the chance of finding a good match.
+                distance_tolerance:
+                  type: number
+                  minimum: 0.02
+                  maximum: 0.5
+                  default: 0.1
+                  description: >
+                    The accepted deviation from `distance` as a fraction of it. The service stops searching once it finds a round trip within the tolerance,
+                    so a larger value answers faster. If none is found within the tolerance, the closest one is returned.
 
     MatrixRequest:
       allOf:

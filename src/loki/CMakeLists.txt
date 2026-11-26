@@ -18,6 +18,7 @@ set(sources
   street_name.cc
   tile_action.cc
   trace_route_action.cc
+  round_trip_action.cc
   worker.cc)
 
 set(system_includes

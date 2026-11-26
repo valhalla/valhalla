@@ -60,8 +60,8 @@ std::pair<bool, bool> loki_worker_t::parse_location(valhalla::Location& location
   if (!location.has_node_snap_tolerance_case())
     location.set_node_snap_tolerance(default_node_snap_tolerance);
 
-  const bool has_level =
-      location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
+  const bool has_level = location.has_search_filter() && location.search_filter().has_level_case() &&
+                         location.search_filter().level() != baldr::kMaxLevel;
 
   if (!location.has_search_cutoff_case() && !has_level) {
     // no level and no cutoff, provide regular default
@@ -398,6 +398,11 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                                ".max_matrix_location_pairs"));
     }
+    // optional so that existing configs keep working, costings without it don't do round trips
+    if (auto rt_dist =
+            config.get_optional<float>("service_limits." + kv.first + ".max_round_trip_distance")) {
+      max_roundtrip_distances.emplace(kv.first, *rt_dist);
+    }
   }
 
   // overwrite config value with hardcoded one since multi-location routes
@@ -607,6 +612,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case Options::tile:
         result = to_response(render_tile(request), info, request, mvt_headers);
+        break;
+      case Options::round_trip:
+        round_trip(request);
+        result.messages.emplace_back(request.SerializeAsString());
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
