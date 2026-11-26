@@ -27,6 +27,11 @@ if(WIN32)
   endif()
 endif()
 
+# MSVC reads BOM-less sources as the ANSI codepage, which mangles non-ASCII U"" literals
+if(MSVC)
+  add_compile_options(/utf-8)
+endif()
+
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
@@ -158,6 +163,8 @@ set(libosmium_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include 
 set(vtzero_include_dirs ${VALHALLA_SOURCE_DIR}/third_party/vtzero/include ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 set(flatbush_include_dir ${VALHALLA_SOURCE_DIR}/third_party/flatbush)
+# we want to use stable unicode tables, don't override with system ones
+set(utf8proc_include_dir ${VALHALLA_SOURCE_DIR}/third_party/utf8proc)
 
 if (PREFER_EXTERNAL_DEPS)
   # date
