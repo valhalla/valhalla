@@ -13,6 +13,7 @@
 * **Enhancement**
    * ADDED: Simplified Chinese (`zh-CN`) narrative language [#6509](https://github.com/valhalla/valhalla/pull/6509)
    * CHANGED: Multithreaded `GraphFilter` [#6374](https://github.com/valhalla/valhalla/pull/6374)
+   * ADDED: `docker/manylinux` recipe to build the image for the Python Linux packaging [#6528](https://github.com/valhalla/valhalla/pull/6528)
 
 ## Release Date: 2026-11-12 Valhalla 3.9.2
 * **Removed**

@@ -100,8 +100,9 @@ test-command = "python -c \"from valhalla.baldr import GraphId; g = GraphId(); a
 build = "cp*"
 skip = "*musllinux*"
 archs = "native"
-manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
-manylinux-aarch64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
+# built from docker/manylinux/ by .github/workflows/docker-manylinux-build.yml
+manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python-test"
+manylinux-aarch64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python-test"
 
 [tool.cibuildwheel.windows]
 # this is v1.11.2
@@ -115,8 +116,6 @@ before-build = """
   python -m pip install -r src/bindings/python/requirements-build.txt
   python src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
 """
-# e.g. geos is both installed to the system and built from source, need to prioritize the latter
-environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64" }
 
 [tool.cibuildwheel.macos]
 repair-wheel-command = [
