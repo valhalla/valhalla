@@ -1,6 +1,7 @@
 #include "baldr/graphtile.h"
 #include "baldr/compression_utils.h"
 #include "baldr/curl_tilegetter.h"
+#include "baldr/custom_attributes_tile.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
 #include "exceptions.h"
@@ -51,8 +52,10 @@ private:
   const std::vector<char> memory_;
 };
 
-graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
-                                         const std::vector<char>& compressed) {
+graph_tile_ptr
+GraphTile::DecompressTile(const GraphId& graphid,
+                          const std::vector<char>& compressed,
+                          std::unique_ptr<const GraphMemory> custom_attributes_memory) {
   // for setting where to read compressed data from
   auto src_func = [&compressed](z_stream& s) -> void {
     s.next_in =
@@ -84,14 +87,16 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
     return nullptr;
   }
 
-  return graph_tile_ptr{
-      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)))};
+  return graph_tile_ptr{new GraphTile(graphid,
+                                      std::make_unique<const VectorGraphMemory>(std::move(data)),
+                                      nullptr, std::move(custom_attributes_memory))};
 }
 
 // Constructor given a filename. Reads the graph data into memory.
 graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
                                  const GraphId& graphid,
-                                 std::unique_ptr<const GraphMemory>&& traffic_memory) {
+                                 std::unique_ptr<const GraphMemory>&& traffic_memory,
+                                 std::unique_ptr<const GraphMemory>&& custom_attributes_memory) {
   if (!graphid.is_valid()) {
     LOG_ERROR("Failed to build GraphTile. Error: GraphId is invalid");
     return nullptr;
@@ -121,9 +126,9 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
     file.seekg(0, std::ios::beg);
     file.read(data.data(), filesize);
     file.close();
-    return graph_tile_ptr{new GraphTile(graphid,
-                                        std::make_unique<const VectorGraphMemory>(std::move(data)),
-                                        std::move(traffic_memory))};
+    return graph_tile_ptr{
+        new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)),
+                      std::move(traffic_memory), std::move(custom_attributes_memory))};
   }
 
   // Try to load a gzipped tile
@@ -136,7 +141,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
     std::vector<char> compressed(filesize);
     gz_file.read(&compressed[0], filesize);
     gz_file.close();
-    return DecompressTile(graphid, std::move(compressed));
+    return DecompressTile(graphid, std::move(compressed), std::move(custom_attributes_memory));
   }
 
   // Nothing to load anywhere
@@ -150,27 +155,31 @@ graph_tile_ptr GraphTile::Create(const GraphId& graphid, std::vector<char>&& mem
 
 graph_tile_ptr GraphTile::Create(const GraphId& graphid,
                                  std::unique_ptr<const GraphMemory>&& memory,
-                                 std::unique_ptr<const GraphMemory>&& traffic_memory) {
-  return graph_tile_ptr{new GraphTile(graphid, std::move(memory), std::move(traffic_memory))};
+                                 std::unique_ptr<const GraphMemory>&& traffic_memory,
+                                 std::unique_ptr<const GraphMemory>&& custom_attributes_memory) {
+  return graph_tile_ptr{new GraphTile(graphid, std::move(memory), std::move(traffic_memory),
+                                      std::move(custom_attributes_memory))};
 }
 
 // the right c-tor for GraphTile
 GraphTile::GraphTile(const GraphId& graphid,
                      std::unique_ptr<const GraphMemory> memory,
-                     std::unique_ptr<const GraphMemory> traffic_memory)
-    : header_(nullptr), traffic_tile(std::move(traffic_memory)) {
-  // Initialize the internal tile data structures using a pointer to the
-  // tile and the tile size
+                     std::unique_ptr<const GraphMemory> traffic_memory,
+                     std::unique_ptr<const GraphMemory> custom_attributes_memory)
+    : header_(nullptr), traffic_tile(std::move(traffic_memory)),
+      custom_attributes_tile_(std::move(custom_attributes_memory)) {
   memory_ = std::move(memory);
   Initialize(graphid);
 }
 
 GraphTile::GraphTile(const std::string& tile_dir,
                      const GraphId& graphid,
-                     std::unique_ptr<const GraphMemory>&& traffic_memory) {
+                     std::unique_ptr<const GraphMemory>&& traffic_memory,
+                     std::unique_ptr<const GraphMemory>&& custom_attributes_memory) {
   // const_cast is only ok here because Create actually makes a new non-const GraphTile
   // which is then coerced to const via the template parameter of the managed pointer
-  if (auto tile = Create(tile_dir, graphid, std::move(traffic_memory))) {
+  if (auto tile =
+          Create(tile_dir, graphid, std::move(traffic_memory), std::move(custom_attributes_memory))) {
     *this = std::move(const_cast<GraphTile&>(*tile));
   }
 }

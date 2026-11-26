@@ -103,6 +103,7 @@ constexpr std::string_view kEdgeLayer = "edge.layer";
 constexpr std::string_view kEdgeShortcut = "edge.is_shortcut";
 constexpr std::string_view kEdgeLeavesTile = "edge.leaves_tile";
 constexpr std::string_view kEdgeCurvature = "edge.curvature";
+constexpr std::string_view kEdgeCustomAttribute = "edge.custom_attribute";
 
 // direction-dependent keys (mostly used by MVT)
 constexpr std::string_view kEdgeSpeedFwd = "edge.speed_forward";

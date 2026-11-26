@@ -349,7 +349,8 @@ set(valhalla_programs
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
   valhalla_convert_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
-  valhalla_assign_speeds valhalla_add_elevation valhalla_build_landmarks valhalla_add_landmarks)
+  valhalla_assign_speeds valhalla_add_elevation valhalla_build_landmarks valhalla_add_landmarks
+  valhalla_add_custom_attributes)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
@@ -415,7 +416,7 @@ endif()
 
 # add the scripts to the build folder as well
 foreach(script valhalla_build_config valhalla_build_elevation
-  valhalla_build_extract valhalla_build_timezones)
+  valhalla_build_extract valhalla_build_timezones valhalla_build_custom_attributes_extract)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
 
   install(
