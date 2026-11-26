@@ -161,7 +161,8 @@ double custom_cost_t::sort_and_find_smallest() {
 BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
-      alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
+      uturn_penalty_{0.f, kTCUnfavorableUturn, kMaxPenalty}, alley_penalty_{0.f, kDefaultAlleyPenalty,
+                                                                            kMaxPenalty},
       gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
                                                                     kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
@@ -227,6 +228,10 @@ DynamicCost::DynamicCost(const Costing& costing,
       hierarchy_limits_.back().set_up_transition_count(0);
     }
   }
+
+  // costings built without parsing (e.g. in tests) have no value set
+  uturn_penalty_ = costing.options().has_uturn_penalty_case() ? costing.options().uturn_penalty()
+                                                              : kTCUnfavorableUturn;
 
   SetCostFactorEdges(costing.options());
 
@@ -550,6 +555,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // maneuver_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.maneuver_penalty_, json, "/maneuver_penalty", maneuver_penalty,
                           warnings);
+
+  // uturn_penalty
+  JSON_PBF_RANGED_DEFAULT(co, cfg.uturn_penalty_, json, "/uturn_penalty", uturn_penalty, warnings);
 
   // alley_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.alley_penalty_, json, "/alley_penalty", alley_penalty, warnings);

@@ -754,6 +754,9 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
     case valhalla::Options::tile:
       json_str = actor.tile(request_json, nullptr, &api);
       break;
+    case valhalla::Options::round_trip:
+      json_str = actor.round_trip(request_json, nullptr, &api);
+      break;
     default:
       throw std::logic_error("Unsupported action");
       break;

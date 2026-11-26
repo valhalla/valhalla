@@ -192,6 +192,7 @@ std::string serializePbf(Api& request) {
       case Options::centroid:
       case Options::optimized_route:
       case Options::trace_route:
+      case Options::round_trip:
         selection.set_directions(true);
         break;
       // meta data requests

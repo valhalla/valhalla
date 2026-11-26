@@ -99,7 +99,8 @@ if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar multimodal_astar complexrestriction countryaccess graphbuilder graphparser
     graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs servicedays shape_attributes signinfo summary urban tar_index
-    thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
+    thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates
+    round_trip)
   if(ENABLE_HTTP AND ENABLE_SERVICES)
     list(APPEND tests http_tiles)
     # TODO: fix https://github.com/valhalla/valhalla/issues/3740
@@ -448,6 +449,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(multimodal_astar paris_bss_tiles utrecht_tiles)
   add_dependencies(astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(alternates utrecht_tiles)
+  add_dependencies(round_trip utrecht_tiles)
   add_dependencies(tar_index utrecht_tiles)
   add_dependencies(graphtile utrecht_tiles)
   add_dependencies(graphbuilder build_timezones)

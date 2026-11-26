@@ -125,6 +125,7 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
       {"centroid", Options::centroid},
       {"status", Options::status},
       {"tile", Options::tile},
+      {"round_trip", Options::round_trip},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -160,6 +161,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
       {Options::centroid, "centroid"},
       {Options::status, "status"},
       {Options::tile, "tile"},
+      {Options::round_trip, "round_trip"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty_str : i->second;

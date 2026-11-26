@@ -44,6 +44,7 @@ public:
   std::string transit_available(Api& request);
   void status(Api& request) const;
   std::string render_tile(Api& request);
+  void round_trip(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -85,6 +86,7 @@ protected:
   std::vector<std::pair<std::string, std::string>> mvt_headers;
   size_t max_timedep_dist_matrix;
   std::unordered_map<std::string, float> max_matrix_locations;
+  std::unordered_map<std::string, float> max_roundtrip_distances;
   size_t max_exclude_locations;
   float max_exclude_polygons_length;
   float max_exclude_polygons_vertices;

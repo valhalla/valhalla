@@ -6,6 +6,7 @@
 * **Enhancement**
    * ADDED: custom attributes [#6474](https://github.com/valhalla/valhalla/pull/6474)
    * CHANGED: density V2 [#6425](https://github.com/valhalla/valhalla/pull/6425) 
+   * ADDED: round trip routing [#6522](https://github.com/valhalla/valhalla/pull/6522)
 
 ## Release Date: 2026-11-16 Valhalla 3.9.3
 * **Removed**
