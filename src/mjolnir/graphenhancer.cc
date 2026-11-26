@@ -67,7 +67,7 @@ constexpr float kMinNodeDensity = 1.0f;
 constexpr float kMaxNodeDensity = 490.0f;
 
 // Street nodes per km^2 within kLocalDensityRadius below which suburban areas share the lowest
-// suburban level; most suburban nodes sit here and the sif density factors expect them to stay low
+// suburban level; most suburban nodes sit below this
 constexpr float kMinSuburbanSpreadDensity = 145.0f;
 constexpr uint32_t kMaxRuralLevel = 2;
 
