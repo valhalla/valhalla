@@ -652,6 +652,7 @@ TEST(DateTime, TimezoneAliases) {
   for (const auto& pair : pairs) {
     auto alias_tz = dt_db.from_index(dt_db.to_index(pair.first));
     EXPECT_EQ(alias_tz, dt_db.from_index(dt_db.to_index(pair.second)));
+    EXPECT_EQ(alias_tz->name(), pair.second);
   }
 }
 
