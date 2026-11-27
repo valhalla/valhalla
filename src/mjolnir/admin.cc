@@ -139,7 +139,8 @@ std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_pol
 }
 
 // Get the timezone polys from the db
-std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db, const AABB2<PointLL>& aabb) {
+std::multimap<uint32_t, Geometry>
+GetTimeZones(AdminDB& db, const AABB2<PointLL>& aabb, bool keep_unknown) {
   const AABB2<PointLL> bbox(aabb.minx() - kTileBboxBuffer, aabb.miny() - kTileBboxBuffer,
                             aabb.maxx() + kTileBboxBuffer, aabb.maxy() + kTileBboxBuffer);
   std::multimap<uint32_t, Geometry> polys;
@@ -174,8 +175,9 @@ std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db, const AABB2<PointLL>
         wkb_size = sqlite3_column_bytes(stmt, 1);
       }
 
-      uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
-      if (idx == 0) {
+      // we fail when building tiles, but it's fine when updating them
+      const auto idx = DateTime::get_tz_db().find_index(tz_id);
+      if (idx == DateTime::kUnknownTimeZone && !keep_unknown) {
         sqlite3_finalize(stmt);
         throw std::runtime_error("Can't find timezone ID " + std::string(tz_id));
       }

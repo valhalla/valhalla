@@ -127,11 +127,12 @@ GetMultiPolyIndexes(const language_poly_index& language_ploys, const midgard::Po
 
 /**
  * Get the timezone polys from the db
- * @param  db           sqlite3 db handle
- * @param  aabb         bb of the tile
+ * @param  db            sqlite3 db handle
+ * @param  aabb          bb of the tile
+ * @param  keep_unknown  if true, unknown timezones get the index kUnknownTimeZone instead of throwing
  */
-std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db,
-                                               const midgard::AABB2<midgard::PointLL>& aabb);
+std::multimap<uint32_t, Geometry>
+GetTimeZones(AdminDB& db, const midgard::AABB2<midgard::PointLL>& aabb, bool keep_unknown = false);
 
 /**
  * Get the admin polys that intersect with the tile bounding box.

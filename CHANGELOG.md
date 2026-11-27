@@ -59,6 +59,7 @@
    * ADDED: `use_curvature` costing option for motorcycle costing [#6449](https://github.com/valhalla/valhalla/pull/6449)
    * ADDED: detailed documentation for `/locate` [#6471](https://github.com/valhalla/valhalla/pull/6471)
    * CHANGED: `/tile` verbose output is now gated by its own `service_limits.tile.allow_verbose` instead of `service_limits.status.allow_verbose` [#6510](https://github.com/valhalla/valhalla/pull/6510)
+   * ADDED: `valhalla_update_timezones` to re-assign the nodes' time zones of an existing tileset from an updated `mjolnir.timezone` db [#TODO](https://github.com/valhalla/valhalla/pull/TODO)
 
 ## Release Date: 2026-10-01 Valhalla 3.9.1
 * **Removed**
