@@ -235,6 +235,9 @@ Lengths and distances are in meters, speeds in kilometers per hour, angles in de
 | `filtered_edges` | Only present if non-empty. Edges near the location that were dropped by the location's `heading` or `search_filter.level` filter. Same format as `edges`. |
 | `nodes` | The end nodes of correlated edges, if the location snapped onto a node. Empty if it snapped to the middle of an edge. |
 | `reason` | Verbose only. Why nothing was found for this location. |
+| `street` | The location's `street`, only present if it had one |
+| `street_score` | The best score any edge within `street_radius` reached against the `street` hint, also when it's below `street_threshold` |
+| `street_matched` | Whether we found a road matching the `street` hint with a score of at least `street_threshold`. We use all street segments of that road within `radius` (default only closest) as start/end locations. |
 
 #### Edge (verbose)
 
