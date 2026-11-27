@@ -210,6 +210,12 @@
       "max_matrix_distance": 400000.0,
       "max_matrix_location_pairs": 2500
     },
+    "emergency": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_location_pairs": 2500
+    },
     "pedestrian": {
       "max_distance": 250000.0,
       "max_locations": 50,
