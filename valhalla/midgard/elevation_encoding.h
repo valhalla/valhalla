@@ -19,7 +19,7 @@ constexpr int32_t ELEVATION_NO_DATA_VALUE = -32768;
 const double kElevationPrecision = 0.25f;
 const double kInvElevationPrecision = 4.0;
 inline int32_t to_fixed_precision(const double v) {
-  return static_cast<int32_t>((v * kInvElevationPrecision) + 0.5);
+  return static_cast<int32_t>(std::round(v * kInvElevationPrecision));
 }
 inline float from_fixed_precision(const int8_t v) {
   return (v * kElevationPrecision);
