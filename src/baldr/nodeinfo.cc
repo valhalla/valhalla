@@ -181,7 +181,8 @@ void NodeInfo::set_elevation(const float elevation) {
   if (elevation < kNodeMinElevation) {
     elevation_ = 0;
   } else {
-    uint32_t elev = static_cast<uint32_t>((elevation - kNodeMinElevation) / kNodeElevationPrecision);
+    uint32_t elev =
+        static_cast<uint32_t>(std::round((elevation - kNodeMinElevation) / kNodeElevationPrecision));
     elevation_ = (elev > kNodeMaxStoredElevation) ? kNodeMaxStoredElevation : elev;
   }
 }

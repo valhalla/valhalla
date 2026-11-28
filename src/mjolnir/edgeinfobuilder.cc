@@ -31,7 +31,8 @@ void EdgeInfoBuilder::set_mean_elevation(const float mean_elev) {
   if (mean_elev <= kMinElevation) {
     ei_.mean_elevation_ = 0;
   } else {
-    uint32_t elev = static_cast<uint32_t>((mean_elev - kMinElevation) / kElevationBinSize);
+    uint32_t elev =
+        static_cast<uint32_t>(std::round((mean_elev - kMinElevation) / kElevationBinSize));
     ei_.mean_elevation_ = (elev > kMaxStoredElevation) ? kMaxStoredElevation : elev;
   }
 }
