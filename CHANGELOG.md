@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: protect PointLL::PointAlongSegment against very close points [#6532](https://github.com/valhalla/valhalla/pull/6532)
    * FIXED: Turkish (tr-TR) narrative: remaining English phrases and grammar [#6525](https://github.com/valhalla/valhalla/pull/6525)
+   * FIXED: Round elevation instead of truncating - [#6543](https://github.com/valhalla/valhalla/pull/6543)
 * **Enhancement**
 
 ## Release Date: 2026-11-16 Valhalla 3.9.3
