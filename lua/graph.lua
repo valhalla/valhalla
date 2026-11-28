@@ -397,7 +397,14 @@ oneway = {
 bridge = {
 ["yes"] = "true",
 ["no"] = "false",
-["1"] = "true"
+["1"] = "true",
+["viaduct"] = "true",
+["aqueduct"] = "true",
+["movable"] = "true",
+["cantilever"] = "true",
+["covered"] = "true",
+["trestle"] = "true",
+["low_water_crossing"] = "true"
 }
 
 --TODO: building_passage is for ped only
